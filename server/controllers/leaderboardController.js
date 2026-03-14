@@ -9,6 +9,7 @@
 const Redis = require('ioredis');
 const User = require('../models/User');
 const SkillState = require('../models/SkillState');
+const { sendSuccess } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
 let redis = null;
@@ -72,10 +73,7 @@ const getLeaderboard = async (req, res, next) => {
             }
           }
 
-          return res.status(200).json({
-            success: true,
-            data: { leaderboard, cached: true }
-          });
+          return sendSuccess(res, { leaderboard, cached: true });
         }
       } catch (cacheError) {
         logger.error('Redis cache read error', { error: cacheError.message });
@@ -125,10 +123,7 @@ const getLeaderboard = async (req, res, next) => {
       }
     }
 
-    return res.status(200).json({
-      success: true,
-      data: { leaderboard, cached: false }
-    });
+    return sendSuccess(res, { leaderboard, cached: false });
   } catch (error) {
     next(error);
   }

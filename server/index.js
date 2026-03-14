@@ -10,6 +10,8 @@ const mongoose = require('mongoose');
 const logger = require('./utils/logger');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
+const { generalLimiter } = require('./middleware/rateLimiter');
+const { initSocket } = require('./socket/socketHandler');
 
 // Create Express app and HTTP server
 const app = express();
@@ -24,11 +26,20 @@ const io = new Server(server, {
   }
 });
 
+// Initialise Socket.io connection handling
+initSocket(io);
+
+// Make io accessible to controllers via app
+app.set('io', io);
+
 // --------------- Middleware Stack ---------------
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev', { stream: { write: (msg) => logger.info(msg.trim()) } }));
+
+// General rate limiter — before all API routes
+app.use('/api', generalLimiter);
 
 // --------------- Routes ---------------
 app.use('/api', routes);
@@ -61,18 +72,6 @@ const connectDB = async () => {
   }
 };
 
-// --------------- Socket.io ---------------
-io.on('connection', (socket) => {
-  logger.info(`Socket connected: ${socket.id}`);
-
-  socket.on('disconnect', () => {
-    logger.info(`Socket disconnected: ${socket.id}`);
-  });
-});
-
-// Make io accessible to controllers via app
-app.set('io', io);
-
 // --------------- Start Server ---------------
 const PORT = process.env.PORT || 5000;
 
@@ -82,5 +81,5 @@ connectDB().then(() => {
   });
 });
 
-// Export app for testing (supertest)
-module.exports = app;
+// Export app and io for testing and controller access
+module.exports = { app, io };

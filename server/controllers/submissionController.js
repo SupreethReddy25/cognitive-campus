@@ -8,9 +8,9 @@
  * 4. Analyse code structure via AST analyser
  * 5. Fetch/create SkillState and compute BKT mastery update
  * 6. Apply hint penalty and update mastery state
- * 7. Calculate and award XP, update level and streak
- * 8. Check and unlock prerequisite-gated skills, generate nudges
- * 9. Get next recommendation, save submission, return response
+ * 7. Calculate and award XP, update level and streak, emit XP event
+ * 8. Check and unlock prerequisite-gated skills, generate nudges, emit skill events
+ * 9. Get next recommendation, save submission, emit leaderboard refresh
  *
  * @module submissionController
  */
@@ -19,10 +19,14 @@ const User = require('../models/User');
 const Problem = require('../models/Problem');
 const Submission = require('../models/Submission');
 const SkillState = require('../models/SkillState');
+const Skill = require('../models/Skill');
 const bktEngine = require('../services/bktEngine');
 const astAnalyser = require('../services/astAnalyser');
 const codeExecutionService = require('../services/codeExecutionService');
 const recommendationEngine = require('../services/recommendationEngine');
+const { generateNudge } = require('../services/nudgeService');
+const { emitXPUpdate, emitLeaderboardUpdate, emitSkillUnlocked } = require('../socket/socketHandler');
+const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
 /**
@@ -76,17 +80,11 @@ const createSubmission = async (req, res, next) => {
     // ─── Step 2: Validate ───
     const problem = await Problem.findById(problemId);
     if (!problem || !problem.isActive) {
-      return res.status(404).json({
-        success: false,
-        message: 'Problem not found or is inactive'
-      });
+      return sendError(res, 'Problem not found or is inactive', 404);
     }
 
     if (!code || code.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Code cannot be empty'
-      });
+      return sendError(res, 'Code cannot be empty');
     }
 
     const skillId = problem.skillId;
@@ -155,28 +153,43 @@ const createSubmission = async (req, res, next) => {
     user.lastActiveDate = today;
     await user.save();
 
+    // Emit XP update via Socket.io (lazy require to avoid circular dependency)
+    const { io } = require('../index');
+    if (xpAwarded > 0) {
+      emitXPUpdate(io, {
+        userId: userId.toString(),
+        userName: user.name,
+        xpEarned: xpAwarded,
+        newXP: user.xp,
+        newLevel: user.level,
+        newStreak: user.streak
+      });
+    }
+
     // ─── Step 8: Check and unlock new skills + generate nudges ───
     const newlyUnlockedSkills = await recommendationEngine.checkAndUnlockSkills(userId);
 
-    let nudge = null;
-    if (astResult.antiPatternDetected) {
-      nudge = astResult.antiPatternDescription;
-    }
-
-    // Check if this is 3rd+ failed attempt on same problem
-    if (testResults.passed === 0) {
-      const failedAttemptCount = await Submission.countDocuments({
-        userId,
-        problemId,
-        isCorrect: false
+    // Emit skill unlocked events for each newly unlocked skill
+    for (const skillName of newlyUnlockedSkills) {
+      emitSkillUnlocked(io, userId.toString(), {
+        skillName,
+        newMasteryP
       });
-
-      if (failedAttemptCount >= 2) {
-        nudge = nudge
-          ? `${nudge} Also, consider trying a simpler problem or using hints.`
-          : 'You have struggled with this problem multiple times. Consider trying a simpler problem or using hints.';
-      }
     }
+
+    // Get skill name for nudge context
+    const skill = await Skill.findById(skillId).select('name');
+    const skillName = skill ? skill.name : 'this skill';
+
+    // Count prior failed attempts on this problem
+    const failedAttemptCount = await Submission.countDocuments({
+      userId,
+      problemId,
+      isCorrect: false
+    });
+
+    // Generate nudge using centralised nudge service
+    const nudge = generateNudge(astResult, failedAttemptCount, skillName, newMasteryP);
 
     // ─── Step 9: Get recommendation, save submission, return response ───
     const nextRecommendation = await recommendationEngine.getRecommendation(userId);
@@ -200,27 +213,27 @@ const createSubmission = async (req, res, next) => {
 
     logger.info(`Submission created: user=${userId} problem=${problemId} correct=${isCorrect} xp=${xpAwarded}`);
 
-    return res.status(201).json({
-      success: true,
-      data: {
-        submission: {
-          id: submission._id,
-          isCorrect,
-          passedTestCases: testResults.passed,
-          totalTestCases: testResults.total,
-          xpAwarded
-        },
-        testResults,
-        astFeedback: astResult,
-        newMastery: newMasteryP,
-        xpEarned: xpAwarded,
-        newLevel: user.level,
-        newStreak: user.streak,
-        newlyUnlockedSkills,
-        nextRecommendation,
-        nudge
-      }
-    });
+    // Emit leaderboard refresh signal
+    emitLeaderboardUpdate(io);
+
+    return sendSuccess(res, {
+      submission: {
+        id: submission._id,
+        isCorrect,
+        passedTestCases: testResults.passed,
+        totalTestCases: testResults.total,
+        xpAwarded
+      },
+      testResults,
+      astFeedback: astResult,
+      newMastery: newMasteryP,
+      xpEarned: xpAwarded,
+      newLevel: user.level,
+      newStreak: user.streak,
+      newlyUnlockedSkills,
+      nextRecommendation,
+      nudge
+    }, 201);
   } catch (error) {
     next(error);
   }
@@ -250,16 +263,13 @@ const getHistory = async (req, res, next) => {
       Submission.countDocuments({ userId })
     ]);
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        submissions,
-        pagination: {
-          page,
-          limit,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limit)
-        }
+    return sendSuccess(res, {
+      submissions,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit)
       }
     });
   } catch (error) {

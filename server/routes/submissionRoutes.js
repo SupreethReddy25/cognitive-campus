@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const authenticateToken = require('../middleware/auth');
+const { submissionLimiter } = require('../middleware/rateLimiter');
 const { createSubmission, getHistory } = require('../controllers/submissionController');
 
 const router = express.Router();
@@ -11,6 +12,7 @@ router.post(
   '/',
   [
     authenticateToken,
+    submissionLimiter,
     body('problemId')
       .notEmpty()
       .withMessage('Problem ID is required')

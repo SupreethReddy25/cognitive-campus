@@ -10,6 +10,7 @@ const User = require('../models/User');
 const SkillState = require('../models/SkillState');
 const Submission = require('../models/Submission');
 const recommendationEngine = require('../services/recommendationEngine');
+const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
 /**
@@ -36,20 +37,14 @@ const getProfile = async (req, res, next) => {
     ]);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return sendError(res, 'User not found', 404);
     }
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        user,
-        skillStates,
-        submissionCount,
-        recentSubmissions
-      }
+    return sendSuccess(res, {
+      user,
+      skillStates,
+      submissionCount,
+      recentSubmissions
     });
   } catch (error) {
     next(error);
@@ -70,10 +65,7 @@ const getRecommendations = async (req, res, next) => {
 
     const recommendation = await recommendationEngine.getRecommendation(userId);
 
-    return res.status(200).json({
-      success: true,
-      data: { recommendation }
-    });
+    return sendSuccess(res, { recommendation });
   } catch (error) {
     next(error);
   }

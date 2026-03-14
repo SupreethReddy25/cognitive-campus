@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const authenticateToken = require('../middleware/auth');
+const { authLimiter } = require('../middleware/rateLimiter');
 const { register, login, getMe } = require('../controllers/authController');
 
 const router = express.Router();
@@ -10,6 +11,7 @@ const router = express.Router();
 router.post(
   '/register',
   [
+    authLimiter,
     body('name')
       .trim()
       .isLength({ min: 2, max: 50 })
@@ -30,6 +32,7 @@ router.post(
 router.post(
   '/login',
   [
+    authLimiter,
     body('email')
       .isEmail()
       .normalizeEmail()

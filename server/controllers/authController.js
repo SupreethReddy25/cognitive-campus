@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Skill = require('../models/Skill');
 const SkillState = require('../models/SkillState');
+const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
 /**
@@ -20,10 +21,7 @@ const register = async (req, res, next) => {
     // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'Email already exists'
-      });
+      return sendError(res, 'Email already exists', 409);
     }
 
     // Hash password
@@ -54,28 +52,25 @@ const register = async (req, res, next) => {
 
     logger.info(`New user registered: ${user.email}`);
 
-    // Sign JWT
+    // Sign JWT — include role for admin authorization
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
-    return res.status(201).json({
-      success: true,
-      data: {
-        token,
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          xp: user.xp,
-          level: user.level,
-          streak: user.streak,
-          role: user.role
-        }
+    return sendSuccess(res, {
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        xp: user.xp,
+        level: user.level,
+        streak: user.streak,
+        role: user.role
       }
-    });
+    }, 201);
   } catch (error) {
     next(error);
   }
@@ -96,43 +91,34 @@ const login = async (req, res, next) => {
     // Find user by email (include passwordHash for comparison)
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return sendError(res, 'Invalid credentials', 401);
     }
 
     // Compare password
     const isPasswordMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return sendError(res, 'Invalid credentials', 401);
     }
 
     logger.info(`User logged in: ${user.email}`);
 
-    // Sign JWT
+    // Sign JWT — include role for admin authorization
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        token,
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          xp: user.xp,
-          level: user.level,
-          streak: user.streak,
-          role: user.role
-        }
+    return sendSuccess(res, {
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        xp: user.xp,
+        level: user.level,
+        streak: user.streak,
+        role: user.role
       }
     });
   } catch (error) {
@@ -153,16 +139,10 @@ const getMe = async (req, res, next) => {
     const user = await User.findById(req.user.userId).select('-passwordHash');
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return sendError(res, 'User not found', 404);
     }
 
-    return res.status(200).json({
-      success: true,
-      data: { user }
-    });
+    return sendSuccess(res, { user });
   } catch (error) {
     next(error);
   }

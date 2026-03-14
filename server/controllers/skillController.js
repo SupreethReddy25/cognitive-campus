@@ -8,6 +8,7 @@
 
 const Skill = require('../models/Skill');
 const SkillState = require('../models/SkillState');
+const { sendSuccess } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
 /**
@@ -24,10 +25,7 @@ const getAllSkills = async (req, res, next) => {
       .populate('prerequisites', 'name order')
       .sort({ order: 1 });
 
-    return res.status(200).json({
-      success: true,
-      data: { skills }
-    });
+    return sendSuccess(res, { skills });
   } catch (error) {
     next(error);
   }
@@ -49,10 +47,7 @@ const getUserSkillStates = async (req, res, next) => {
       .populate('skillId', 'name description order difficultyWeight')
       .sort({ 'skillId.order': 1 });
 
-    return res.status(200).json({
-      success: true,
-      data: { skillStates }
-    });
+    return sendSuccess(res, { skillStates });
   } catch (error) {
     next(error);
   }
