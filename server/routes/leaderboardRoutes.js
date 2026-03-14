@@ -1,5 +1,10 @@
 const express = require('express');
+const authenticateToken = require('../middleware/auth');
+const { getLeaderboard } = require('../controllers/leaderboardController');
+
 const router = express.Router();
 
-// Placeholder — leaderboard routes will be implemented in Phase 3
+// GET /api/leaderboard — Get global leaderboard (top 50)
+router.get('/', authenticateToken, getLeaderboard);
+
 module.exports = router;
