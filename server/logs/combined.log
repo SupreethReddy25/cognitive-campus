@@ -28,3 +28,20 @@
 2026-03-14 17:39:54 [INFO]: Server running on port 5000 in development mode
 2026-03-14 17:42:35 [INFO]: MongoDB connected
 2026-03-14 17:42:35 [INFO]: Server running on port 5000 in development mode
+2026-03-14 17:46:24 [INFO]: MongoDB connected for skill seeding
+2026-03-14 17:46:26 [INFO]: Pass 1 complete: all 12 skills upserted
+2026-03-14 17:46:26 [INFO]: Pass 2 complete: prerequisites resolved and linked
+2026-03-14 17:46:32 [INFO]: MongoDB connected for problem seeding
+2026-03-14 17:46:33 [INFO]: Seeded 3 problems for Arrays
+2026-03-14 17:46:33 [INFO]: Seeded 3 problems for Strings
+2026-03-14 17:46:34 [INFO]: Seeded 3 problems for Hashing
+2026-03-14 17:46:34 [INFO]: Seeded 3 problems for Recursion
+2026-03-14 17:46:34 [INFO]: Seeded 3 problems for Sorting
+2026-03-14 17:46:34 [INFO]: Seeded 3 problems for Searching
+2026-03-14 17:46:34 [INFO]: Seeded 3 problems for Linked Lists
+2026-03-14 17:46:34 [INFO]: Seeded 3 problems for Stacks & Queues
+2026-03-14 17:46:35 [INFO]: Seeded 3 problems for Trees
+2026-03-14 17:46:35 [INFO]: Seeded 3 problems for Graphs
+2026-03-14 17:46:35 [INFO]: Seeded 3 problems for Dynamic Programming
+2026-03-14 17:46:35 [INFO]: Seeded 3 problems for Greedy Algorithms
+2026-03-14 17:46:35 [INFO]: Problem seeding finished — 36 problems upserted
