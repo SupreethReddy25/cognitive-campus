@@ -1,0 +1,24 @@
+# ── Cognitive Campus — Docker Compose (Local Dev) ──
+# Redis is NOT included — we use Upstash Redis (cloud) in all environments.
+
+services:
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

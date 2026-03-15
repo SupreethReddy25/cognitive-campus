@@ -8,10 +8,17 @@ const morgan = require('morgan');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const logger = require('./utils/logger');
+const connectDB = require('./utils/connectDB');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 const { initSocket } = require('./socket/socketHandler');
+
+// ─── Uncaught Exception Handler ───
+process.on('uncaughtException', (error) => {
+  logger.error('UNCAUGHT EXCEPTION — shutting down', { error: error.message, stack: error.stack });
+  process.exit(1);
+});
 
 // Create Express app and HTTP server
 const app = express();
@@ -57,27 +64,30 @@ app.get('/health', (req, res) => {
 // Global error handler — must be AFTER all routes
 app.use(errorHandler);
 
-// --------------- MongoDB Connection ---------------
-/**
- * Connects to MongoDB using the MONGO_URI environment variable.
- * Exits the process on failure.
- */
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    logger.info('MongoDB connected');
-  } catch (error) {
-    logger.error('MongoDB connection failed', { error: error.message });
-    process.exit(1);
-  }
-};
-
 // --------------- Start Server ---------------
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
   server.listen(PORT, () => {
     logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+  });
+});
+
+// ─── Unhandled Rejection Handler ───
+process.on('unhandledRejection', (reason) => {
+  logger.error('UNHANDLED REJECTION — shutting down', { reason: reason?.message || reason });
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// ─── Graceful Shutdown ───
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received — shutting down gracefully');
+  server.close(async () => {
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+    process.exit(0);
   });
 });
 
