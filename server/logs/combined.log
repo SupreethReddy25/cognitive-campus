@@ -80,3 +80,68 @@
 2026-03-14 17:57:03 [INFO]: MongoDB connected
 2026-03-14 17:57:03 [INFO]: Server running on port 5000 in development mode
 2026-03-14 17:59:20 [INFO]: MongoDB connected
+2026-03-14 18:27:49 [INFO]: New user registered: supreethreddypannala@gmail.com
+2026-03-14 18:27:49 [INFO]: [0mPOST /api/auth/register [32m201[0m 1696.672 ms - 441[0m
+2026-03-14 18:27:49 [INFO]: Socket connected: PdJZTNm0GSZFlGTsAAAB
+2026-03-14 18:27:49 [INFO]: Socket PdJZTNm0GSZFlGTsAAAB joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-14 18:27:49 [INFO]: [0mGET /api/skills/my-states [32m200[0m 194.764 ms - 6375[0m
+2026-03-14 18:27:49 [INFO]: [0mGET /api/users/profile [32m200[0m 249.782 ms - 6476[0m
+2026-03-14 18:27:49 [INFO]: [0mGET /api/skills/my-states [36m304[0m 167.173 ms - -[0m
+2026-03-14 18:27:49 [INFO]: [0mGET /api/users/profile [36m304[0m 182.901 ms - -[0m
+2026-03-14 18:27:50 [INFO]: [0mGET /api/submissions/history?limit=10 [32m200[0m 648.484 ms - 107[0m
+2026-03-14 18:27:50 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 84.108 ms - -[0m
+2026-03-14 18:27:50 [INFO]: [0mGET /api/users/recommendations [32m200[0m 851.074 ms - 1607[0m
+2026-03-14 18:27:50 [INFO]: [0mGET /api/users/recommendations [36m304[0m 173.274 ms - -[0m
+2026-03-14 18:27:55 [INFO]: [0mGET /api/problems?page=1&limit=12 [32m200[0m 119.887 ms - 12238[0m
+2026-03-14 18:27:55 [INFO]: [0mGET /api/skills [32m200[0m 145.057 ms - 4858[0m
+2026-03-14 18:27:55 [INFO]: [0mGET /api/problems?page=1&limit=12 [36m304[0m 181.442 ms - -[0m
+2026-03-14 18:27:55 [INFO]: [0mGET /api/skills [36m304[0m 181.147 ms - -[0m
+2026-03-14 18:27:59 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 258.735 ms - 1393[0m
+2026-03-14 18:27:59 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 325.674 ms - -[0m
+2026-03-14 18:28:17 [INFO]: [0mGET /api/submissions/history?limit=20 [32m200[0m 122.599 ms - 107[0m
+2026-03-14 18:28:17 [INFO]: [0mGET /api/users/profile [36m304[0m 150.125 ms - -[0m
+2026-03-14 18:28:17 [INFO]: [0mGET /api/submissions/history?limit=20 [36m304[0m 56.865 ms - -[0m
+2026-03-14 18:28:17 [INFO]: [0mGET /api/users/profile [36m304[0m 115.536 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/users/profile [36m304[0m 153.676 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 160.281 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/users/recommendations [36m304[0m 239.786 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/users/profile [36m304[0m 116.083 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 144.334 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/users/recommendations [36m304[0m 276.082 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 626.140 ms - -[0m
+2026-03-14 18:28:27 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 85.754 ms - -[0m
+2026-03-14 18:33:21 [INFO]: Socket disconnected: PdJZTNm0GSZFlGTsAAAB
+2026-03-14 18:33:51 [INFO]: MongoDB connected
+2026-03-14 18:33:51 [INFO]: Server running on port 5000 in development mode
+2026-03-14 18:34:19 [INFO]: MongoDB connected
+2026-03-14 18:34:19 [INFO]: Server running on port 5000 in development mode
+2026-03-14 18:38:25 [INFO]: MongoDB connected
+2026-03-14 18:38:25 [INFO]: Server running on port 5000 in development mode
+2026-03-14 18:38:46 [INFO]: MongoDB connected
+2026-03-14 18:38:46 [INFO]: Server running on port 5000 in development mode
+2026-03-14 18:44:23 [INFO]: MongoDB connected for problem seeding
+2026-03-14 18:44:23 [INFO]: Seeded 3 problems for Arrays
+2026-03-14 18:44:23 [INFO]: Seeded 3 problems for Strings
+2026-03-14 18:44:24 [INFO]: Seeded 3 problems for Hashing
+2026-03-14 18:44:24 [INFO]: Seeded 3 problems for Recursion
+2026-03-14 18:44:24 [INFO]: Seeded 3 problems for Sorting
+2026-03-14 18:44:24 [INFO]: Seeded 3 problems for Searching
+2026-03-14 18:44:24 [INFO]: Seeded 3 problems for Linked Lists
+2026-03-14 18:44:25 [INFO]: Seeded 3 problems for Stacks & Queues
+2026-03-14 18:44:25 [INFO]: Seeded 3 problems for Trees
+2026-03-14 18:44:25 [INFO]: Seeded 3 problems for Graphs
+2026-03-14 18:44:25 [INFO]: Seeded 3 problems for Dynamic Programming
+2026-03-14 18:44:26 [INFO]: Seeded 3 problems for Greedy Algorithms
+2026-03-15 10:36:03 [INFO]: MongoDB connected for problem seeding
+2026-03-15 10:36:03 [INFO]: Seeded 3 problems for Arrays
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Strings
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Hashing
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Recursion
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Sorting
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Searching
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Linked Lists
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Stacks & Queues
+2026-03-15 10:36:04 [INFO]: Seeded 3 problems for Trees
+2026-03-15 10:36:05 [INFO]: Seeded 3 problems for Graphs
+2026-03-15 10:36:05 [INFO]: Seeded 3 problems for Dynamic Programming
+2026-03-15 10:36:05 [INFO]: Seeded 3 problems for Greedy Algorithms

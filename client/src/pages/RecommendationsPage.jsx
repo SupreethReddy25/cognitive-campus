@@ -4,125 +4,72 @@ import { usersService, skillsService } from '../services/api';
 import SkillBadge from '../components/SkillBadge';
 import DifficultyBadge from '../components/DifficultyBadge';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { Compass, ArrowRight, Target } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const RecommendationsPage = () => {
-  const [recommendation, setRecommendation] = useState(null);
+  const [reco, setReco] = useState(null);
   const [skillStates, setSkillStates] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       try {
-        const [recoRes, skillsRes] = await Promise.all([
-          usersService.getRecommendations(),
-          skillsService.getMySkillStates()
-        ]);
-        setRecommendation(recoRes.data.data.recommendation);
-        setSkillStates(skillsRes.data.data.skillStates);
-      } catch (err) {
-        console.error('Recommendations load error:', err);
-      } finally {
-        setLoading(false);
-      }
+        const [r, s] = await Promise.all([usersService.getRecommendations(), skillsService.getMySkillStates()]);
+        setReco(r.data.data.recommendation);
+        setSkillStates(s.data.data.skillStates);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     };
-    fetchData();
+    load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <LoadingSkeleton lines={2} />
-        <div className="card"><LoadingSkeleton lines={6} /></div>
-        <div className="card"><LoadingSkeleton lines={8} /></div>
-      </div>
-    );
-  }
+  if (loading) return <div className="space-y-4"><LoadingSkeleton lines={2} /><div className="card"><LoadingSkeleton lines={8} /></div></div>;
 
-  const unlockedSkills = skillStates.filter((s) => s.isUnlocked);
+  const unlocked = skillStates.filter((s) => s.isUnlocked);
+  const locked = skillStates.filter((s) => !s.isUnlocked);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Compass className="w-7 h-7 text-primary" />
-          Recommendations
-        </h1>
-        <p className="text-muted text-sm mt-1">Personalised problems based on your mastery</p>
-      </div>
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold tracking-tight">Recommendations</h1>
 
-      {/* Featured recommendation */}
-      {recommendation?.problem ? (
-        <div className="card border-primary/30 bg-gradient-to-br from-surface to-primary/5">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-primary">Top Pick For You</span>
+      {reco?.problem ? (
+        <div className="card border-[#6C63FF]/30">
+          <p className="text-[10px] font-mono text-[#6C63FF] uppercase tracking-widest mb-2">Top Pick</p>
+          <p className="text-base font-semibold text-[#E8E8F0] mb-1">{reco.problem.title}</p>
+          <div className="flex items-center gap-2 mb-3">
+            <DifficultyBadge difficulty={reco.problem.difficulty} />
+            {reco.skill && <span className="text-xs text-[#8888A0]">{reco.skill}</span>}
           </div>
-
-          <h2 className="text-xl font-bold mb-2">{recommendation.problem.title}</h2>
-
-          <div className="flex items-center gap-3 mb-4">
-            <DifficultyBadge difficulty={recommendation.problem.difficulty} />
-            {recommendation.skill && (
-              <span className="text-sm text-muted">Skill: {recommendation.skill}</span>
-            )}
-          </div>
-
-          {recommendation.reason && (
-            <p className="text-sm text-muted mb-4">{recommendation.reason}</p>
-          )}
-
-          {recommendation.currentMastery !== undefined && (
-            <div className="mb-4">
-              <p className="text-xs text-muted mb-1">Current mastery for this skill</p>
-              <div className="w-full bg-gray-700/50 rounded-full h-2.5 max-w-xs">
-                <div
-                  className="bg-primary h-2.5 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.round(recommendation.currentMastery * 100)}%` }}
-                />
+          {reco.currentMastery !== undefined && (
+            <div className="mb-3">
+              <p className="text-[10px] text-[#8888A0] mb-1">Current mastery</p>
+              <div className="w-full max-w-xs bg-[#2A2A4A] rounded-sm h-1">
+                <div className="bg-[#6C63FF] h-1 rounded-sm transition-all" style={{ width: `${Math.round(reco.currentMastery * 100)}%` }} />
               </div>
-              <p className="text-xs text-primary mt-1">{Math.round(recommendation.currentMastery * 100)}%</p>
+              <p className="text-xs font-mono text-[#6C63FF] mt-0.5">{Math.round(reco.currentMastery * 100)}%</p>
             </div>
           )}
-
-          <Link
-            to={`/problems/${recommendation.problem._id}`}
-            className="btn-primary inline-flex items-center gap-2"
-          >
-            Solve Now <ArrowRight className="w-4 h-4" />
+          <Link to={`/problems/${reco.problem._id}`} className="btn-primary inline-flex items-center gap-1.5 text-xs">
+            Solve <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
       ) : (
-        <div className="card text-center py-12">
-          <Compass className="w-10 h-10 text-muted mx-auto mb-3" />
-          <p className="text-muted">No recommendations right now. Keep practicing!</p>
-        </div>
+        <div className="card text-center py-10"><p className="text-sm text-[#8888A0]">No recommendations right now. Keep practicing!</p></div>
       )}
 
-      {/* Skills mastery progress */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Your Skill Mastery</h2>
-        <div className="space-y-4">
-          {unlockedSkills.map((ss) => (
-            <SkillBadge
-              key={ss._id}
-              skillName={ss.skillId?.name || 'Unknown'}
-              masteryP={ss.masteryP}
-              isUnlocked={ss.isUnlocked}
-            />
+        <p className="text-sm font-medium text-[#E8E8F0] mb-3">Skill Mastery</p>
+        <div className="space-y-2">
+          {unlocked.map((ss) => (
+            <SkillBadge key={ss._id} skillName={ss.skillId?.name || '?'} masteryP={ss.masteryP} isUnlocked attempts={ss.attempts || 0} />
           ))}
         </div>
-        {skillStates.filter((s) => !s.isUnlocked).length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-700/50">
-            <p className="text-xs text-muted mb-3">Locked Skills — master prerequisites to unlock:</p>
-            <div className="space-y-3">
-              {skillStates.filter((s) => !s.isUnlocked).map((ss) => (
-                <SkillBadge
-                  key={ss._id}
-                  skillName={ss.skillId?.name || 'Unknown'}
-                  masteryP={ss.masteryP}
-                  isUnlocked={false}
-                />
+        {locked.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-[#2A2A4A]">
+            <p className="text-[10px] text-[#8888A0] uppercase tracking-widest mb-2">Locked</p>
+            <div className="space-y-2">
+              {locked.map((ss) => (
+                <SkillBadge key={ss._id} skillName={ss.skillId?.name || '?'} masteryP={ss.masteryP} isUnlocked={false} attempts={0} />
               ))}
             </div>
           </div>

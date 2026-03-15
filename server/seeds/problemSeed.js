@@ -15,6 +15,7 @@ const mongoose = require('mongoose');
 const Skill = require('../models/Skill');
 const Problem = require('../models/Problem');
 const logger = require('../utils/logger');
+const starterCodeMaps = require('./starterCodeMaps');
 
 /**
  * Returns all 36 problem definitions keyed by skill name.
@@ -672,6 +673,7 @@ const seedProblems = async () => {
               difficulty: problemData.difficulty,
               skillId,
               starterCode: problemData.starterCode,
+              starterCodeMap: starterCodeMaps[problemData.title] || { javascript: problemData.starterCode },
               constraints: problemData.constraints,
               testCases: problemData.testCases,
               examples: problemData.examples,

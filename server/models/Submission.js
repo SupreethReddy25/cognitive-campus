@@ -21,6 +21,11 @@ const submissionSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Code is required']
     },
+    language: {
+      type: String,
+      default: 'javascript',
+      enum: ['javascript', 'python', 'java', 'cpp']
+    },
     isCorrect: {
       type: Boolean,
       required: [true, 'isCorrect flag is required']

@@ -41,6 +41,12 @@ const problemSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Starter code is required']
     },
+    starterCodeMap: {
+      javascript: { type: String },
+      python: { type: String },
+      java: { type: String },
+      cpp: { type: String }
+    },
     constraints: {
       type: String
     },

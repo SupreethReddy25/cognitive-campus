@@ -3,22 +3,14 @@ import { useAuth } from '../context/AuthContext';
 import useSocket from '../hooks/useSocket';
 import Toast from './Toast';
 import {
-  LayoutDashboard,
-  Code2,
-  Compass,
-  Trophy,
-  User,
-  LogOut,
-  Zap,
-  Menu,
-  X
+  LayoutDashboard, Code2, Compass, Trophy, User, LogOut, Menu, X
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/problems', label: 'Problems', icon: Code2 },
-  { to: '/recommendations', label: 'Recommendations', icon: Compass },
+  { to: '/recommendations', label: 'Explore', icon: Compass },
   { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { to: '/profile', label: 'Profile', icon: User }
 ];
@@ -27,156 +19,94 @@ const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { skillUnlockToast, dismissToast } = useSocket();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
-    <div className="min-h-screen flex bg-secondary">
-      {/* Sidebar — desktop */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-surface/50 border-r border-gray-700/50 fixed h-full z-30">
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-700/50">
-          <h1 className="text-xl font-bold">
-            <span className="text-primary">Cognitive</span>
-            <span className="text-gray-100"> Campus</span>
-          </h1>
-          <p className="text-xs text-muted mt-1">Adaptive DSA Learning</p>
+    <div className="min-h-screen flex bg-[#0F0F1A]">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex lg:flex-col w-56 bg-[#0F0F1A] border-r border-[#1E1E35] fixed h-full z-30">
+        <div className="px-4 py-5 border-b border-[#1E1E35]">
+          <span className="text-sm font-semibold tracking-tight">
+            <span className="text-[#6C63FF]">Cognitive</span>
+            <span className="text-[#E8E8F0]"> Campus</span>
+          </span>
         </div>
 
-        {/* Nav links */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 px-2 py-3 space-y-0.5">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
                   isActive
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted hover:text-gray-100 hover:bg-gray-700/30'
+                    ? 'text-white bg-[#1A1A2E] border-l-2 border-[#6C63FF]'
+                    : 'text-[#8888A0] hover:text-white hover:bg-[#1A1A2E]'
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-4 h-4" />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        {/* User card at bottom */}
-        <div className="p-4 border-t border-gray-700/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-semibold text-sm">
-                {user?.name?.charAt(0)?.toUpperCase()}
-              </span>
+        <div className="px-3 py-4 border-t border-[#1E1E35]">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-7 h-7 rounded-md bg-[#6C63FF]/20 flex items-center justify-center text-xs font-semibold text-[#6C63FF]">
+              {user?.name?.charAt(0)?.toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-muted">Level {user?.level}</p>
+              <p className="text-xs font-medium text-[#E8E8F0] truncate">{user?.name}</p>
+              <p className="text-[10px] font-mono text-[#8888A0]">LVL {user?.level}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-sm text-muted hover:text-red-400 transition-colors w-full px-2 py-1.5"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
+          <button onClick={handleLogout} className="flex items-center gap-2 text-xs text-[#8888A0] hover:text-[#FF4757] transition-colors">
+            <LogOut className="w-3.5 h-3.5" /> Logout
           </button>
         </div>
       </aside>
 
-      {/* Main content area */}
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 lg:ml-56">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-secondary/80 backdrop-blur-md border-b border-gray-700/50 px-4 lg:px-8 py-3">
+        <header className="sticky top-0 z-20 bg-[#0F0F1A]/90 backdrop-blur-sm border-b border-[#1E1E35] px-4 lg:px-6 py-2.5">
           <div className="flex items-center justify-between">
-            {/* Mobile menu toggle */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden text-muted hover:text-gray-100"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-[#8888A0]">
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-
-            <div className="lg:hidden text-lg font-bold">
-              <span className="text-primary">CC</span>
-            </div>
-
-            {/* Stats bar */}
+            <span className="lg:hidden text-sm font-semibold text-[#6C63FF]">CC</span>
             <div className="flex items-center gap-4 ml-auto">
-              <div className="flex items-center gap-1.5 text-sm">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span className="font-semibold text-amber-400">{user?.xp || 0}</span>
-                <span className="text-muted hidden sm:inline">XP</span>
-              </div>
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full">
-                <span className="text-xs text-primary font-semibold">LVL {user?.level || 1}</span>
-              </div>
-              <div className="hidden sm:flex items-center gap-1.5 text-sm">
-                <span className="text-accent">🔥</span>
-                <span className="text-gray-300">{user?.streak || 0}d</span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="hidden lg:flex items-center gap-1.5 text-sm text-muted hover:text-red-400 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              <span className="font-mono text-sm font-semibold text-[#FFA726]">{user?.xp || 0} <span className="text-[#8888A0] font-normal text-xs">XP</span></span>
+              <span className="font-mono text-xs px-2 py-0.5 bg-[#1A1A2E] border border-[#2A2A4A] rounded text-[#6C63FF]">[LVL {user?.level || 1}]</span>
+              <span className="text-xs text-[#8888A0]">🔥 {user?.streak || 0}d</span>
             </div>
           </div>
         </header>
 
-        {/* Mobile nav dropdown */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-40 bg-secondary/95 backdrop-blur-sm pt-16">
-            <nav className="p-4 space-y-2">
+        {/* Mobile nav */}
+        {mobileOpen && (
+          <div className="lg:hidden fixed inset-0 z-40 bg-[#0F0F1A]/98 pt-14">
+            <nav className="p-4 space-y-1">
               {navItems.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all ${
-                      isActive
-                        ? 'bg-primary/15 text-primary'
-                        : 'text-muted hover:text-gray-100'
-                    }`
-                  }
-                >
-                  <Icon className="w-5 h-5" />
-                  {label}
+                <NavLink key={to} to={to} onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) => `flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm ${isActive ? 'text-white bg-[#1A1A2E]' : 'text-[#8888A0]'}`}>
+                  <Icon className="w-4 h-4" />{label}
                 </NavLink>
               ))}
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-4 py-3 text-base text-red-400 w-full"
-              >
-                <LogOut className="w-5 h-5" />
-                Logout
+              <button onClick={handleLogout} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#FF4757] w-full">
+                <LogOut className="w-4 h-4" /> Logout
               </button>
             </nav>
           </div>
         )}
 
-        {/* Page content */}
-        <main className="p-4 lg:p-8">
-          <Outlet />
-        </main>
+        <main className="p-4 lg:p-6"><Outlet /></main>
       </div>
 
-      {/* Toast for skill unlock notifications */}
       {skillUnlockToast && (
-        <Toast
-          message={`🎉 Skill Unlocked: ${skillUnlockToast.skillName}!`}
-          type="success"
-          onDismiss={dismissToast}
-          duration={4000}
-        />
+        <Toast message={`Skill Unlocked: ${skillUnlockToast.skillName}`} type="success" onDismiss={dismissToast} duration={4000} />
       )}
     </div>
   );

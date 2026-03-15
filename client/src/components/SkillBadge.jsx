@@ -1,35 +1,33 @@
-const SkillBadge = ({ skillName, masteryP, isUnlocked = true }) => {
-  const percentage = Math.round((masteryP || 0) * 100);
-  const isMastered = masteryP >= 0.85;
-
-  let barColor = 'bg-gray-600';
-  let textColor = 'text-muted';
+const SkillBadge = ({ skillName, masteryP, isUnlocked = true, attempts = 0 }) => {
+  const displayMastery = attempts > 0 ? Math.round((masteryP || 0) * 100) : 0;
+  const isMastered = masteryP >= 0.85 && attempts > 0;
 
   if (!isUnlocked) {
-    barColor = 'bg-gray-700';
-    textColor = 'text-gray-600';
-  } else if (isMastered) {
-    barColor = 'bg-accent';
-    textColor = 'text-accent';
-  } else {
-    barColor = 'bg-primary';
-    textColor = 'text-gray-200';
+    return (
+      <div className="flex items-center justify-between py-1.5">
+        <span className="text-sm text-[#555] flex items-center gap-1.5">
+          <span className="text-xs">🔒</span> {skillName}
+        </span>
+        <span className="text-xs font-mono text-[#555]">Locked</span>
+      </div>
+    );
   }
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1">
-        <span className={`text-sm font-medium ${textColor}`}>
+        <span className="text-sm text-[#E8E8F0]">
           {skillName}
-          {isMastered && <span className="ml-1.5 text-accent">✓</span>}
-          {!isUnlocked && <span className="ml-1.5 text-gray-600">🔒</span>}
+          {isMastered && <span className="ml-1.5 text-[#00D4AA]">✓</span>}
         </span>
-        <span className={`text-xs ${textColor}`}>{percentage}%</span>
+        <span className="text-xs font-mono text-[#8888A0]">
+          {attempts > 0 ? `${displayMastery}%` : 'Not started'}
+        </span>
       </div>
-      <div className="w-full bg-gray-700/50 rounded-full h-2">
+      <div className="w-full bg-[#2A2A4A] rounded-sm h-1">
         <div
-          className={`${barColor} h-2 rounded-full transition-all duration-500`}
-          style={{ width: `${percentage}%` }}
+          className={`h-1 rounded-sm transition-all duration-500 ${isMastered ? 'bg-[#00D4AA]' : 'bg-[#6C63FF]'}`}
+          style={{ width: `${displayMastery}%` }}
         />
       </div>
     </div>

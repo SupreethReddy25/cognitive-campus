@@ -75,7 +75,7 @@ const createSubmission = async (req, res, next) => {
   try {
     // ─── Step 1: Extract data ───
     const userId = req.user.userId;
-    const { problemId, code, hintsUsed = 0, timeTaken = 0 } = req.body;
+    const { problemId, code, hintsUsed = 0, timeTaken = 0, language = 'javascript' } = req.body;
 
     // ─── Step 2: Validate ───
     const problem = await Problem.findById(problemId);
@@ -90,10 +90,10 @@ const createSubmission = async (req, res, next) => {
     const skillId = problem.skillId;
 
     // ─── Step 3: Run test cases ───
-    const testResults = await codeExecutionService.runTestCases(code, problem.testCases);
+    const testResults = await codeExecutionService.runTestCases(code, problem.testCases, language);
 
     // ─── Step 4: Analyse code structure ───
-    const astResult = astAnalyser.analyseCode(code);
+    const astResult = astAnalyser.analyseCode(code, language);
 
     // ─── Step 5: Fetch or create SkillState ───
     let skillState = await SkillState.findOne({ userId, skillId });
@@ -199,6 +199,7 @@ const createSubmission = async (req, res, next) => {
       problemId,
       skillId,
       code,
+      language,
       isCorrect,
       passedTestCases: testResults.passed,
       totalTestCases: testResults.total,

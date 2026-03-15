@@ -3,147 +3,70 @@ import { leaderboardService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import useSocket from '../hooks/useSocket';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { Trophy, Medal, Crown } from 'lucide-react';
 
 const LeaderboardPage = () => {
   const { user } = useAuth();
   const { lastLeaderboardSignal } = useSocket();
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [lb, setLb] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchLeaderboard = useCallback(async () => {
-    try {
-      const res = await leaderboardService.getLeaderboard();
-      setLeaderboard(res.data.data.leaderboard);
-    } catch (err) {
-      console.error('Leaderboard load error:', err);
-    } finally {
-      setLoading(false);
-    }
+  const fetch = useCallback(async () => {
+    try { const r = await leaderboardService.getLeaderboard(); setLb(r.data.data.leaderboard); }
+    catch (e) { console.error(e); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { if (lastLeaderboardSignal > 0) fetch(); }, [lastLeaderboardSignal, fetch]);
 
-  // Re-fetch on socket signal
-  useEffect(() => {
-    if (lastLeaderboardSignal > 0) {
-      fetchLeaderboard();
-    }
-  }, [lastLeaderboardSignal, fetchLeaderboard]);
+  if (loading) return <div className="card"><LoadingSkeleton lines={12} /></div>;
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <LoadingSkeleton lines={2} />
-        <div className="card"><LoadingSkeleton lines={12} /></div>
-      </div>
-    );
-  }
+  const rankBorder = { 1: 'border-l-amber-400', 2: 'border-l-gray-400', 3: 'border-l-amber-700' };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Trophy className="w-7 h-7 text-amber-400" />
-          Leaderboard
-        </h1>
-        <p className="text-muted text-sm mt-1">Top performers by XP</p>
-      </div>
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold tracking-tight">Leaderboard</h1>
 
-      <div className="card overflow-hidden p-0">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-700/50 text-left">
-              <th className="px-6 py-3 text-xs font-medium text-muted uppercase tracking-wider w-20">Rank</th>
-              <th className="px-6 py-3 text-xs font-medium text-muted uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-xs font-medium text-muted uppercase tracking-wider text-center">Level</th>
-              <th className="px-6 py-3 text-xs font-medium text-muted uppercase tracking-wider text-right">XP</th>
-              <th className="px-6 py-3 text-xs font-medium text-muted uppercase tracking-wider text-right hidden sm:table-cell">Skills Mastered</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-700/30">
-            {leaderboard.map((entry) => {
-              const isCurrentUser = entry.userId === user?._id || entry.isCurrentUser;
-              return (
-                <tr
-                  key={entry.userId}
-                  className={`transition-colors ${
-                    isCurrentUser
-                      ? 'bg-primary/10 border-l-2 border-primary'
-                      : 'hover:bg-surface/50'
-                  }`}
-                >
-                  <td className="px-6 py-4">
-                    <RankDisplay rank={entry.rank} />
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
-                        {entry.name?.charAt(0)?.toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">
-                          {entry.name}
-                          {isCurrentUser && <span className="text-xs text-primary ml-2">(You)</span>}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center px-2 py-0.5 bg-primary/10 rounded-full text-xs font-medium text-primary">
-                      LVL {entry.level}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className="font-semibold text-amber-400">{entry.xp}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right hidden sm:table-cell">
-                    <span className="text-sm text-muted">{entry.skillsMastered}/12</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="border border-[#2A2A4A] rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-[#0F0F1A] text-[10px] font-mono text-[#8888A0] uppercase tracking-widest border-b border-[#2A2A4A]">
+          <span className="col-span-1">#</span>
+          <span className="col-span-5">Name</span>
+          <span className="col-span-2 text-center">Level</span>
+          <span className="col-span-2 text-right">XP</span>
+          <span className="col-span-2 text-right hidden sm:block">Mastered</span>
+        </div>
 
-        {leaderboard.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted">No data yet. Be the first to submit!</p>
-          </div>
-        )}
+        {/* Rows */}
+        {lb.length === 0 ? (
+          <div className="px-4 py-10 text-center text-sm text-[#8888A0]">No data yet.</div>
+        ) : lb.map((entry) => {
+          const isMe = entry.userId === user?._id || entry.isCurrentUser;
+          return (
+            <div key={entry.userId}
+              className={`grid grid-cols-12 gap-2 px-4 py-2.5 border-l-2 transition-colors ${
+                isMe ? 'bg-[#6C63FF]/5 border-l-[#6C63FF]'
+                : rankBorder[entry.rank] ? `bg-[#1A1A2E] ${rankBorder[entry.rank]}`
+                : 'bg-[#1A1A2E] border-l-transparent hover:bg-[#22223A]'
+              } ${entry.rank > 1 ? 'border-t border-[#2A2A4A]' : ''}`}>
+              <span className="col-span-1 font-mono text-sm font-bold text-[#8888A0]">{entry.rank}</span>
+              <div className="col-span-5 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-[#6C63FF]/15 flex items-center justify-center text-[10px] font-semibold text-[#6C63FF] shrink-0">
+                  {entry.name?.charAt(0)?.toUpperCase()}
+                </div>
+                <span className="text-sm text-[#E8E8F0] truncate">
+                  {entry.name}{isMe && <span className="text-[10px] text-[#6C63FF] ml-1">(you)</span>}
+                </span>
+              </div>
+              <span className="col-span-2 text-center font-mono text-xs text-[#6C63FF]">{entry.level}</span>
+              <span className="col-span-2 text-right font-mono text-sm font-semibold text-[#FFA726]">{entry.xp}</span>
+              <span className="col-span-2 text-right font-mono text-xs text-[#8888A0] hidden sm:block">{entry.skillsMastered}/12</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-};
-
-const RankDisplay = ({ rank }) => {
-  if (rank === 1) {
-    return (
-      <div className="flex items-center gap-1">
-        <Crown className="w-5 h-5 text-amber-400" />
-        <span className="font-bold text-amber-400">1</span>
-      </div>
-    );
-  }
-  if (rank === 2) {
-    return (
-      <div className="flex items-center gap-1">
-        <Medal className="w-5 h-5 text-gray-300" />
-        <span className="font-bold text-gray-300">2</span>
-      </div>
-    );
-  }
-  if (rank === 3) {
-    return (
-      <div className="flex items-center gap-1">
-        <Medal className="w-5 h-5 text-amber-600" />
-        <span className="font-bold text-amber-600">3</span>
-      </div>
-    );
-  }
-  return <span className="text-sm text-muted font-medium">{rank}</span>;
 };
 
 export default LeaderboardPage;

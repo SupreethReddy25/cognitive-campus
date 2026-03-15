@@ -127,16 +127,24 @@ const classifyAlgorithm = (hasRecursion, loopTypes, nestingDepth, auxiliaryStruc
 };
 
 /**
- * Analyses a JavaScript code string and returns a structured AST analysis result.
+ * Analyses a code string and returns a structured AST analysis result.
  *
- * Detects loop types, recursion, nesting depth, auxiliary data structures,
- * algorithm classification, and anti-patterns.
+ * For JavaScript: full AST analysis with loop/recursion/anti-pattern detection.
+ * For other languages: returns a default result with a note.
  *
- * @param {string} codeString - The JavaScript source code to analyse
- * @returns {object} Analysis result with fields: parseError, loopTypes, hasRecursion,
- *   nestingDepth, auxiliaryStructures, algorithmClass, antiPatternDetected, antiPatternDescription
+ * @param {string} codeString - The source code to analyse
+ * @param {string} [language='javascript'] - The programming language
+ * @returns {object} Analysis result
  */
-const analyseCode = (codeString) => {
+const analyseCode = (codeString, language = 'javascript') => {
+  // AST analysis only works for JavaScript (Acorn.js)
+  if (language !== 'javascript') {
+    return {
+      ...createDefaultResult(false),
+      note: 'AST analysis available for JavaScript only',
+      algorithmClass: 'n/a'
+    };
+  }
   let ast;
 
   try {

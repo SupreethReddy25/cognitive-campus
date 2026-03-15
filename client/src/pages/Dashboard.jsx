@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { skillsService, usersService, submissionsService } from '../services/api';
 import SkillBadge from '../components/SkillBadge';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { Zap, Trophy, Flame, BookOpen, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -19,159 +19,103 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profileRes, skillsRes, recoRes, subRes] = await Promise.all([
+        const [p, s, r, sub] = await Promise.all([
           usersService.getProfile(),
           skillsService.getMySkillStates(),
           usersService.getRecommendations(),
           submissionsService.getHistory({ limit: 10 })
         ]);
-        setProfile(profileRes.data.data);
-        setSkillStates(skillsRes.data.data.skillStates);
-        setRecommendation(recoRes.data.data.recommendation);
-        setSubmissions(subRes.data.data.submissions);
-      } catch (err) {
-        console.error('Dashboard load error:', err);
-      } finally {
-        setLoading(false);
-      }
+        setProfile(p.data.data);
+        setSkillStates(s.data.data.skillStates);
+        setRecommendation(r.data.data.recommendation);
+        setSubmissions(sub.data.data.submissions);
+      } catch (err) { console.error('Dashboard load error:', err); }
+      finally { setLoading(false); }
     };
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <LoadingSkeleton lines={2} />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="card"><LoadingSkeleton lines={2} /></div>)}
-        </div>
-        <div className="card"><LoadingSkeleton lines={8} /></div>
-      </div>
-    );
-  }
+  if (loading) return <div className="space-y-4"><LoadingSkeleton lines={2} /><div className="card"><LoadingSkeleton lines={8} /></div></div>;
 
   const user = profile?.user;
-  const masteredCount = skillStates.filter((s) => s.isMastered).length;
+  const masteredCount = skillStates.filter((s) => s.isMastered && (s.attempts || 0) > 0).length;
 
-  // Radar chart data
   const radarData = skillStates.map((ss) => ({
-    skill: ss.skillId?.name?.replace('&', '&\n') || 'Unknown',
-    mastery: Math.round((ss.masteryP || 0) * 100),
+    skill: ss.skillId?.name?.replace(' & ', '\n') || '?',
+    mastery: (ss.attempts || 0) > 0 ? Math.round((ss.masteryP || 0) * 100) : 0,
     fullMark: 100
   }));
 
-  // XP progression from recent submissions
-  const xpData = submissions
-    .slice()
-    .reverse()
-    .map((sub, index) => ({
-      submission: index + 1,
-      xp: sub.xpAwarded || 0
-    }));
+  const xpData = submissions.slice().reverse().map((sub, i) => ({
+    sub: i + 1,
+    xp: sub.xpAwarded || 0
+  }));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
-        <p className="text-muted text-sm mt-1">Here&apos;s your learning progress</p>
+    <div className="space-y-5">
+      <h1 className="text-xl font-semibold tracking-tight">Welcome back, {user?.name?.split(' ')[0]}</h1>
+
+      {/* Stats row — terminal-style thin bordered blocks */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#2A2A4A] rounded-lg overflow-hidden divide-x divide-[#2A2A4A]">
+        <Stat label="Total XP" value={user?.xp || 0} />
+        <Stat label="Level" value={user?.level || 1} />
+        <Stat label="Streak" value={`${user?.streak || 0}d`} />
+        <Stat label="Mastered" value={`${masteredCount}/12`} />
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Zap} label="Total XP" value={user?.xp || 0} color="text-amber-400" />
-        <StatCard icon={Trophy} label="Level" value={user?.level || 1} color="text-primary" />
-        <StatCard icon={Flame} label="Streak" value={`${user?.streak || 0} days`} color="text-orange-400" />
-        <StatCard icon={BookOpen} label="Mastered" value={`${masteredCount}/12`} color="text-accent" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Radar chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Radar */}
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Skill Mastery Radar</h2>
+          <p className="text-sm font-medium text-[#E8E8F0] mb-3">Skill Radar</p>
           {radarData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={280}>
               <RadarChart data={radarData}>
-                <PolarGrid stroke="#374151" />
-                <PolarAngleAxis dataKey="skill" tick={{ fill: '#A0A0B0', fontSize: 11 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#A0A0B0', fontSize: 10 }} />
-                <Radar
-                  name="Mastery"
-                  dataKey="mastery"
-                  stroke="#6C63FF"
-                  fill="#6C63FF"
-                  fillOpacity={0.25}
-                  strokeWidth={2}
-                />
+                <PolarGrid stroke="#2A2A4A" />
+                <PolarAngleAxis dataKey="skill" tick={{ fill: '#8888A0', fontSize: 10 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#555', fontSize: 9 }} />
+                <Radar name="Mastery" dataKey="mastery" stroke="#6C63FF" fill="#6C63FF" fillOpacity={0.1} strokeWidth={2} />
               </RadarChart>
             </ResponsiveContainer>
-          ) : (
-            <p className="text-muted text-sm">No skill data yet</p>
-          )}
+          ) : <p className="text-xs text-[#8888A0]">No data yet</p>}
         </div>
 
-        {/* XP progression */}
+        {/* XP line chart */}
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Recent XP Gains</h2>
+          <p className="text-sm font-medium text-[#E8E8F0] mb-3">Recent XP</p>
           {xpData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={xpData}>
-                <XAxis dataKey="submission" tick={{ fill: '#A0A0B0', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#A0A0B0', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#2A2A3E', border: '1px solid #374151', borderRadius: 8 }}
-                  labelStyle={{ color: '#A0A0B0' }}
-                  itemStyle={{ color: '#6C63FF' }}
-                />
-                <Line type="monotone" dataKey="xp" stroke="#6C63FF" strokeWidth={2} dot={{ fill: '#6C63FF', r: 4 }} />
+                <XAxis dataKey="sub" tick={{ fill: '#8888A0', fontSize: 11 }} />
+                <YAxis tick={{ fill: '#8888A0', fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1A1A2E', border: '1px solid #2A2A4A', borderRadius: 4 }} labelStyle={{ color: '#8888A0' }} itemStyle={{ color: '#6C63FF' }} />
+                <Line type="monotone" dataKey="xp" stroke="#6C63FF" strokeWidth={2} dot={{ fill: '#6C63FF', r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
-          ) : (
-            <p className="text-muted text-sm">Submit solutions to see your progress</p>
-          )}
+          ) : <p className="text-xs text-[#8888A0]">Submit solutions to see progress</p>}
         </div>
       </div>
 
-      {/* Continue Learning + Skills */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recommendation */}
-        {recommendation && (
-          <div className="card border-primary/30">
-            <h2 className="text-lg font-semibold mb-3">Continue Learning</h2>
-            <div className="space-y-2">
-              <p className="text-sm text-muted">Recommended for you:</p>
-              <p className="font-medium text-gray-100">{recommendation.problem?.title || 'Practice more problems'}</p>
-              {recommendation.skill && (
-                <p className="text-xs text-muted">Skill: {recommendation.skill}</p>
-              )}
-              {recommendation.problem && (
-                <Link
-                  to={`/problems/${recommendation.problem._id}`}
-                  className="btn-primary inline-flex items-center gap-2 text-sm mt-3"
-                >
-                  Solve Now <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
-            </div>
+        {recommendation?.problem && (
+          <div className="card border-[#6C63FF]/30">
+            <p className="text-xs font-mono text-[#6C63FF] uppercase tracking-widest mb-2">Recommended</p>
+            <p className="text-sm font-medium text-[#E8E8F0] mb-1">{recommendation.problem.title}</p>
+            {recommendation.skill && <p className="text-xs text-[#8888A0] mb-3">{recommendation.skill}</p>}
+            <Link to={`/problems/${recommendation.problem._id}`} className="btn-primary inline-flex items-center gap-1.5 text-xs">
+              Solve <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
         )}
 
         {/* Skills overview */}
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Skill Overview</h2>
-          <div className="space-y-3">
+          <p className="text-sm font-medium text-[#E8E8F0] mb-3">Skills</p>
+          <div className="space-y-2">
             {skillStates.slice(0, 6).map((ss) => (
-              <SkillBadge
-                key={ss._id}
-                skillName={ss.skillId?.name || 'Unknown'}
-                masteryP={ss.masteryP}
-                isUnlocked={ss.isUnlocked}
-              />
+              <SkillBadge key={ss._id} skillName={ss.skillId?.name || '?'} masteryP={ss.masteryP} isUnlocked={ss.isUnlocked} attempts={ss.attempts || 0} />
             ))}
-            {skillStates.length > 6 && (
-              <Link to="/profile" className="text-sm text-primary hover:underline">
-                View all skills →
-              </Link>
-            )}
+            {skillStates.length > 6 && <Link to="/profile" className="text-xs text-[#6C63FF]">View all →</Link>}
           </div>
         </div>
       </div>
@@ -179,15 +123,10 @@ const Dashboard = () => {
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, color }) => (
-  <div className="card flex items-center gap-4">
-    <div className={`w-10 h-10 rounded-lg bg-surface flex items-center justify-center ${color}`}>
-      <Icon className="w-5 h-5" />
-    </div>
-    <div>
-      <p className="text-xs text-muted">{label}</p>
-      <p className="text-lg font-bold">{value}</p>
-    </div>
+const Stat = ({ label, value }) => (
+  <div className="px-4 py-4 bg-[#1A1A2E]">
+    <p className="font-mono text-2xl font-bold text-white">{value}</p>
+    <p className="text-[10px] text-[#8888A0] uppercase tracking-widest mt-1">{label}</p>
   </div>
 );
 
