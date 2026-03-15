@@ -145,3 +145,159 @@
 2026-03-15 10:36:05 [INFO]: Seeded 3 problems for Graphs
 2026-03-15 10:36:05 [INFO]: Seeded 3 problems for Dynamic Programming
 2026-03-15 10:36:05 [INFO]: Seeded 3 problems for Greedy Algorithms
+2026-03-15 11:56:22 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 11:56:23 [INFO]: MongoDB connected successfully
+2026-03-15 11:56:23 [INFO]: Server running on port 5000 in development mode
+2026-03-15 12:01:25 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 12:01:26 [INFO]: MongoDB connected successfully
+2026-03-15 12:01:26 [INFO]: Server running on port 5000 in development mode
+2026-03-15 12:01:55 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-03-15 12:01:55 [INFO]: [0mPOST /api/auth/login [32m200[0m 176.758 ms - 441[0m
+2026-03-15 12:01:55 [INFO]: Socket connected: _nONQ-FvThOIxI5wAAAB
+2026-03-15 12:01:55 [INFO]: Socket _nONQ-FvThOIxI5wAAAB joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-15 12:01:55 [INFO]: [0mGET /api/submissions/history?limit=10 [32m200[0m 111.711 ms - 107[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 56.087 ms - -[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/users/recommendations [32m200[0m 234.220 ms - 2080[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/users/profile [32m200[0m 428.359 ms - 6476[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/skills/my-states [32m200[0m 443.535 ms - 6375[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/users/recommendations [36m304[0m 212.035 ms - -[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/skills/my-states [36m304[0m 100.513 ms - -[0m
+2026-03-15 12:01:55 [INFO]: [0mGET /api/users/profile [36m304[0m 371.734 ms - -[0m
+2026-03-15 12:02:05 [INFO]: [0mGET /api/skills [32m200[0m 102.037 ms - 4858[0m
+2026-03-15 12:02:05 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 135.019 ms - 23607[0m
+2026-03-15 12:02:05 [INFO]: [0mGET /api/skills [36m304[0m 118.886 ms - -[0m
+2026-03-15 12:02:06 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 204.434 ms - -[0m
+2026-03-15 12:02:09 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 190.674 ms - 1845[0m
+2026-03-15 12:02:09 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 143.697 ms - -[0m
+2026-03-15 12:03:58 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:03:58 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:03:58 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:03:59 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10a9 correct=false xp=0
+2026-03-15 12:03:59 [INFO]: [0mPOST /api/submissions [32m201[0m 3075.593 ms - 3005[0m
+2026-03-15 12:04:40 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:04:40 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:04:40 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:04:41 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10a9 correct=false xp=0
+2026-03-15 12:04:41 [INFO]: [0mPOST /api/submissions [32m201[0m 2277.066 ms - 3004[0m
+2026-03-15 12:04:51 [INFO]: [0mGET /api/skills/my-states [32m200[0m 90.506 ms - 6391[0m
+2026-03-15 12:04:51 [INFO]: [0mGET /api/users/profile [32m200[0m 102.356 ms - 8576[0m
+2026-03-15 12:04:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 185.566 ms - -[0m
+2026-03-15 12:04:51 [INFO]: [0mGET /api/users/recommendations [36m304[0m 285.507 ms - -[0m
+2026-03-15 12:04:51 [INFO]: [0mGET /api/users/profile [36m304[0m 191.232 ms - -[0m
+2026-03-15 12:04:52 [INFO]: [0mGET /api/users/recommendations [36m304[0m 208.922 ms - -[0m
+2026-03-15 12:04:52 [INFO]: [0mGET /api/submissions/history?limit=10 [32m200[0m 691.412 ms - 2169[0m
+2026-03-15 12:04:52 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 101.340 ms - -[0m
+2026-03-15 12:05:16 [INFO]: Socket disconnected: _nONQ-FvThOIxI5wAAAB
+2026-03-15 12:05:17 [INFO]: [0mGET /api/auth/me [32m200[0m 55.008 ms - 357[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/auth/me [36m304[0m 65.789 ms - -[0m
+2026-03-15 12:05:17 [INFO]: Socket connected: mtX0krVGk2UnKbI4AAAE
+2026-03-15 12:05:17 [INFO]: Socket mtX0krVGk2UnKbI4AAAE joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-15 12:05:17 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 98.790 ms - -[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/skills/my-states [36m304[0m 112.679 ms - -[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/users/profile [36m304[0m 119.306 ms - -[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/users/recommendations [36m304[0m 163.045 ms - -[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/skills/my-states [36m304[0m 114.143 ms - -[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 129.965 ms - -[0m
+2026-03-15 12:05:17 [INFO]: [0mGET /api/users/profile [36m304[0m 118.759 ms - -[0m
+2026-03-15 12:05:18 [INFO]: [0mGET /api/users/recommendations [36m304[0m 178.270 ms - -[0m
+2026-03-15 12:05:20 [INFO]: [0mGET /api/skills [36m304[0m 103.053 ms - -[0m
+2026-03-15 12:05:20 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 136.041 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/skills [36m304[0m 159.744 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 177.158 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/skills/my-states [36m304[0m 121.746 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 124.112 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/users/profile [36m304[0m 132.378 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/users/recommendations [36m304[0m 185.140 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 99.681 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/skills/my-states [36m304[0m 118.642 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/users/profile [36m304[0m 114.709 ms - -[0m
+2026-03-15 12:05:21 [INFO]: [0mGET /api/users/recommendations [36m304[0m 169.014 ms - -[0m
+2026-03-15 12:05:24 [INFO]: [0mGET /api/skills [36m304[0m 103.254 ms - -[0m
+2026-03-15 12:05:24 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 174.706 ms - -[0m
+2026-03-15 12:05:25 [INFO]: [0mGET /api/skills [36m304[0m 123.889 ms - -[0m
+2026-03-15 12:05:25 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 138.944 ms - -[0m
+2026-03-15 12:05:31 [INFO]: [0mGET /api/skills/my-states [36m304[0m 101.518 ms - -[0m
+2026-03-15 12:05:31 [INFO]: [0mGET /api/users/recommendations [36m304[0m 167.626 ms - -[0m
+2026-03-15 12:05:31 [INFO]: [0mGET /api/skills/my-states [36m304[0m 121.099 ms - -[0m
+2026-03-15 12:05:31 [INFO]: [0mGET /api/users/recommendations [36m304[0m 176.395 ms - -[0m
+2026-03-15 12:05:40 [INFO]: Socket connected: SwfkLYkfq83IBb8iAAAG
+2026-03-15 12:05:40 [INFO]: Socket SwfkLYkfq83IBb8iAAAG joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-15 12:05:43 [INFO]: Socket disconnected: SwfkLYkfq83IBb8iAAAG
+2026-03-15 12:05:43 [INFO]: [0mGET /api/users/profile [36m304[0m 125.005 ms - -[0m
+2026-03-15 12:05:43 [INFO]: [0mGET /api/submissions/history?limit=20 [32m200[0m 138.888 ms - 2169[0m
+2026-03-15 12:05:44 [INFO]: [0mGET /api/submissions/history?limit=20 [36m304[0m 81.471 ms - -[0m
+2026-03-15 12:05:44 [INFO]: [0mGET /api/users/profile [36m304[0m 135.246 ms - -[0m
+2026-03-15 12:05:44 [INFO]: Socket connected: TUfN0bR434WrKqIbAAAI
+2026-03-15 12:05:44 [INFO]: Socket TUfN0bR434WrKqIbAAAI joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-15 12:05:50 [INFO]: Socket disconnected: TUfN0bR434WrKqIbAAAI
+2026-03-15 12:05:50 [INFO]: [0mGET /api/submissions/history?limit=20 [36m304[0m 98.313 ms - -[0m
+2026-03-15 12:05:50 [INFO]: [0mGET /api/users/profile [36m304[0m 102.525 ms - -[0m
+2026-03-15 12:05:50 [INFO]: [0mGET /api/submissions/history?limit=20 [36m304[0m 94.227 ms - -[0m
+2026-03-15 12:05:50 [INFO]: [0mGET /api/users/profile [36m304[0m 139.062 ms - -[0m
+2026-03-15 12:05:50 [ERROR]: Redis connection failed {"error":"Connection is closed."}
+2026-03-15 12:06:10 [ERROR]: Redis connection failed {"error":"Connection is closed."}
+2026-03-15 12:06:21 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:30 [INFO]: [0mGET /api/skills [36m304[0m 190.879 ms - -[0m
+2026-03-15 12:06:30 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 194.172 ms - -[0m
+2026-03-15 12:06:30 [INFO]: [0mGET /api/skills [36m304[0m 151.534 ms - -[0m
+2026-03-15 12:06:31 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 193.731 ms - -[0m
+2026-03-15 12:06:36 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 549.588 ms - 1845[0m
+2026-03-15 12:06:37 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 199.575 ms - -[0m
+2026-03-15 12:06:41 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:41 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:41 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:48 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:06:48 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:06:48 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:06:49 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10a9 correct=false xp=0
+2026-03-15 12:06:49 [INFO]: [0mPOST /api/submissions [32m201[0m 2991.835 ms - 3005[0m
+2026-03-15 12:07:02 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:02 [INFO]: [0mGET /api/leaderboard [32m200[0m 81663.220 ms - 163[0m
+2026-03-15 12:07:22 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:22 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:22 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:22 [INFO]: [0mGET /api/leaderboard [32m200[0m 81936.737 ms - 163[0m
+2026-03-15 12:07:22 [INFO]: [0mGET /api/leaderboard [32m200[0m 78171.788 ms - 163[0m
+2026-03-15 12:07:22 [INFO]: [0mGET /api/leaderboard [32m200[0m 78171.592 ms - 163[0m
+2026-03-15 12:09:55 [INFO]: Socket disconnected: mtX0krVGk2UnKbI4AAAE
+2026-03-15 12:18:18 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 12:18:20 [INFO]: MongoDB connected successfully
+2026-03-15 12:18:20 [INFO]: Server running on port 5000 in development mode
+2026-03-15 12:18:33 [INFO]: [0mGET /api/auth/me [32m200[0m 118.116 ms - 357[0m
+2026-03-15 12:18:33 [INFO]: [0mGET /api/auth/me [36m304[0m 105.904 ms - -[0m
+2026-03-15 12:18:34 [INFO]: Socket connected: oMin1sr714IE2sjJAAAD
+2026-03-15 12:18:34 [INFO]: Socket oMin1sr714IE2sjJAAAD joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-15 12:18:34 [INFO]: [0mGET /api/users/recommendations [36m304[0m 286.679 ms - -[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/submissions/history?limit=10 [32m200[0m 285.625 ms - 3402[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 136.912 ms - -[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/users/recommendations [36m304[0m 302.642 ms - -[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/users/profile [32m200[0m 702.647 ms - 9809[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/skills/my-states [32m200[0m 704.190 ms - 6391[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/users/profile [36m304[0m 154.340 ms - -[0m
+2026-03-15 12:18:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 194.667 ms - -[0m
+2026-03-15 12:18:36 [INFO]: Socket disconnected: oMin1sr714IE2sjJAAAD
+2026-03-15 12:18:49 [INFO]: [0mGET /api/auth/me [36m304[0m 103.147 ms - -[0m
+2026-03-15 12:18:49 [INFO]: [0mGET /api/auth/me [36m304[0m 109.587 ms - -[0m
+2026-03-15 12:18:49 [INFO]: Socket connected: mjO1jZlMxwxbRv-SAAAG
+2026-03-15 12:18:49 [INFO]: Socket mjO1jZlMxwxbRv-SAAAG joined room user:69b55b4c2a4ff06cb7d760fa
+2026-03-15 12:18:49 [INFO]: [0mGET /api/skills/my-states [36m304[0m 188.280 ms - -[0m
+2026-03-15 12:18:49 [INFO]: [0mGET /api/users/profile [36m304[0m 210.524 ms - -[0m
+2026-03-15 12:18:50 [INFO]: [0mGET /api/skills/my-states [36m304[0m 229.352 ms - -[0m
+2026-03-15 12:18:50 [INFO]: [0mGET /api/users/profile [36m304[0m 225.701 ms - -[0m
+2026-03-15 12:18:50 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 689.066 ms - -[0m
+2026-03-15 12:18:50 [INFO]: [0mGET /api/users/recommendations [36m304[0m 816.655 ms - -[0m
+2026-03-15 12:18:50 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 229.496 ms - -[0m
+2026-03-15 12:18:50 [INFO]: [0mGET /api/users/recommendations [36m304[0m 330.254 ms - -[0m
+2026-03-15 12:20:08 [INFO]: Socket disconnected: mjO1jZlMxwxbRv-SAAAG
+2026-03-15 12:26:40 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 12:26:42 [INFO]: MongoDB connected successfully
+2026-03-15 12:26:42 [INFO]: Server running on port 5000 in development mode
+2026-03-15 13:04:09 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 13:04:11 [INFO]: MongoDB connected successfully
+2026-03-15 13:04:11 [INFO]: Server running on port 5000 in development mode
+2026-03-15 13:46:18 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 13:46:19 [INFO]: MongoDB connected successfully
+2026-03-15 13:46:19 [INFO]: Server running on port 5000 in development mode
+2026-03-15 14:01:54 [INFO]: MongoDB connection attempt 1/3
+2026-03-15 14:01:55 [INFO]: MongoDB connected successfully
+2026-03-15 14:01:55 [INFO]: Server running on port 5000 in development mode

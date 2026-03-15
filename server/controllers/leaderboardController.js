@@ -2,6 +2,7 @@
  * Leaderboard Controller
  *
  * Provides global leaderboard with Redis caching and per-user rank insertion.
+ * If Redis is unavailable or throws, silently falls back to MongoDB.
  *
  * @module leaderboardController
  */
@@ -13,38 +14,58 @@ const { sendSuccess } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
 let redis = null;
+let redisReady = false;
 
 /**
  * Gets the Redis client, creating it lazily to handle environments without Redis.
+ * Tracks connection readiness so callers don't attempt operations on a broken client.
  *
  * @returns {object|null} Redis client instance or null if unavailable
  */
 const getRedisClient = () => {
-  if (redis) return redis;
+  if (redis && redisReady) return redis;
+  if (redis) return null; // connection pending or failed
 
   try {
     if (process.env.REDIS_URL) {
       redis = new Redis(process.env.REDIS_URL, {
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: 1,
+        connectTimeout: 5000,
         lazyConnect: true
       });
+
+      redis.on('ready', () => {
+        redisReady = true;
+        logger.info('Redis connected for leaderboard cache');
+      });
+
+      redis.on('error', (err) => {
+        logger.warn('Redis error — leaderboard will use MongoDB fallback', { error: err.message });
+        redisReady = false;
+      });
+
+      redis.on('close', () => {
+        redisReady = false;
+      });
+
       redis.connect().catch((err) => {
-        logger.error('Redis connection failed', { error: err.message });
-        redis = null;
+        logger.warn('Redis connect failed — using MongoDB fallback', { error: err.message });
+        redisReady = false;
       });
     }
   } catch (error) {
-    logger.error('Redis initialization error', { error: error.message });
+    logger.warn('Redis initialization failed — using MongoDB fallback', { error: error.message });
     redis = null;
+    redisReady = false;
   }
 
-  return redis;
+  return null; // not ready on first call — will be ready on subsequent calls
 };
 
 /**
  * @desc    Get the global leaderboard (top 50 users by XP).
- *          Checks Redis cache first (60s TTL). If cache miss, queries MongoDB,
- *          counts mastered skills per user, and caches the result.
+ *          Checks Redis cache first (60s TTL). If cache miss or Redis unavailable,
+ *          queries MongoDB, counts mastered skills, and caches the result.
  *          Always appends the requesting user's own rank if not already in top 50.
  * @route   GET /api/leaderboard
  * @access  Protected
@@ -58,7 +79,7 @@ const getLeaderboard = async (req, res, next) => {
     const cacheKey = 'leaderboard:top50';
     const redisClient = getRedisClient();
 
-    // Check Redis cache first
+    // ─── Try Redis cache ───
     if (redisClient) {
       try {
         const cachedData = await redisClient.get(cacheKey);
@@ -71,22 +92,27 @@ const getLeaderboard = async (req, res, next) => {
             if (userRank) {
               leaderboard.push(userRank);
             }
+          } else {
+            userInTop.isCurrentUser = true;
           }
 
           return sendSuccess(res, { leaderboard, cached: true });
         }
       } catch (cacheError) {
-        logger.error('Redis cache read error', { error: cacheError.message });
+        logger.warn('Redis cache read failed — falling back to MongoDB', {
+          error: cacheError.message
+        });
+        // Fall through to MongoDB query below
       }
     }
 
-    // Cache miss — query MongoDB
+    // ─── MongoDB fallback ───
     const topUsers = await User.find({})
       .select('-passwordHash')
       .sort({ xp: -1 })
       .limit(50);
 
-    // Count mastered skills for each user
+    // Build leaderboard even if only 1 user exists
     const leaderboard = await Promise.all(
       topUsers.map(async (user, index) => {
         const masteredCount = await SkillState.countDocuments({
@@ -100,17 +126,20 @@ const getLeaderboard = async (req, res, next) => {
           name: user.name,
           level: user.level,
           xp: user.xp,
-          skillsMastered: masteredCount
+          skillsMastered: masteredCount,
+          isCurrentUser: user._id.toString() === userId
         };
       })
     );
 
-    // Cache in Redis with 60 second TTL
+    // ─── Try to cache the result ───
     if (redisClient) {
       try {
         await redisClient.set(cacheKey, JSON.stringify(leaderboard), 'EX', 60);
       } catch (cacheError) {
-        logger.error('Redis cache write error', { error: cacheError.message });
+        logger.warn('Redis cache write failed — result not cached', {
+          error: cacheError.message
+        });
       }
     }
 

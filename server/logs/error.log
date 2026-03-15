@@ -1,0 +1,19 @@
+2026-03-15 12:03:58 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:03:58 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:03:58 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:04:40 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:04:40 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:04:40 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:05:50 [ERROR]: Redis connection failed {"error":"Connection is closed."}
+2026-03-15 12:06:10 [ERROR]: Redis connection failed {"error":"Connection is closed."}
+2026-03-15 12:06:21 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:41 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:41 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:41 [ERROR]: Redis cache read error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:06:48 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:06:48 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:06:48 [ERROR]: Code execution failed {"error":"Request failed with status code 401","language":"java"}
+2026-03-15 12:07:02 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:22 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:22 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}
+2026-03-15 12:07:22 [ERROR]: Redis cache write error {"error":"Reached the max retries per request limit (which is 3). Refer to \"maxRetriesPerRequest\" option for details."}

@@ -10,6 +10,7 @@ import ProblemWorkspace from './pages/ProblemWorkspace';
 import RecommendationsPage from './pages/RecommendationsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -24,7 +25,7 @@ const App = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={
-          <PublicRoute><LandingPage /></PublicRoute>
+          <PublicRoute><ErrorBoundary><LandingPage /></ErrorBoundary></PublicRoute>
         } />
         <Route path="/login" element={
           <PublicRoute><AuthPage /></PublicRoute>
