@@ -65,7 +65,12 @@ const ProblemWorkspace = () => {
       const r = await submissionsService.createSubmission({ problemId: id, code, hintsUsed, language });
       setResult(r.data.data);
     } catch (e) { setResult({ error: e.response?.data?.message || 'Submission failed.' }); }
-    finally { setSubmitting(false); }
+    finally {
+      setSubmitting(false);
+      setTimeout(() => {
+        document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   if (loading) return <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 h-[calc(100vh-100px)]"><div className="card"><LoadingSkeleton lines={10} /></div><div className="card"><LoadingSkeleton lines={10} /></div></div>;
@@ -123,7 +128,7 @@ const ProblemWorkspace = () => {
 
         {/* Results */}
         {result && !result.error && (
-          <div className="card bg-[#0F0F1A] font-mono space-y-3">
+          <div id="result-section" className="card bg-[#0F0F1A] font-mono space-y-3">
             <p className="text-xs text-[#8888A0] uppercase tracking-widest">Result</p>
             <div className={`flex items-center gap-2 p-2.5 rounded border ${result.submission?.isCorrect ? 'border-[#00D4AA]/30 bg-[#00D4AA]/5' : 'border-[#FF4757]/30 bg-[#FF4757]/5'}`}>
               <span className={`text-lg ${result.submission?.isCorrect ? 'text-[#00D4AA]' : 'text-[#FF4757]'}`}>
@@ -134,6 +139,29 @@ const ProblemWorkspace = () => {
                 <p className="text-[10px] text-[#8888A0]">{result.submission?.passedTestCases}/{result.submission?.totalTestCases} test cases</p>
               </div>
             </div>
+
+            {/* Per-test-case details */}
+            {result.testResults?.results?.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-[#8888A0] uppercase tracking-widest">Test Case Details</p>
+                {result.testResults.results.map((tc, i) => (
+                  <div key={i} className={`rounded border p-2 text-xs ${tc.passed ? 'border-[#00D4AA]/20 bg-[#00D4AA]/5' : 'border-[#FF4757]/20 bg-[#FF4757]/5'}`}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[#8888A0]">Test {i + 1}</span>
+                      <span className={tc.passed ? 'text-[#00D4AA]' : 'text-[#FF4757]'}>
+                        {tc.passed ? '✓ Pass' : '✗ Fail'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-[11px]">
+                      <p><span className="text-[#8888A0]">Input: </span><span className="text-[#E8E8F0]">{tc.input || '(none)'}</span></p>
+                      <p><span className="text-[#8888A0]">Expected: </span><span className="text-[#E8E8F0]">{tc.expectedOutput}</span></p>
+                      <p><span className="text-[#8888A0]">Actual: </span><span className={tc.passed ? 'text-[#00D4AA]' : 'text-[#FF4757]'}>{tc.actualOutput || '(empty)'}</span></p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <p className="text-xl font-bold text-[#00D4AA]">+{result.xpEarned || 0} XP</p>
             <p className="text-xs text-[#8888A0]">Mastery: <span className="text-[#6C63FF]">{Math.round((result.newMastery || 0) * 100)}%</span> · Level {result.newLevel} · Streak {result.newStreak}d</p>
             {result.astFeedback?.algorithmClass && result.astFeedback.algorithmClass !== 'n/a' && (
@@ -147,7 +175,7 @@ const ProblemWorkspace = () => {
             )}
           </div>
         )}
-        {result?.error && <div className="card bg-[#FF4757]/5 border-[#FF4757]/30"><p className="text-xs text-[#FF4757]">{result.error}</p></div>}
+        {result?.error && <div id="result-section" className="card bg-[#FF4757]/5 border-[#FF4757]/30"><p className="text-xs text-[#FF4757]">{result.error}</p></div>}
       </div>
 
       {/* RIGHT — Editor */}

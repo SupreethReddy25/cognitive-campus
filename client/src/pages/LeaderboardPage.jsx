@@ -9,17 +9,36 @@ const LeaderboardPage = () => {
   const { lastLeaderboardSignal } = useSocket();
   const [lb, setLb] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const fetch = useCallback(async () => {
-    try { const r = await leaderboardService.getLeaderboard(); setLb(r.data.data.leaderboard); }
-    catch (e) { console.error(e); }
-    finally { setLoading(false); }
+  const fetchData = useCallback(async () => {
+    try {
+      setError('');
+      const r = await leaderboardService.getLeaderboard();
+      setLb(r.data.data.leaderboard);
+    } catch (e) {
+      setError('Unable to load leaderboard. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
-  useEffect(() => { if (lastLeaderboardSignal > 0) fetch(); }, [lastLeaderboardSignal, fetch]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { if (lastLeaderboardSignal > 0) fetchData(); }, [lastLeaderboardSignal, fetchData]);
 
   if (loading) return <div className="card"><LoadingSkeleton lines={12} /></div>;
+
+  if (error) return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold tracking-tight">Leaderboard</h1>
+      <div className="card bg-[#FF4757]/5 border border-[#FF4757]/30 text-center py-10">
+        <p className="text-sm text-[#FF4757] mb-3">{error}</p>
+        <button onClick={() => { setLoading(true); fetchData(); }} className="btn-primary text-xs px-4 py-1.5">
+          Retry
+        </button>
+      </div>
+    </div>
+  );
 
   const rankBorder = { 1: 'border-l-amber-400', 2: 'border-l-gray-400', 3: 'border-l-amber-700' };
 

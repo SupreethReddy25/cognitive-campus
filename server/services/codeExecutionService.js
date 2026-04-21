@@ -15,7 +15,7 @@ const PISTON_URL = process.env.CODE_EXECUTION_API_URL;
 const SUPPORTED_LANGUAGES = {
   javascript: { pistonName: 'javascript', version: '18.15.0', monacoLang: 'javascript', extension: 'solution.js' },
   python:     { pistonName: 'python',     version: '3.10.0',  monacoLang: 'python',     extension: 'solution.py' },
-  java:       { pistonName: 'java',       version: '15.0.2',  monacoLang: 'java',       extension: 'Solution.java' },
+  java:       { pistonName: 'java',       version: '15.0.2',  monacoLang: 'java',       extension: 'Main.java' },
   cpp:        { pistonName: 'c++',        version: '10.2.0',  monacoLang: 'cpp',        extension: 'solution.cpp' }
 };
 
@@ -72,7 +72,8 @@ const runTestCases = async (code, testCases, language = 'javascript') => {
   const results = [];
   let passedCount = 0;
 
-  for (const testCase of testCases) {
+  for (let idx = 0; idx < testCases.length; idx++) {
+    const testCase = testCases[idx];
     try {
       const startTime = Date.now();
       const executionResult = await executeCode(code, testCase.input || '', language);
@@ -84,6 +85,15 @@ const runTestCases = async (code, testCases, language = 'javascript') => {
 
       if (passed) passedCount++;
 
+      logger.debug(`Test case ${idx + 1}/${testCases.length}: ${passed ? 'PASS' : 'FAIL'}`, {
+        language,
+        input: (testCase.input || '').substring(0, 100),
+        expected: expectedOutput.substring(0, 100),
+        actual: actualOutput.substring(0, 100),
+        stderr: executionResult.stderr ? executionResult.stderr.substring(0, 200) : '',
+        executionTime
+      });
+
       results.push({
         input: testCase.input || '',
         expectedOutput,
@@ -92,7 +102,7 @@ const runTestCases = async (code, testCases, language = 'javascript') => {
         executionTime
       });
     } catch (error) {
-      logger.error('Test case execution error', { error: error.message });
+      logger.error(`Test case ${idx + 1}/${testCases.length} execution error`, { error: error.message });
       results.push({
         input: testCase.input || '',
         expectedOutput: (testCase.expectedOutput || '').trim(),
@@ -102,6 +112,8 @@ const runTestCases = async (code, testCases, language = 'javascript') => {
       });
     }
   }
+
+  logger.info(`Test run complete: ${passedCount}/${testCases.length} passed (${language})`);
 
   return {
     passed: passedCount,
