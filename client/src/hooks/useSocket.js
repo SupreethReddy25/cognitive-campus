@@ -13,8 +13,10 @@ const useSocket = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socket = io('/', {
-      transports: ['websocket', 'polling']
+    const BACKEND_URL = 'http://127.0.0.1:5000';
+    const socket = io(BACKEND_URL, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true
     });
     socketRef.current = socket;
 

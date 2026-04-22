@@ -11,6 +11,7 @@ const Problem = require('../models/Problem');
 const Submission = require('../models/Submission');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
+const aiMentorService = require('../services/aiMentorService');
 
 /**
  * @desc    Get paginated list of active problems with optional filters
@@ -106,4 +107,34 @@ const getProblemById = async (req, res, next) => {
   }
 };
 
-module.exports = { getProblems, getProblemById };
+/**
+ * @desc    Get an AI-generated mentoring nudge for the user's code
+ * @route   POST /api/problems/:id/nudge
+ * @access  Protected
+ */
+const getAiNudge = async (req, res, next) => {
+  try {
+    const problemId = req.params.id;
+    const { code, language, nudgeDepth, lastError } = req.body;
+
+    if (!code) return sendError(res, 'Code is required to generate a nudge', 400);
+
+    const problem = await Problem.findById(problemId);
+    if (!problem) return sendError(res, 'Problem not found', 404);
+
+    const nudge = await aiMentorService.getMentorNudge(
+      req.user.userId,
+      problem,
+      code,
+      language || 'javascript',
+      nudgeDepth || 1,
+      lastError || null
+    );
+
+    return sendSuccess(res, { nudge });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getProblems, getProblemById, getAiNudge };

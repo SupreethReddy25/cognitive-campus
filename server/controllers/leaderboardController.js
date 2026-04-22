@@ -31,7 +31,8 @@ const getRedisClient = () => {
       redis = new Redis(process.env.REDIS_URL, {
         maxRetriesPerRequest: 1,
         connectTimeout: 5000,
-        lazyConnect: true
+        lazyConnect: true,
+        retryStrategy: () => null // Disables infinite reconnect spam
       });
 
       redis.on('ready', () => {
@@ -39,8 +40,12 @@ const getRedisClient = () => {
         logger.info('Redis connected for leaderboard cache');
       });
 
+      let errorLogged = false;
       redis.on('error', (err) => {
-        logger.warn('Redis error — leaderboard will use MongoDB fallback', { error: err.message });
+        if (!errorLogged) {
+          logger.warn('Redis error — leaderboard will use MongoDB fallback', { error: err.message });
+          errorLogged = true;
+        }
         redisReady = false;
       });
 
@@ -49,7 +54,10 @@ const getRedisClient = () => {
       });
 
       redis.connect().catch((err) => {
-        logger.warn('Redis connect failed — using MongoDB fallback', { error: err.message });
+        if (!errorLogged) {
+          logger.warn('Redis connect failed — using MongoDB fallback', { error: err.message });
+          errorLogged = true;
+        }
         redisReady = false;
       });
     }

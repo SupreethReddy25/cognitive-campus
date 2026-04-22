@@ -9,6 +9,7 @@
     "test": "jest --coverage"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "acorn": "^8.14.1",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
@@ -19,6 +20,7 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.2",
+    "java-parser": "^3.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",

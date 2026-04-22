@@ -6,7 +6,8 @@ import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import ProblemsPage from './pages/ProblemsPage';
-import ProblemWorkspace from './pages/ProblemWorkspace';
+// Changed to the new WorkspaceV2 entry
+import { WorkspaceShell as ProblemWorkspaceV2 } from './pages/WorkspaceV2/components/workspace/workspace-shell';
 import RecommendationsPage from './pages/RecommendationsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
@@ -34,13 +35,19 @@ const App = () => {
           <PublicRoute><AuthPage /></PublicRoute>
         } />
 
+        {/* Protected Standalone routes without nested Layout sidebars */}
+        <Route path="/problems/:id" element={
+          <ProtectedRoute>
+            <ProblemWorkspaceV2 />
+          </ProtectedRoute>
+        } />
+
         {/* Protected routes with Layout shell */}
         <Route element={
           <ProtectedRoute><Layout /></ProtectedRoute>
         }>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/problems" element={<ProblemsPage />} />
-          <Route path="/problems/:id" element={<ProblemWorkspace />} />
           <Route path="/recommendations" element={<RecommendationsPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />

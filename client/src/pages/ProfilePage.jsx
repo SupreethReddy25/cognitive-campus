@@ -3,12 +3,15 @@ import { usersService, submissionsService } from '../services/api';
 import SkillBadge from '../components/SkillBadge';
 import DifficultyBadge from '../components/DifficultyBadge';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Key, Lock, Loader2 } from 'lucide-react';
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [savingKey, setSavingKey] = useState(false);
+  const [keyMessage, setKeyMessage] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -16,13 +19,27 @@ const ProfilePage = () => {
         const [p, s] = await Promise.all([usersService.getProfile(), submissionsService.getHistory({ limit: 20 })]);
         setProfile(p.data.data);
         setSubs(s.data.data.submissions);
-      } catch (e) { console.error(e); }
+      } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
     load();
   }, []);
 
-  if (loading) return <div className="space-y-4"><div className="card"><LoadingSkeleton lines={4} /></div><div className="card"><LoadingSkeleton lines={8} /></div></div>;
+  const handleSaveKey = async () => {
+    setSavingKey(true);
+    try {
+      await usersService.configGeminiKey(apiKeyInput);
+      setKeyMessage(apiKeyInput.trim() ? "Key saved & encrypted securely!" : "Key removed successfully.");
+      setApiKeyInput('');
+    } catch (err) {
+      setKeyMessage("Failed to save API key.");
+    } finally {
+      setSavingKey(false);
+      setTimeout(() => setKeyMessage(''), 3000);
+    }
+  };
+
+  if (loading) return <div className="space-y-4"><LoadingSkeleton lines={2} /><div className="card"><LoadingSkeleton lines={10} /></div></div>;
 
   const user = profile?.user;
   const skillStates = profile?.skillStates || [];
@@ -90,6 +107,45 @@ const ProfilePage = () => {
             ))}
           </div>
         ) : <p className="text-sm text-[#8888A0] text-center py-6">No submissions yet.</p>}
+      </div>
+
+      {/* Developer Settings (BYOK Vault) */}
+      <div className="card border border-[#6C63FF]/30 space-y-4 pt-5 pb-5">
+        <div className="flex items-center justify-between border-b border-[#2A2A4A] pb-3">
+          <p className="text-sm font-medium text-[#E8E8F0] flex items-center gap-2">
+            <Key className="w-4 h-4 text-[#6C63FF]" /> Developer Settings
+          </p>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#00D4AA]/10 border border-[#00D4AA]/30 rounded text-[#00D4AA]">
+            <Lock className="w-3 h-3" />
+            <span className="text-[10px] uppercase tracking-wider font-semibold">BYOK Vault</span>
+          </div>
+        </div>
+        
+        <div>
+          <p className="text-xs text-[#8888A0] mb-3 leading-relaxed">
+            By default, you have a strict limit of 5 AI nudges per day. Paste your own Gemini API key here to bypass quotas and get <strong>unlimited</strong> AI coaching. Your key is natively encrypted with AES-256-GCM before it ever touches the database.
+          </p>
+          
+          <div className="flex gap-2">
+            <input 
+              type="password" 
+              placeholder="Paste custom Gemini API key (or leave empty to clear)" 
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              className="flex-1 bg-[#0F0F1A] border border-[#2A2A4A] rounded-lg px-3 py-2 text-sm text-[#E8E8F0] placeholder:text-[#8888A0] focus:outline-none focus:border-[#6C63FF]"
+            />
+            <button 
+              onClick={handleSaveKey} 
+              disabled={savingKey}
+              className="btn-primary min-w-[100px] flex items-center justify-center gap-2"
+            >
+              {savingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Config"}
+            </button>
+          </div>
+          {keyMessage && (
+            <p className="text-xs mt-2 text-[#00D4AA]">{keyMessage}</p>
+          )}
+        </div>
       </div>
     </div>
   );

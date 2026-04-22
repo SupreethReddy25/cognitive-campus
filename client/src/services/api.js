@@ -43,16 +43,18 @@ export const skillsService = {
   getMySkillStates: () => api.get('/skills/my-states')
 };
 
-// ─── Problems ───
 export const problemsService = {
   getProblems: (params = {}) => api.get('/problems', { params }),
-  getProblemById: (id) => api.get(`/problems/${id}`)
+  getProblemById: (id) => api.get(`/problems/${id}`),
+  getAiNudge: (id, code, language, nudgeDepth = 1, lastError = null) => api.post(`/problems/${id}/nudge`, { code, language, nudgeDepth, lastError })
 };
 
 // ─── Submissions ───
 export const submissionsService = {
   createSubmission: (data) => api.post('/submissions', data),
-  getHistory: (params = {}) => api.get('/submissions/history', { params })
+  getHistory: (params = {}) => api.get('/submissions/history', { params }),
+  runCode: (data) => api.post('/submissions/run', data),
+  getRecentSubmissions: (problemId) => api.get(`/submissions/recent/${problemId}`)
 };
 
 // ─── Leaderboard ───
@@ -60,10 +62,10 @@ export const leaderboardService = {
   getLeaderboard: () => api.get('/leaderboard')
 };
 
-// ─── Users ───
 export const usersService = {
   getProfile: () => api.get('/users/profile'),
-  getRecommendations: () => api.get('/users/recommendations')
+  getRecommendations: () => api.get('/users/recommendations'),
+  configGeminiKey: (apiKey) => api.post('/users/config-key', { apiKey })
 };
 
 export default api;

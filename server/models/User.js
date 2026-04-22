@@ -39,6 +39,26 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    dailyNudgesUsed: {
+      type: Number,
+      default: 0
+    },
+    lastNudgeDate: {
+      type: Date,
+      default: Date.now
+    },
+    encryptedGeminiKey: {
+      type: String,
+      default: null
+    },
+    keyIv: {
+      type: String,
+      default: null
+    },
+    keyAuthTag: {
+      type: String,
+      default: null
+    },
     role: {
       type: String,
       enum: ['student', 'admin'],

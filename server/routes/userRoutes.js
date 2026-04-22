@@ -8,6 +8,9 @@ const router = express.Router();
 router.get('/profile', authenticateToken, getProfile);
 
 // GET /api/users/recommendations — Get personalised problem recommendation
-router.get('/recommendations', authenticateToken, getRecommendations);
+router.get('/recommendations', authenticateToken, require('../controllers/userController').getRecommendations);
+
+// POST /api/users/config-key — Securely encrypt and store BYOK Gemini key
+router.post('/config-key', authenticateToken, require('../controllers/userController').configGeminiKey);
 
 module.exports = router;

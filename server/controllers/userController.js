@@ -71,4 +71,41 @@ const getRecommendations = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, getRecommendations };
+/**
+ * @desc    Configure and securely encrypt the user's BYOK Gemini API key
+ * @route   POST /api/users/config-key
+ * @access  Protected
+ */
+const configGeminiKey = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { apiKey } = req.body;
+
+    const User = require('../models/User');
+    const encryptionService = require('../services/encryptionService');
+
+    const user = await User.findById(userId);
+    if (!user) return sendError(res, 'User not found', 404);
+
+    if (!apiKey || apiKey.trim() === '') {
+      user.encryptedGeminiKey = null;
+      user.keyIv = null;
+      user.keyAuthTag = null;
+      await user.save();
+      return sendSuccess(res, { message: 'API key wiped successfully.' });
+    }
+
+    const { encryptedData, iv, authTag } = encryptionService.encryptKey(apiKey.trim());
+    
+    user.encryptedGeminiKey = encryptedData;
+    user.keyIv = iv;
+    user.keyAuthTag = authTag;
+    await user.save();
+
+    return sendSuccess(res, { message: 'API key encrypted and stored securely.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getProfile, getRecommendations, configGeminiKey };

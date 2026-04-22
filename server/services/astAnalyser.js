@@ -12,6 +12,12 @@
  */
 
 const acorn = require('acorn');
+let javaParser;
+try {
+  javaParser = require('java-parser');
+} catch (e) {
+  console.warn('java-parser not installed. Java AST analysis disabled.');
+}
 
 /**
  * Creates a default result object with all fields initialized.
@@ -137,11 +143,15 @@ const classifyAlgorithm = (hasRecursion, loopTypes, nestingDepth, auxiliaryStruc
  * @returns {object} Analysis result
  */
 const analyseCode = (codeString, language = 'javascript') => {
-  // AST analysis only works for JavaScript (Acorn.js)
+  if (language === 'java' && javaParser) {
+    return analyseJavaAST(codeString);
+  }
+
+  // AST analysis only works for JavaScript and Java
   if (language !== 'javascript') {
     return {
       ...createDefaultResult(false),
-      note: 'AST analysis available for JavaScript only',
+      note: 'AST analysis available for JavaScript and Java only',
       algorithmClass: 'n/a'
     };
   }
@@ -271,6 +281,82 @@ const analyseCode = (codeString, language = 'javascript') => {
     result.antiPatternDescription =
       'O(n²) or worse nesting detected. Consider using a hash map to reduce to O(n).';
   }
+
+  return result;
+};
+
+/**
+ * Analyses Java source code using Chevrotain-based java-parser CST.
+ */
+const analyseJavaAST = (codeString) => {
+  const result = createDefaultResult(false);
+  let cst;
+  try {
+    cst = javaParser.parse(codeString);
+  } catch (err) {
+    return createDefaultResult(true);
+  }
+
+  const loopTypeSet = new Set();
+  const auxStructSet = new Set();
+  let currentLoopDepth = 0;
+  let maxLoopDepth = 0;
+
+  const walkJavaCST = (node, insideLoop) => {
+    if (!node || typeof node !== 'object') return;
+
+    let isLoopNode = false;
+    if (node.name === 'forStatement' || node.name === 'enhancedForStatement') {
+      loopTypeSet.add('for');
+      isLoopNode = true;
+    } else if (node.name === 'whileStatement') {
+      loopTypeSet.add('while');
+      isLoopNode = true;
+    } else if (node.name === 'doStatement') {
+      loopTypeSet.add('doWhile');
+      isLoopNode = true;
+    }
+
+    if (isLoopNode) {
+      currentLoopDepth++;
+      maxLoopDepth = Math.max(maxLoopDepth, currentLoopDepth);
+    }
+
+    if (insideLoop || isLoopNode) {
+      if (node.name === 'classInstanceCreationExpression') {
+        auxStructSet.add('object');
+      }
+    }
+
+    if (node.name === 'methodInvocation') {
+      result.hasRecursion = true;
+    }
+
+    if (node.children) {
+      for (const key of Object.keys(node.children)) {
+        const childArray = node.children[key];
+        if (Array.isArray(childArray)) {
+          childArray.forEach(child => walkJavaCST(child, insideLoop || isLoopNode));
+        }
+      }
+    }
+
+    if (isLoopNode) {
+      currentLoopDepth--;
+    }
+  };
+
+  walkJavaCST(cst, false);
+
+  result.loopTypes = [...loopTypeSet];
+  result.nestingDepth = maxLoopDepth;
+  result.auxiliaryStructures = [...auxStructSet];
+  result.algorithmClass = classifyAlgorithm(
+    result.hasRecursion,
+    result.loopTypes,
+    result.nestingDepth,
+    result.auxiliaryStructures
+  );
 
   return result;
 };

@@ -90,7 +90,7 @@ const createSubmission = async (req, res, next) => {
     const skillId = problem.skillId;
 
     // ─── Step 3: Run test cases ───
-    const testResults = await codeExecutionService.runTestCases(code, problem.testCases, language);
+    const testResults = await codeExecutionService.runTestCases(code, problem.testCases, language, problem);
 
     // ─── Step 4: Analyse code structure ───
     const astResult = astAnalyser.analyseCode(code, language);
@@ -107,8 +107,12 @@ const createSubmission = async (req, res, next) => {
     }
 
     // ─── Step 6: Compute new mastery via BKT ───
+    const passRate = testResults.passed / testResults.total;
+    const isSignificant = passRate > 0.5;
     const isCorrect = testResults.allPassed;
-    let newMasteryP = bktEngine.updateMastery(skillState.masteryP, isCorrect);
+    
+    // Fall back to false if the user submits code that passes <= 50% (prevents leaking)
+    let newMasteryP = bktEngine.updateMastery(skillState.masteryP, isSignificant ? isCorrect : false);
 
     // Apply hint penalty if hints were used
     if (hintsUsed > 0) {
@@ -130,7 +134,7 @@ const createSubmission = async (req, res, next) => {
 
     if (testResults.allPassed) {
       xpAwarded = fullXP;
-    } else if (testResults.passed > 0) {
+    } else if (isSignificant) {
       xpAwarded = Math.floor(fullXP * 0.3);
     }
 
@@ -278,4 +282,70 @@ const getHistory = async (req, res, next) => {
   }
 };
 
-module.exports = { createSubmission, getHistory };
+/**
+ * @desc    Get the 3 most recent submissions for a specific problem to enable state persistence
+ * @route   GET /api/submissions/recent/:problemId
+ * @access  Protected
+ */
+const getRecentSubmissions = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { problemId } = req.params;
+
+    const submissions = await Submission.find({ userId, problemId })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .select('code language isCorrect passedTestCases totalTestCases createdAt');
+
+    return sendSuccess(res, { submissions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Run code against custom inputs or public test cases without affecting mastery/XP
+ * @route   POST /api/submissions/run
+ * @access  Protected
+ */
+const runCode = async (req, res, next) => {
+  try {
+    const { problemId, code, customInput, language = 'javascript' } = req.body;
+
+    const problem = await Problem.findById(problemId);
+    if (!problem || !problem.isActive) {
+      return sendError(res, 'Problem not found or is inactive', 404);
+    }
+
+    if (!code || code.trim().length === 0) {
+      return sendError(res, 'Code cannot be empty');
+    }
+
+    let rawTestCases = [];
+    
+    // If user provided a custom input, map it structure-wise cleanly for the Piston Execution loop
+    if (customInput !== undefined && customInput !== null) {
+      rawTestCases = [{ input: customInput, expectedOutput: null }];
+    } else {
+      // Limit dry runs to just the "public" examples so users don't extract hidden validation tests
+      rawTestCases = problem.testCases.filter(tc => tc.isPublic) || [];
+      if (rawTestCases.length === 0) {
+          rawTestCases = [problem.testCases[0]]; // Fallback if no public tests labeled
+      }
+    }
+
+    // Run custom test cases
+    const testResults = await codeExecutionService.runTestCases(code, rawTestCases, language, problem);
+
+    // Completely bypass DB (no Submission create, no XP, no SkillState changes)
+    return sendSuccess(res, {
+      testResults,
+      customInputRun: customInput !== undefined && customInput !== null
+    }, 200);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { createSubmission, getHistory, getRecentSubmissions, runCode };

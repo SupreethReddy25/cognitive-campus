@@ -4,6 +4,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
+const axios = require('axios');
 const morgan = require('morgan');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
@@ -25,9 +26,16 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io attached to HTTP server with CORS config
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5000',
+  'http://127.0.0.1:5000'
+];
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -41,7 +49,7 @@ app.set('io', io);
 
 // --------------- Middleware Stack ---------------
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 
@@ -70,6 +78,11 @@ const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   server.listen(PORT, () => {
     logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+    
+    // Piston Health Verification
+    axios.get('http://127.0.0.1:2000/api/v2/runtimes')
+      .then(() => logger.info('Piston Execution API connected successfully'))
+      .catch((err) => logger.warn(`Piston Execution API unavailable on boot: ${err.message} (offline)`));
   });
 });
 
