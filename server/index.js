@@ -14,6 +14,7 @@ const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 const { initSocket } = require('./socket/socketHandler');
+const { initArenaSocket } = require('./socket/arenaHandler');
 
 // ─── Uncaught Exception Handler ───
 process.on('uncaughtException', (error) => {
@@ -26,30 +27,20 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io attached to HTTP server with CORS config
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:5000',
-  'http://127.0.0.1:5000'
-];
-
 const io = new Server(server, {
-  cors: {
-    origin: ALLOWED_ORIGINS,
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
+  cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
 // Initialise Socket.io connection handling
 initSocket(io);
+initArenaSocket(io);
 
 // Make io accessible to controllers via app
 app.set('io', io);
 
 // --------------- Middleware Stack ---------------
 app.use(helmet());
-app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
+app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 

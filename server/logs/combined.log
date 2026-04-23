@@ -2937,3 +2937,1202 @@
 2026-04-22 22:20:24 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 131.876 ms - 1857[0m
 2026-04-22 22:20:24 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 93.385 ms - -[0m
 2026-04-22 22:34:29 [INFO]: Socket connected: UWig_WaRG51D4FPmAAAJ
+2026-04-23 05:32:21 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 05:32:22 [INFO]: MongoDB connected successfully
+2026-04-23 05:32:51 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 05:32:51 [INFO]: MongoDB connected successfully
+2026-04-23 05:32:51 [INFO]: Server running on port 5000 in development mode
+2026-04-23 05:32:51 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 05:34:07 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 05:34:07 [INFO]: MongoDB connected successfully
+2026-04-23 05:34:07 [INFO]: Server running on port 5000 in development mode
+2026-04-23 05:34:07 [INFO]: Piston Execution API connected successfully
+2026-04-23 05:34:15 [INFO]: [0mGET /api/auth/me [32m200[0m 63.131 ms - 607[0m
+2026-04-23 05:34:15 [INFO]: [0mGET /api/auth/me [36m304[0m 31.354 ms - -[0m
+2026-04-23 05:34:15 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 123.798 ms - -[0m
+2026-04-23 05:34:15 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 105.097 ms - -[0m
+2026-04-23 05:34:27 [INFO]: [0mGET /api/auth/me [36m304[0m 34.458 ms - -[0m
+2026-04-23 05:34:27 [INFO]: [0mGET /api/auth/me [36m304[0m 30.759 ms - -[0m
+2026-04-23 05:37:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 100.369 ms - -[0m
+2026-04-23 05:37:34 [INFO]: [0mGET /api/submissions/history [32m200[0m 100.685 ms - 20572[0m
+2026-04-23 05:37:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.913 ms - -[0m
+2026-04-23 05:37:34 [INFO]: [0mGET /api/submissions/history [36m304[0m 85.302 ms - -[0m
+2026-04-23 05:39:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.826 ms - -[0m
+2026-04-23 05:39:51 [INFO]: [0mGET /api/submissions/history [36m304[0m 79.214 ms - -[0m
+2026-04-23 05:39:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 71.447 ms - -[0m
+2026-04-23 05:39:51 [INFO]: [0mGET /api/submissions/history [36m304[0m 93.110 ms - -[0m
+2026-04-23 05:39:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 54.276 ms - -[0m
+2026-04-23 05:39:53 [INFO]: [0mGET /api/submissions/history [36m304[0m 101.819 ms - -[0m
+2026-04-23 05:39:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 75.228 ms - -[0m
+2026-04-23 05:39:53 [INFO]: [0mGET /api/submissions/history [36m304[0m 84.895 ms - -[0m
+2026-04-23 05:40:42 [INFO]: [0mGET /api/skills/my-states [36m304[0m 59.185 ms - -[0m
+2026-04-23 05:40:42 [INFO]: [0mGET /api/submissions/history [36m304[0m 91.711 ms - -[0m
+2026-04-23 05:40:42 [INFO]: [0mGET /api/skills/my-states [36m304[0m 57.274 ms - -[0m
+2026-04-23 05:40:42 [INFO]: [0mGET /api/submissions/history [36m304[0m 83.355 ms - -[0m
+2026-04-23 05:40:46 [INFO]: [0mGET /api/skills/my-states [36m304[0m 66.629 ms - -[0m
+2026-04-23 05:40:46 [INFO]: [0mGET /api/submissions/history [36m304[0m 114.834 ms - -[0m
+2026-04-23 05:40:46 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.162 ms - -[0m
+2026-04-23 05:40:46 [INFO]: [0mGET /api/submissions/history [36m304[0m 91.745 ms - -[0m
+2026-04-23 05:40:47 [INFO]: Socket connected: L6b08GpH_P7S-TGXAAAC
+2026-04-23 05:40:47 [INFO]: Socket L6b08GpH_P7S-TGXAAAC joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 05:40:47 [INFO]: [0mGET /api/leaderboard [32m200[0m 107.565 ms - 185[0m
+2026-04-23 05:40:47 [INFO]: Socket disconnected: L6b08GpH_P7S-TGXAAAC
+2026-04-23 05:40:47 [INFO]: [0mGET /api/leaderboard [36m304[0m 74.025 ms - -[0m
+2026-04-23 05:40:47 [WARN]: Redis error — leaderboard will use MongoDB fallback {"error":"WRONGPASS invalid username-password pair"}
+2026-04-23 05:40:55 [INFO]: [0mGET /api/auth/me [36m304[0m 28.012 ms - -[0m
+2026-04-23 05:40:55 [INFO]: [0mGET /api/auth/me [36m304[0m 26.021 ms - -[0m
+2026-04-23 05:40:55 [INFO]: Socket connected: nUQvnmFfk27BIuhaAAAF
+2026-04-23 05:40:55 [INFO]: Socket disconnected: nUQvnmFfk27BIuhaAAAF
+2026-04-23 05:40:55 [INFO]: Socket connected: -BzkiorOThyfVD-XAAAH
+2026-04-23 05:40:55 [INFO]: Socket -BzkiorOThyfVD-XAAAH joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 05:40:55 [INFO]: [0mGET /api/leaderboard [36m304[0m 53.778 ms - -[0m
+2026-04-23 05:40:55 [INFO]: Socket disconnected: -BzkiorOThyfVD-XAAAH
+2026-04-23 05:40:55 [INFO]: [0mGET /api/leaderboard [36m304[0m 53.616 ms - -[0m
+2026-04-23 05:41:36 [INFO]: [0mGET /api/auth/me [36m304[0m 25.159 ms - -[0m
+2026-04-23 05:41:36 [INFO]: [0mGET /api/auth/me [36m304[0m 25.023 ms - -[0m
+2026-04-23 05:41:36 [INFO]: Socket connected: MsTz9WBdWcfR3A5xAAAL
+2026-04-23 05:41:36 [INFO]: Socket MsTz9WBdWcfR3A5xAAAL joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 05:41:36 [INFO]: [0mGET /api/leaderboard [36m304[0m 51.871 ms - -[0m
+2026-04-23 05:41:36 [INFO]: Socket disconnected: MsTz9WBdWcfR3A5xAAAL
+2026-04-23 05:41:36 [INFO]: [0mGET /api/leaderboard [36m304[0m 56.786 ms - -[0m
+2026-04-23 05:41:42 [INFO]: [0mGET /api/auth/me [36m304[0m 26.993 ms - -[0m
+2026-04-23 05:41:42 [INFO]: [0mGET /api/auth/me [36m304[0m 30.722 ms - -[0m
+2026-04-23 05:41:46 [INFO]: [0mGET /api/skills/my-states [36m304[0m 62.941 ms - -[0m
+2026-04-23 05:41:46 [INFO]: [0mGET /api/submissions/history [36m304[0m 84.286 ms - -[0m
+2026-04-23 05:41:46 [INFO]: [0mGET /api/skills/my-states [36m304[0m 51.424 ms - -[0m
+2026-04-23 05:41:46 [INFO]: [0mGET /api/submissions/history [36m304[0m 78.787 ms - -[0m
+2026-04-23 05:42:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 54.374 ms - -[0m
+2026-04-23 05:42:27 [INFO]: [0mGET /api/submissions/history [36m304[0m 84.109 ms - -[0m
+2026-04-23 05:42:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 73.757 ms - -[0m
+2026-04-23 05:42:27 [INFO]: [0mGET /api/submissions/history [36m304[0m 58.936 ms - -[0m
+2026-04-23 05:42:32 [INFO]: [0mGET /api/skills/my-states [36m304[0m 49.198 ms - -[0m
+2026-04-23 05:42:32 [INFO]: [0mGET /api/submissions/history [36m304[0m 80.213 ms - -[0m
+2026-04-23 05:42:32 [INFO]: [0mGET /api/skills/my-states [36m304[0m 50.428 ms - -[0m
+2026-04-23 05:42:32 [INFO]: [0mGET /api/submissions/history [36m304[0m 79.504 ms - -[0m
+2026-04-23 05:42:33 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.111 ms - -[0m
+2026-04-23 05:42:33 [INFO]: [0mGET /api/submissions/history [36m304[0m 78.661 ms - -[0m
+2026-04-23 05:42:33 [INFO]: [0mGET /api/skills/my-states [36m304[0m 52.482 ms - -[0m
+2026-04-23 05:42:33 [INFO]: [0mGET /api/submissions/history [36m304[0m 78.634 ms - -[0m
+2026-04-23 05:42:35 [INFO]: Socket connected: 5V1SgyGwQ4XUhH_eAAAN
+2026-04-23 05:42:35 [INFO]: Socket 5V1SgyGwQ4XUhH_eAAAN joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 05:42:35 [INFO]: [0mGET /api/leaderboard [36m304[0m 52.605 ms - -[0m
+2026-04-23 05:42:35 [INFO]: Socket disconnected: 5V1SgyGwQ4XUhH_eAAAN
+2026-04-23 05:42:35 [INFO]: [0mGET /api/leaderboard [36m304[0m 64.760 ms - -[0m
+2026-04-23 05:48:40 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 05:48:40 [INFO]: MongoDB connected successfully
+2026-04-23 05:48:40 [INFO]: Server running on port 5000 in development mode
+2026-04-23 05:48:41 [INFO]: Piston Execution API connected successfully
+2026-04-23 06:16:58 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 06:16:58 [INFO]: MongoDB connected successfully
+2026-04-23 06:19:07 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 06:19:07 [INFO]: MongoDB connected successfully
+2026-04-23 06:19:07 [INFO]: Server running on port 5000 in development mode
+2026-04-23 06:19:07 [INFO]: Piston Execution API connected successfully
+2026-04-23 06:19:41 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 06:19:41 [INFO]: [0mPOST /api/auth/login [32m200[0m 273.262 ms - 442[0m
+2026-04-23 06:19:41 [INFO]: [0mGET /api/skills/my-states [32m200[0m 86.743 ms - 6437[0m
+2026-04-23 06:19:41 [INFO]: [0mGET /api/users/recommendations [32m200[0m 132.600 ms - 2080[0m
+2026-04-23 06:19:41 [INFO]: [0mGET /api/skills/my-states [36m304[0m 67.559 ms - -[0m
+2026-04-23 06:19:41 [INFO]: [0mGET /api/users/recommendations [36m304[0m 163.278 ms - -[0m
+2026-04-23 06:21:33 [INFO]: [0mGET /api/skills [36m304[0m 64.561 ms - -[0m
+2026-04-23 06:21:33 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 98.917 ms - -[0m
+2026-04-23 06:21:33 [INFO]: [0mGET /api/skills [36m304[0m 63.328 ms - -[0m
+2026-04-23 06:21:33 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 93.956 ms - -[0m
+2026-04-23 06:21:48 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 91.041 ms - 2091[0m
+2026-04-23 06:21:48 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 98.385 ms - -[0m
+2026-04-23 06:22:46 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.963 ms - -[0m
+2026-04-23 06:22:46 [INFO]: [0mGET /api/users/recommendations [36m304[0m 89.926 ms - -[0m
+2026-04-23 06:22:46 [INFO]: [0mGET /api/skills/my-states [36m304[0m 61.920 ms - -[0m
+2026-04-23 06:22:46 [INFO]: [0mGET /api/users/recommendations [36m304[0m 83.812 ms - -[0m
+2026-04-23 06:22:51 [INFO]: [0mGET /api/skills [36m304[0m 57.265 ms - -[0m
+2026-04-23 06:22:51 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 100.237 ms - -[0m
+2026-04-23 06:22:51 [INFO]: [0mGET /api/skills [36m304[0m 60.280 ms - -[0m
+2026-04-23 06:22:51 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 89.944 ms - -[0m
+2026-04-23 06:22:57 [INFO]: Socket connected: 5C52eXP9m-K7u6iUAAAC
+2026-04-23 06:22:57 [INFO]: Socket 5C52eXP9m-K7u6iUAAAC joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 06:22:58 [INFO]: [0mGET /api/leaderboard [32m200[0m 108.932 ms - 185[0m
+2026-04-23 06:22:58 [INFO]: [0mGET /api/leaderboard [36m304[0m 86.589 ms - -[0m
+2026-04-23 06:22:58 [WARN]: Redis error — leaderboard will use MongoDB fallback {"error":"WRONGPASS invalid username-password pair"}
+2026-04-23 06:22:59 [INFO]: Socket disconnected: 5C52eXP9m-K7u6iUAAAC
+2026-04-23 06:22:59 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.847 ms - -[0m
+2026-04-23 06:22:59 [INFO]: [0mGET /api/submissions/history [32m200[0m 90.575 ms - 20572[0m
+2026-04-23 06:22:59 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.467 ms - -[0m
+2026-04-23 06:23:00 [INFO]: [0mGET /api/submissions/history [36m304[0m 95.390 ms - -[0m
+2026-04-23 06:23:10 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.678 ms - -[0m
+2026-04-23 06:23:10 [INFO]: [0mGET /api/users/recommendations [36m304[0m 97.463 ms - -[0m
+2026-04-23 06:23:10 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.969 ms - -[0m
+2026-04-23 06:23:10 [INFO]: [0mGET /api/users/recommendations [36m304[0m 83.225 ms - -[0m
+2026-04-23 06:23:52 [INFO]: [0mGET /api/skills [36m304[0m 53.801 ms - -[0m
+2026-04-23 06:23:52 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 83.240 ms - -[0m
+2026-04-23 06:23:52 [INFO]: [0mGET /api/skills [36m304[0m 58.160 ms - -[0m
+2026-04-23 06:23:52 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 83.142 ms - -[0m
+2026-04-23 06:23:56 [INFO]: [0mGET /api/problems?page=1&limit=15&skillId=69b5519b30f4ccf0382a1083 [32m200[0m 58.452 ms - 4469[0m
+2026-04-23 06:23:58 [INFO]: [0mGET /api/problems?page=1&limit=15&skillId=69b5519b30f4ccf0382a1083&difficulty=easy [32m200[0m 54.239 ms - 1400[0m
+2026-04-23 06:24:03 [INFO]: [0mGET /api/problems?page=1&limit=15&difficulty=easy [36m304[0m 83.473 ms - -[0m
+2026-04-23 06:24:06 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a6 [36m304[0m 85.856 ms - -[0m
+2026-04-23 06:24:06 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a6 [36m304[0m 93.941 ms - -[0m
+2026-04-23 06:36:59 [INFO]: [0mGET /api/auth/me [32m200[0m 168.254 ms - 607[0m
+2026-04-23 06:36:59 [INFO]: [0mGET /api/auth/me [36m304[0m 28.305 ms - -[0m
+2026-04-23 06:37:00 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a6 [36m304[0m 102.590 ms - -[0m
+2026-04-23 06:37:00 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a6 [36m304[0m 130.869 ms - -[0m
+2026-04-23 06:46:48 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 07:21:44 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 07:21:44 [INFO]: MongoDB connected successfully
+2026-04-23 07:21:44 [INFO]: Server running on port 5000 in development mode
+2026-04-23 07:21:44 [INFO]: Piston Execution API connected successfully
+2026-04-23 07:22:17 [INFO]: [0mGET /api/auth/me [36m304[0m 73.095 ms - -[0m
+2026-04-23 07:22:17 [INFO]: [0mGET /api/auth/me [36m304[0m 31.254 ms - -[0m
+2026-04-23 07:22:18 [INFO]: [0mGET /api/skills/my-states [36m304[0m 94.037 ms - -[0m
+2026-04-23 07:22:18 [INFO]: [0mGET /api/users/recommendations [36m304[0m 138.444 ms - -[0m
+2026-04-23 07:22:18 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.188 ms - -[0m
+2026-04-23 07:22:18 [INFO]: [0mGET /api/users/recommendations [36m304[0m 96.081 ms - -[0m
+2026-04-23 07:22:22 [INFO]: [0mGET /api/skills [36m304[0m 62.579 ms - -[0m
+2026-04-23 07:22:22 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 101.459 ms - -[0m
+2026-04-23 07:22:22 [INFO]: [0mGET /api/skills [36m304[0m 64.069 ms - -[0m
+2026-04-23 07:22:22 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 84.766 ms - -[0m
+2026-04-23 07:22:25 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 81.372 ms - -[0m
+2026-04-23 07:22:25 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 97.294 ms - -[0m
+2026-04-23 07:22:39 [INFO]: User 69b55b4c2a4ff06cb7d760fa using BYOK for AI Mentor.
+2026-04-23 07:22:41 [ERROR]: Gemini API Error in AI Mentor {"error":"[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later."}
+2026-04-23 07:22:41 [INFO]: [0mPOST /api/problems/69b551a430f4ccf0382a10ab/nudge [32m200[0m 1846.064 ms - 108[0m
+2026-04-23 07:23:01 [INFO]: Test run complete: 0/1 passed (javascript)
+2026-04-23 07:23:01 [INFO]: [0mPOST /api/submissions/run [32m200[0m 335.292 ms - 1034[0m
+2026-04-23 07:23:19 [INFO]: Socket connected: xvdOAAIXerLhBspCAAAC
+2026-04-23 07:23:19 [INFO]: Socket xvdOAAIXerLhBspCAAAC joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 07:23:19 [INFO]: [0mGET /api/leaderboard [36m304[0m 72.443 ms - -[0m
+2026-04-23 07:23:19 [INFO]: [0mGET /api/leaderboard [36m304[0m 54.771 ms - -[0m
+2026-04-23 07:23:19 [WARN]: Redis error — leaderboard will use MongoDB fallback {"error":"WRONGPASS invalid username-password pair"}
+2026-04-23 07:23:20 [INFO]: Socket disconnected: xvdOAAIXerLhBspCAAAC
+2026-04-23 07:23:20 [INFO]: [0mGET /api/skills/my-states [36m304[0m 57.895 ms - -[0m
+2026-04-23 07:23:20 [INFO]: [0mGET /api/submissions/history [36m304[0m 95.831 ms - -[0m
+2026-04-23 07:23:20 [INFO]: [0mGET /api/skills/my-states [36m304[0m 66.144 ms - -[0m
+2026-04-23 07:23:21 [INFO]: [0mGET /api/submissions/history [36m304[0m 78.245 ms - -[0m
+2026-04-23 07:23:29 [INFO]: [0mGET /api/skills/my-states [36m304[0m 67.736 ms - -[0m
+2026-04-23 07:23:29 [INFO]: [0mGET /api/users/recommendations [36m304[0m 87.979 ms - -[0m
+2026-04-23 07:23:29 [INFO]: [0mGET /api/skills/my-states [36m304[0m 53.033 ms - -[0m
+2026-04-23 07:23:29 [INFO]: [0mGET /api/users/recommendations [36m304[0m 79.293 ms - -[0m
+2026-04-23 07:23:31 [INFO]: [0mGET /api/skills [36m304[0m 52.400 ms - -[0m
+2026-04-23 07:23:31 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 104.558 ms - -[0m
+2026-04-23 07:23:32 [INFO]: [0mGET /api/skills [36m304[0m 69.209 ms - -[0m
+2026-04-23 07:23:32 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 89.598 ms - -[0m
+2026-04-23 07:23:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 86.427 ms - 1857[0m
+2026-04-23 07:23:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 101.843 ms - -[0m
+2026-04-23 07:29:03 [INFO]: Test run complete: 1/1 passed (java)
+2026-04-23 07:29:03 [INFO]: [0mPOST /api/submissions/run [32m200[0m 2358.764 ms - 215[0m
+2026-04-23 07:29:12 [INFO]: Test run complete: 2/3 passed (java)
+2026-04-23 07:29:12 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10a9 correct=false xp=3
+2026-04-23 07:29:12 [INFO]: [0mPOST /api/submissions [32m201[0m 5687.628 ms - 2975[0m
+2026-04-23 07:29:22 [INFO]: Test run complete: 3/3 passed (java)
+2026-04-23 07:29:22 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10a9 correct=true xp=10
+2026-04-23 07:29:22 [INFO]: [0mPOST /api/submissions [32m201[0m 4346.177 ms - 2931[0m
+2026-04-23 07:29:39 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 07:29:39 [INFO]: [0mPOST /api/submissions/run [32m200[0m 1206.797 ms - 217[0m
+2026-04-23 07:29:45 [INFO]: User 69b55b4c2a4ff06cb7d760fa using BYOK for AI Mentor.
+2026-04-23 07:29:50 [INFO]: [0mPOST /api/problems/69b551a430f4ccf0382a10a9/nudge [32m200[0m 4416.142 ms - 247[0m
+2026-04-23 07:45:44 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 07:45:44 [INFO]: [0mPOST /api/auth/login [32m200[0m 274.422 ms - 442[0m
+2026-04-23 07:45:44 [INFO]: [0mGET /api/skills/my-states [32m200[0m 95.013 ms - 6438[0m
+2026-04-23 07:45:44 [INFO]: [0mGET /api/users/recommendations [32m200[0m 146.081 ms - 2036[0m
+2026-04-23 07:45:44 [INFO]: [0mGET /api/skills/my-states [36m304[0m 70.709 ms - -[0m
+2026-04-23 07:45:44 [INFO]: [0mGET /api/users/recommendations [36m304[0m 116.981 ms - -[0m
+2026-04-23 07:46:02 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 07:46:02 [INFO]: [0mPOST /api/auth/login [32m200[0m 182.543 ms - 442[0m
+2026-04-23 07:46:03 [INFO]: [0mGET /api/skills/my-states [36m304[0m 87.812 ms - -[0m
+2026-04-23 07:46:03 [INFO]: [0mGET /api/users/recommendations [36m304[0m 115.775 ms - -[0m
+2026-04-23 07:46:03 [INFO]: [0mGET /api/skills/my-states [36m304[0m 65.692 ms - -[0m
+2026-04-23 07:46:03 [INFO]: [0mGET /api/users/recommendations [36m304[0m 93.236 ms - -[0m
+2026-04-23 07:46:59 [INFO]: [0mGET /api/skills [36m304[0m 63.041 ms - -[0m
+2026-04-23 07:46:59 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 103.290 ms - -[0m
+2026-04-23 07:46:59 [INFO]: [0mGET /api/skills [36m304[0m 72.213 ms - -[0m
+2026-04-23 07:46:59 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 97.162 ms - -[0m
+2026-04-23 07:47:01 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 91.958 ms - -[0m
+2026-04-23 07:47:01 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 101.731 ms - -[0m
+2026-04-23 07:47:07 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10ab [32m200[0m 31.585 ms - 42[0m
+2026-04-23 07:47:07 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10ab [36m304[0m 27.399 ms - -[0m
+2026-04-23 07:47:13 [INFO]: [0mGET /api/skills [36m304[0m 92.566 ms - -[0m
+2026-04-23 07:47:13 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 110.881 ms - -[0m
+2026-04-23 07:47:13 [INFO]: [0mGET /api/skills [36m304[0m 69.163 ms - -[0m
+2026-04-23 07:47:13 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 111.520 ms - -[0m
+2026-04-23 07:47:15 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 88.784 ms - 1857[0m
+2026-04-23 07:47:15 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 191.381 ms - -[0m
+2026-04-23 07:47:19 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10a9 [32m200[0m 29.886 ms - 1440[0m
+2026-04-23 07:47:19 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10a9 [36m304[0m 28.981 ms - -[0m
+2026-04-23 07:47:44 [INFO]: Test run complete: 0/3 passed (javascript)
+2026-04-23 07:47:45 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10a9 correct=false xp=0
+2026-04-23 07:47:45 [INFO]: [0mPOST /api/submissions [32m201[0m 1895.665 ms - 4978[0m
+2026-04-23 07:47:57 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10a9 [32m200[0m 28.845 ms - 1447[0m
+2026-04-23 07:47:58 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10a9 [36m304[0m 27.669 ms - -[0m
+2026-04-23 07:52:42 [INFO]: Socket connected: bdIKYIOcD5r89guiAAAF
+2026-04-23 07:52:42 [INFO]: Socket bdIKYIOcD5r89guiAAAF joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 07:52:42 [INFO]: [0mGET /api/leaderboard [32m200[0m 80.872 ms - 185[0m
+2026-04-23 07:52:42 [INFO]: [0mGET /api/leaderboard [36m304[0m 60.219 ms - -[0m
+2026-04-23 07:52:49 [INFO]: Socket disconnected: bdIKYIOcD5r89guiAAAF
+2026-04-23 07:53:04 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 07:53:04 [INFO]: [0mPOST /api/auth/login [32m200[0m 205.054 ms - 442[0m
+2026-04-23 07:53:04 [INFO]: [0mGET /api/skills/my-states [32m200[0m 81.718 ms - 6438[0m
+2026-04-23 07:53:04 [INFO]: [0mGET /api/users/recommendations [32m200[0m 119.124 ms - 2080[0m
+2026-04-23 07:53:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 59.654 ms - -[0m
+2026-04-23 07:53:05 [INFO]: [0mGET /api/users/recommendations [36m304[0m 94.037 ms - -[0m
+2026-04-23 07:54:09 [INFO]: [0mGET /api/skills [36m304[0m 95.975 ms - -[0m
+2026-04-23 07:54:09 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 113.131 ms - -[0m
+2026-04-23 07:54:09 [INFO]: [0mGET /api/skills [36m304[0m 62.972 ms - -[0m
+2026-04-23 07:54:09 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 98.331 ms - -[0m
+2026-04-23 07:54:10 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 102.895 ms - -[0m
+2026-04-23 07:54:10 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 81.220 ms - -[0m
+2026-04-23 07:55:00 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 07:55:00 [INFO]: [0mPOST /api/submissions/run [32m200[0m 2895.049 ms - 263[0m
+2026-04-23 07:55:04 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 07:55:04 [INFO]: [0mPOST /api/submissions/run [32m200[0m 1791.414 ms - 535[0m
+2026-04-23 07:55:17 [INFO]: User 69b55b4c2a4ff06cb7d760fa using BYOK for AI Mentor.
+2026-04-23 07:55:20 [INFO]: [0mPOST /api/problems/69b551a430f4ccf0382a10ab/nudge [32m200[0m 2855.990 ms - 226[0m
+2026-04-23 07:55:37 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 07:55:37 [INFO]: [0mPOST /api/submissions/run [32m200[0m 3307.051 ms - 499[0m
+2026-04-23 07:55:43 [INFO]: User 69b55b4c2a4ff06cb7d760fa using BYOK for AI Mentor.
+2026-04-23 07:55:47 [INFO]: [0mPOST /api/problems/69b551a430f4ccf0382a10ab/nudge [32m200[0m 3535.037 ms - 203[0m
+2026-04-23 07:56:00 [INFO]: Test run complete: 1/1 passed (java)
+2026-04-23 07:56:00 [INFO]: [0mPOST /api/submissions/run [32m200[0m 1792.093 ms - 262[0m
+2026-04-23 07:56:07 [INFO]: Test run complete: 0/3 passed (java)
+2026-04-23 07:56:07 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10ab correct=false xp=0
+2026-04-23 07:56:07 [INFO]: [0mPOST /api/submissions [32m201[0m 5510.812 ms - 2959[0m
+2026-04-23 07:56:16 [INFO]: Test run complete: 0/3 passed (java)
+2026-04-23 07:56:16 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10ab correct=false xp=0
+2026-04-23 07:56:16 [INFO]: [0mPOST /api/submissions [32m201[0m 6720.769 ms - 3047[0m
+2026-04-23 07:56:24 [INFO]: User 69b55b4c2a4ff06cb7d760fa using BYOK for AI Mentor.
+2026-04-23 07:56:29 [INFO]: [0mPOST /api/problems/69b551a430f4ccf0382a10ab/nudge [32m200[0m 4671.635 ms - 173[0m
+2026-04-23 07:56:40 [INFO]: Test run complete: 0/3 passed (java)
+2026-04-23 07:56:41 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10ab correct=false xp=0
+2026-04-23 07:56:41 [INFO]: [0mPOST /api/submissions [32m201[0m 6891.948 ms - 3047[0m
+2026-04-23 07:57:30 [INFO]: Test run complete: 0/3 passed (java)
+2026-04-23 07:57:31 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10ab correct=false xp=0
+2026-04-23 07:57:31 [INFO]: [0mPOST /api/submissions [32m201[0m 5587.737 ms - 3014[0m
+2026-04-23 07:57:34 [INFO]: Test run complete: 1/1 passed (java)
+2026-04-23 07:57:34 [INFO]: [0mPOST /api/submissions/run [32m200[0m 2006.986 ms - 262[0m
+2026-04-23 08:03:37 [INFO]: [0mGET /api/skills/my-states [32m200[0m 77.818 ms - 6439[0m
+2026-04-23 08:03:37 [INFO]: [0mGET /api/users/recommendations [36m304[0m 149.161 ms - -[0m
+2026-04-23 08:03:38 [INFO]: [0mGET /api/skills/my-states [36m304[0m 66.883 ms - -[0m
+2026-04-23 08:03:38 [INFO]: [0mGET /api/users/recommendations [36m304[0m 103.090 ms - -[0m
+2026-04-23 08:04:32 [INFO]: [0mGET /api/skills/my-states [36m304[0m 105.089 ms - -[0m
+2026-04-23 08:04:32 [INFO]: [0mGET /api/submissions/history [32m200[0m 138.191 ms - 21598[0m
+2026-04-23 08:04:32 [INFO]: [0mGET /api/skills/my-states [36m304[0m 97.059 ms - -[0m
+2026-04-23 08:04:33 [INFO]: [0mGET /api/submissions/history [36m304[0m 147.417 ms - -[0m
+2026-04-23 08:08:20 [INFO]: [0mGET /api/auth/me [32m200[0m 61.050 ms - 607[0m
+2026-04-23 08:08:20 [INFO]: [0mGET /api/auth/me [36m304[0m 27.968 ms - -[0m
+2026-04-23 08:08:20 [INFO]: [0mGET /api/skills/my-states [36m304[0m 93.878 ms - -[0m
+2026-04-23 08:08:20 [INFO]: [0mGET /api/submissions/history [36m304[0m 111.833 ms - -[0m
+2026-04-23 08:08:20 [INFO]: [0mGET /api/skills/my-states [36m304[0m 69.085 ms - -[0m
+2026-04-23 08:08:20 [INFO]: [0mGET /api/submissions/history [36m304[0m 114.568 ms - -[0m
+2026-04-23 08:09:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 66.404 ms - -[0m
+2026-04-23 08:09:34 [INFO]: [0mGET /api/users/recommendations [36m304[0m 96.542 ms - -[0m
+2026-04-23 08:09:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.375 ms - -[0m
+2026-04-23 08:09:34 [INFO]: [0mGET /api/users/recommendations [36m304[0m 90.806 ms - -[0m
+2026-04-23 08:10:34 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 08:10:35 [INFO]: MongoDB connected successfully
+2026-04-23 08:10:35 [INFO]: Server running on port 5000 in development mode
+2026-04-23 08:10:35 [INFO]: Piston Execution API connected successfully
+2026-04-23 08:10:50 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 08:10:51 [INFO]: MongoDB connected successfully
+2026-04-23 08:10:51 [INFO]: Server running on port 5000 in development mode
+2026-04-23 08:10:51 [INFO]: Piston Execution API connected successfully
+2026-04-23 08:12:14 [INFO]: [0mGET /api/skills [36m304[0m 192.576 ms - -[0m
+2026-04-23 08:12:14 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 145.702 ms - -[0m
+2026-04-23 08:12:14 [INFO]: [0mGET /api/skills [36m304[0m 86.926 ms - -[0m
+2026-04-23 08:12:14 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 103.321 ms - -[0m
+2026-04-23 08:12:16 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 112.328 ms - 2091[0m
+2026-04-23 08:12:16 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 97.890 ms - -[0m
+2026-04-23 08:12:27 [INFO]: Socket connected: fGh4R4acOEkJFNXTAAAC
+2026-04-23 08:12:27 [INFO]: Socket fGh4R4acOEkJFNXTAAAC joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 08:12:27 [INFO]: [0mGET /api/leaderboard [36m304[0m 70.122 ms - -[0m
+2026-04-23 08:12:27 [WARN]: Redis error — leaderboard will use MongoDB fallback {"error":"WRONGPASS invalid username-password pair"}
+2026-04-23 08:12:27 [INFO]: [0mGET /api/leaderboard [36m304[0m 115.463 ms - -[0m
+2026-04-23 08:12:28 [INFO]: Socket disconnected: fGh4R4acOEkJFNXTAAAC
+2026-04-23 08:14:50 [INFO]: [0mGET /api/skills/my-states [36m304[0m 78.448 ms - -[0m
+2026-04-23 08:14:50 [INFO]: [0mGET /api/users/recommendations [36m304[0m 113.767 ms - -[0m
+2026-04-23 08:14:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 77.785 ms - -[0m
+2026-04-23 08:14:51 [INFO]: [0mGET /api/users/recommendations [36m304[0m 91.518 ms - -[0m
+2026-04-23 08:15:01 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.114 ms - -[0m
+2026-04-23 08:15:01 [INFO]: [0mGET /api/submissions/history [36m304[0m 116.555 ms - -[0m
+2026-04-23 08:15:01 [INFO]: [0mGET /api/skills/my-states [36m304[0m 70.834 ms - -[0m
+2026-04-23 08:15:01 [INFO]: [0mGET /api/submissions/history [36m304[0m 125.273 ms - -[0m
+2026-04-23 08:15:04 [INFO]: [0mGET /api/skills/my-states [36m304[0m 61.876 ms - -[0m
+2026-04-23 08:15:04 [INFO]: [0mGET /api/users/recommendations [36m304[0m 90.769 ms - -[0m
+2026-04-23 08:15:04 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.858 ms - -[0m
+2026-04-23 08:15:04 [INFO]: [0mGET /api/users/recommendations [36m304[0m 93.169 ms - -[0m
+2026-04-23 08:16:38 [INFO]: [0mGET /api/skills [36m304[0m 80.954 ms - -[0m
+2026-04-23 08:16:39 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 103.534 ms - -[0m
+2026-04-23 08:16:39 [INFO]: [0mGET /api/skills [36m304[0m 66.327 ms - -[0m
+2026-04-23 08:16:39 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 101.675 ms - -[0m
+2026-04-23 08:18:19 [INFO]: [0mGET /api/auth/me [36m304[0m 38.075 ms - -[0m
+2026-04-23 08:18:19 [INFO]: [0mGET /api/auth/me [36m304[0m 29.454 ms - -[0m
+2026-04-23 08:18:19 [INFO]: [0mGET /api/skills [36m304[0m 67.706 ms - -[0m
+2026-04-23 08:18:19 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 109.665 ms - -[0m
+2026-04-23 08:18:19 [INFO]: [0mGET /api/skills [36m304[0m 66.887 ms - -[0m
+2026-04-23 08:18:19 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 91.755 ms - -[0m
+2026-04-23 08:18:26 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 94.651 ms - -[0m
+2026-04-23 08:18:26 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 97.074 ms - -[0m
+2026-04-23 08:18:32 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10ab [32m200[0m 33.395 ms - 2309[0m
+2026-04-23 08:18:32 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10ab [36m304[0m 30.126 ms - -[0m
+2026-04-23 08:18:42 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 08:18:42 [INFO]: [0mPOST /api/submissions/run [32m200[0m 3602.018 ms - 263[0m
+2026-04-23 08:18:46 [INFO]: Test run complete: 1/1 passed (java)
+2026-04-23 08:18:46 [INFO]: [0mPOST /api/submissions/run [32m200[0m 2124.664 ms - 262[0m
+2026-04-23 08:26:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 232.654 ms - -[0m
+2026-04-23 08:30:47 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 08:30:47 [INFO]: [0mPOST /api/auth/login [32m200[0m 858.698 ms - 442[0m
+2026-04-23 08:30:47 [INFO]: [0mGET /api/skills/my-states [32m200[0m 126.590 ms - 6439[0m
+2026-04-23 08:30:47 [INFO]: [0mGET /api/problems [32m200[0m 170.944 ms - 31597[0m
+2026-04-23 08:30:47 [INFO]: [0mGET /api/users/recommendations [32m200[0m 197.937 ms - 2080[0m
+2026-04-23 08:30:47 [INFO]: [0mGET /api/skills/my-states [36m304[0m 112.299 ms - -[0m
+2026-04-23 08:30:47 [INFO]: [0mGET /api/problems [36m304[0m 144.585 ms - -[0m
+2026-04-23 08:30:48 [INFO]: [0mGET /api/users/recommendations [36m304[0m 138.002 ms - -[0m
+2026-04-23 08:30:48 [INFO]: [0mGET /api/skills/my-states [36m304[0m 76.722 ms - -[0m
+2026-04-23 08:30:48 [INFO]: [0mGET /api/skills/my-states [36m304[0m 62.911 ms - -[0m
+2026-04-23 08:31:04 [INFO]: [0mGET /api/auth/me [32m200[0m 45.267 ms - 607[0m
+2026-04-23 08:31:04 [INFO]: [0mGET /api/auth/me [36m304[0m 27.381 ms - -[0m
+2026-04-23 08:31:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.915 ms - -[0m
+2026-04-23 08:31:05 [INFO]: [0mGET /api/submissions/history?limit=500 [32m200[0m 122.528 ms - 39566[0m
+2026-04-23 08:31:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 77.857 ms - -[0m
+2026-04-23 08:31:05 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 108.676 ms - -[0m
+2026-04-23 08:31:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 88.799 ms - -[0m
+2026-04-23 08:31:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 74.429 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/auth/me [36m304[0m 31.623 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/auth/me [36m304[0m 31.263 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.338 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/users/recommendations [36m304[0m 99.413 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/problems [36m304[0m 106.937 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 79.380 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/users/recommendations [36m304[0m 105.928 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/problems [36m304[0m 108.292 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 74.679 ms - -[0m
+2026-04-23 08:31:51 [INFO]: [0mGET /api/skills/my-states [36m304[0m 56.870 ms - -[0m
+2026-04-23 08:39:29 [INFO]: [0mGET /api/skills [36m304[0m 89.215 ms - -[0m
+2026-04-23 08:39:29 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 87.875 ms - 23596[0m
+2026-04-23 08:39:29 [INFO]: [0mGET /api/skills [36m304[0m 58.007 ms - -[0m
+2026-04-23 08:39:29 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 83.501 ms - -[0m
+2026-04-23 08:39:30 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 91.950 ms - 2091[0m
+2026-04-23 08:39:30 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 78.463 ms - -[0m
+2026-04-23 08:39:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 57.876 ms - -[0m
+2026-04-23 08:39:35 [INFO]: [0mGET /api/users/recommendations [36m304[0m 101.799 ms - -[0m
+2026-04-23 08:39:35 [INFO]: [0mGET /api/problems [36m304[0m 104.333 ms - -[0m
+2026-04-23 08:39:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 76.973 ms - -[0m
+2026-04-23 08:39:35 [INFO]: [0mGET /api/users/recommendations [36m304[0m 90.771 ms - -[0m
+2026-04-23 08:39:35 [INFO]: [0mGET /api/problems [36m304[0m 93.077 ms - -[0m
+2026-04-23 08:43:31 [INFO]: [0mGET /api/auth/me [36m304[0m 83.401 ms - -[0m
+2026-04-23 08:43:31 [INFO]: [0mGET /api/auth/me [36m304[0m 26.017 ms - -[0m
+2026-04-23 08:43:31 [INFO]: [0mGET /api/skills/my-states [36m304[0m 52.380 ms - -[0m
+2026-04-23 08:43:31 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 121.028 ms - -[0m
+2026-04-23 08:43:31 [INFO]: [0mGET /api/skills/my-states [36m304[0m 91.565 ms - -[0m
+2026-04-23 08:43:31 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 90.238 ms - -[0m
+2026-04-23 08:43:37 [INFO]: [0mGET /api/skills/my-states [36m304[0m 131.690 ms - -[0m
+2026-04-23 08:43:37 [INFO]: [0mGET /api/problems [32m200[0m 145.818 ms - 31597[0m
+2026-04-23 08:43:37 [INFO]: [0mGET /api/users/recommendations [36m304[0m 159.130 ms - -[0m
+2026-04-23 08:43:37 [INFO]: [0mGET /api/skills/my-states [36m304[0m 75.221 ms - -[0m
+2026-04-23 08:43:37 [INFO]: [0mGET /api/problems [36m304[0m 81.419 ms - -[0m
+2026-04-23 08:43:37 [INFO]: [0mGET /api/users/recommendations [36m304[0m 82.439 ms - -[0m
+2026-04-23 08:44:17 [INFO]: [0mGET /api/skills/my-states [36m304[0m 55.722 ms - -[0m
+2026-04-23 08:44:18 [INFO]: [0mGET /api/submissions/history?limit=500 [32m200[0m 99.167 ms - 39566[0m
+2026-04-23 08:44:18 [INFO]: [0mGET /api/skills/my-states [36m304[0m 55.486 ms - -[0m
+2026-04-23 08:44:18 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 102.419 ms - -[0m
+2026-04-23 08:44:37 [INFO]: [0mGET /api/skills [36m304[0m 52.454 ms - -[0m
+2026-04-23 08:44:37 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 101.040 ms - -[0m
+2026-04-23 08:44:38 [INFO]: [0mGET /api/skills [36m304[0m 123.018 ms - -[0m
+2026-04-23 08:44:38 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 126.686 ms - -[0m
+2026-04-23 08:44:39 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [32m200[0m 81.678 ms - 1853[0m
+2026-04-23 08:44:40 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [36m304[0m 83.271 ms - -[0m
+2026-04-23 08:44:54 [INFO]: Test run complete: 0/1 passed (javascript)
+2026-04-23 08:44:54 [INFO]: [0mPOST /api/submissions/run [32m200[0m 809.784 ms - 988[0m
+2026-04-23 08:44:55 [INFO]: Test run complete: 0/1 passed (javascript)
+2026-04-23 08:44:55 [INFO]: [0mPOST /api/submissions/run [32m200[0m 193.101 ms - 988[0m
+2026-04-23 08:44:56 [INFO]: Test run complete: 0/1 passed (javascript)
+2026-04-23 08:44:56 [INFO]: [0mPOST /api/submissions/run [32m200[0m 208.746 ms - 988[0m
+2026-04-23 09:12:12 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 09:12:13 [INFO]: MongoDB connected successfully
+2026-04-23 09:12:13 [INFO]: Server running on port 5000 in development mode
+2026-04-23 09:12:13 [INFO]: Piston Execution API connected successfully
+2026-04-23 09:12:23 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 09:12:23 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 09:12:23 [INFO]: MongoDB connected successfully
+2026-04-23 09:12:23 [INFO]: Server running on port 5000 in development mode
+2026-04-23 09:12:23 [INFO]: Piston Execution API connected successfully
+2026-04-23 10:19:26 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:19:26 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:19:26 [INFO]: MongoDB connected successfully
+2026-04-23 10:19:26 [INFO]: Server running on port 5000 in development mode
+2026-04-23 10:19:26 [INFO]: Piston Execution API connected successfully
+2026-04-23 10:20:15 [INFO]: [0mGET /api/auth/me [36m304[0m 85.147 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/auth/me [36m304[0m 31.059 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 106.797 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/problems [36m304[0m 145.728 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/users/recommendations [36m304[0m 171.552 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 76.586 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/problems [36m304[0m 77.864 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 61.440 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/users/recommendations [36m304[0m 90.882 ms - -[0m
+2026-04-23 10:20:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 59.281 ms - -[0m
+2026-04-23 10:20:45 [INFO]: Socket connected: lVlrE5FFyWn9bi7ZAAAC
+2026-04-23 10:21:26 [INFO]: [0mGET /api/skills [36m304[0m 60.673 ms - -[0m
+2026-04-23 10:21:26 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 84.280 ms - -[0m
+2026-04-23 10:21:26 [INFO]: [0mGET /api/skills [36m304[0m 54.553 ms - -[0m
+2026-04-23 10:21:26 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 89.966 ms - -[0m
+2026-04-23 10:21:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 52.855 ms - -[0m
+2026-04-23 10:21:27 [INFO]: [0mGET /api/users/recommendations [36m304[0m 80.687 ms - -[0m
+2026-04-23 10:21:27 [INFO]: [0mGET /api/problems [36m304[0m 97.647 ms - -[0m
+2026-04-23 10:21:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 58.892 ms - -[0m
+2026-04-23 10:21:27 [INFO]: [0mGET /api/users/recommendations [36m304[0m 85.105 ms - -[0m
+2026-04-23 10:21:27 [INFO]: [0mGET /api/problems [36m304[0m 88.416 ms - -[0m
+2026-04-23 10:21:33 [INFO]: [0mGET /api/skills [36m304[0m 93.837 ms - -[0m
+2026-04-23 10:21:33 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 115.374 ms - -[0m
+2026-04-23 10:21:33 [INFO]: [0mGET /api/skills [36m304[0m 104.642 ms - -[0m
+2026-04-23 10:21:33 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 135.748 ms - -[0m
+2026-04-23 10:21:35 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 116.647 ms - -[0m
+2026-04-23 10:21:35 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 77.048 ms - -[0m
+2026-04-23 10:21:49 [INFO]: [Arena] Socket connected: 2SllN206d1ZoerfOAAAF
+2026-04-23 10:21:49 [INFO]: [0mGET /api/problems [36m304[0m 123.502 ms - -[0m
+2026-04-23 10:21:50 [INFO]: [0mGET /api/problems [36m304[0m 1155.891 ms - -[0m
+2026-04-23 10:22:18 [INFO]: [Arena] Room 665E01 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 10:27:19 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:27:19 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:27:19 [INFO]: MongoDB connected successfully
+2026-04-23 10:27:19 [INFO]: Server running on port 5000 in development mode
+2026-04-23 10:27:20 [INFO]: [Arena] Socket connected: SqNruwPLrBcmErteAAAB
+2026-04-23 10:27:20 [INFO]: Piston Execution API connected successfully
+2026-04-23 10:27:20 [INFO]: [0mGET /api/problems [36m304[0m 738.697 ms - -[0m
+2026-04-23 10:27:20 [INFO]: [0mGET /api/problems [36m304[0m 87.216 ms - -[0m
+2026-04-23 10:27:23 [INFO]: [Arena] Socket disconnected: SqNruwPLrBcmErteAAAB
+2026-04-23 10:27:26 [INFO]: [0mGET /api/auth/me [32m200[0m 62.872 ms - 607[0m
+2026-04-23 10:27:26 [INFO]: [0mGET /api/auth/me [36m304[0m 30.266 ms - -[0m
+2026-04-23 10:27:27 [INFO]: [0mGET /api/skills/my-states [32m200[0m 78.289 ms - 6439[0m
+2026-04-23 10:27:27 [INFO]: [0mGET /api/problems [32m200[0m 110.154 ms - 31597[0m
+2026-04-23 10:27:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 112.607 ms - -[0m
+2026-04-23 10:27:27 [INFO]: [Arena] Socket connected: Tlo8c2_2PskP9ZVjAAAF
+2026-04-23 10:27:27 [INFO]: [0mGET /api/problems [36m304[0m 179.841 ms - -[0m
+2026-04-23 10:27:40 [INFO]: Socket connected: RNRd90Qasz9pEGzMAAAI
+2026-04-23 10:28:03 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:28:03 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:28:03 [INFO]: MongoDB connected successfully
+2026-04-23 10:28:03 [INFO]: Server running on port 5000 in development mode
+2026-04-23 10:28:03 [INFO]: Piston Execution API connected successfully
+2026-04-23 10:28:03 [INFO]: [Arena] Socket connected: 30C3mWD2mk_3ALNCAAAB
+2026-04-23 10:28:12 [INFO]: [Arena] Socket disconnected: 30C3mWD2mk_3ALNCAAAB
+2026-04-23 10:28:16 [INFO]: [0mGET /api/auth/me [36m304[0m 54.524 ms - -[0m
+2026-04-23 10:28:16 [INFO]: [0mGET /api/auth/me [36m304[0m 32.954 ms - -[0m
+2026-04-23 10:28:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 99.762 ms - -[0m
+2026-04-23 10:28:16 [INFO]: [0mGET /api/problems [36m304[0m 109.452 ms - -[0m
+2026-04-23 10:28:16 [INFO]: [Arena] Socket connected: MWxhjj2vnk4HezETAAAF
+2026-04-23 10:28:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 62.014 ms - -[0m
+2026-04-23 10:28:16 [INFO]: [0mGET /api/problems [36m304[0m 96.002 ms - -[0m
+2026-04-23 10:28:22 [INFO]: Socket connected: TLCeR6tM8qnkANEXAAAI
+2026-04-23 10:30:13 [INFO]: New user registered: angeerasareddypannala@gmail.com
+2026-04-23 10:30:13 [INFO]: [0mPOST /api/auth/register [32m201[0m 494.424 ms - 445[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/skills/my-states [32m200[0m 51.870 ms - 6375[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/skills/my-states [32m200[0m 53.361 ms - 6375[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/skills/my-states [32m200[0m 53.284 ms - 6375[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/users/recommendations [32m200[0m 87.400 ms - 2080[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/problems [32m200[0m 84.513 ms - 31597[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/users/recommendations [32m200[0m 81.837 ms - 2080[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/problems [32m200[0m 84.372 ms - 31597[0m
+2026-04-23 10:30:13 [INFO]: [0mGET /api/skills/my-states [32m200[0m 249.416 ms - 6375[0m
+2026-04-23 10:30:23 [INFO]: [Arena] Socket connected: jpw-jPTr5S2p9RzuAAAK
+2026-04-23 10:30:23 [INFO]: [0mGET /api/problems [32m200[0m 94.562 ms - 31597[0m
+2026-04-23 10:30:23 [INFO]: [0mGET /api/problems [36m304[0m 102.917 ms - -[0m
+2026-04-23 10:30:32 [INFO]: [Arena] Room 879B77 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 10:30:46 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 879B77
+2026-04-23 10:30:49 [INFO]: [Arena] Match started in room 879B77. Mode: coop-split
+2026-04-23 10:30:50 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [32m200[0m 109.717 ms - 1857[0m
+2026-04-23 10:30:50 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a9 [36m304[0m 104.705 ms - -[0m
+2026-04-23 10:31:11 [INFO]: [Arena] Supreeth Reddy left room 879B77. 1 remaining.
+2026-04-23 10:31:12 [INFO]: [0mGET /api/problems [36m304[0m 119.717 ms - -[0m
+2026-04-23 10:31:12 [INFO]: [0mGET /api/problems [36m304[0m 94.639 ms - -[0m
+2026-04-23 10:31:18 [INFO]: [Arena] Room 375325 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 10:31:22 [INFO]: [Arena] Socket disconnected: jpw-jPTr5S2p9RzuAAAK
+2026-04-23 10:31:22 [INFO]: [Arena] Angeerasa Reddy left room 879B77. 0 remaining.
+2026-04-23 10:31:22 [INFO]: [Arena] Room 879B77 deleted (empty).
+2026-04-23 10:31:23 [INFO]: [0mGET /api/auth/me [32m200[0m 24.379 ms - 457[0m
+2026-04-23 10:31:23 [INFO]: [0mGET /api/auth/me [32m200[0m 23.832 ms - 457[0m
+2026-04-23 10:31:23 [INFO]: [Arena] Socket connected: 2Jc6TBlY16G8wDvbAAAM
+2026-04-23 10:31:23 [INFO]: [0mGET /api/skills/my-states [36m304[0m 51.193 ms - -[0m
+2026-04-23 10:31:23 [INFO]: [0mGET /api/skills/my-states [32m200[0m 66.149 ms - 6375[0m
+2026-04-23 10:31:23 [INFO]: [0mGET /api/problems [32m200[0m 108.270 ms - 31597[0m
+2026-04-23 10:31:23 [INFO]: [0mGET /api/problems [36m304[0m 118.194 ms - -[0m
+2026-04-23 10:31:35 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 375325
+2026-04-23 10:31:42 [INFO]: [Arena] Match started in room 375325. Mode: coop-split
+2026-04-23 10:31:43 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a8 [32m200[0m 87.645 ms - 1992[0m
+2026-04-23 10:31:43 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10a8 [36m304[0m 82.162 ms - -[0m
+2026-04-23 10:31:53 [INFO]: [Arena] Socket disconnected: 2Jc6TBlY16G8wDvbAAAM
+2026-04-23 10:31:53 [INFO]: [Arena] Angeerasa Reddy left room 375325. 1 remaining.
+2026-04-23 10:31:53 [INFO]: [0mGET /api/skills [32m200[0m 53.592 ms - 4858[0m
+2026-04-23 10:31:53 [INFO]: [0mGET /api/skills [32m200[0m 54.024 ms - 4858[0m
+2026-04-23 10:31:53 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 89.381 ms - 23596[0m
+2026-04-23 10:31:53 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 88.708 ms - 23596[0m
+2026-04-23 10:31:57 [INFO]: [Arena] Socket connected: tdvLA-joCc_qhNSfAAAO
+2026-04-23 10:31:57 [INFO]: [0mGET /api/problems [36m304[0m 86.363 ms - -[0m
+2026-04-23 10:31:57 [INFO]: [0mGET /api/problems [32m200[0m 95.482 ms - 31597[0m
+2026-04-23 10:32:01 [INFO]: [0mGET /api/problems [36m304[0m 93.651 ms - -[0m
+2026-04-23 10:32:01 [INFO]: [0mGET /api/problems [36m304[0m 106.611 ms - -[0m
+2026-04-23 10:32:16 [INFO]: [Arena] Room E379BD created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 10:32:28 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room E379BD
+2026-04-23 10:32:57 [INFO]: [Arena] Match started in room E379BD. Mode: coop-split
+2026-04-23 10:32:58 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 91.005 ms - 2091[0m
+2026-04-23 10:32:58 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 78.816 ms - -[0m
+2026-04-23 10:36:53 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:36:53 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:36:53 [INFO]: MongoDB connected successfully
+2026-04-23 10:42:56 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:42:56 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:42:57 [INFO]: MongoDB connected successfully
+2026-04-23 10:44:25 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:44:25 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:44:25 [INFO]: MongoDB connected successfully
+2026-04-23 10:44:25 [INFO]: Server running on port 5000 in development mode
+2026-04-23 10:44:25 [INFO]: Piston Execution API connected successfully
+2026-04-23 10:44:36 [INFO]: [Arena] Socket connected: hGKqVv-b-uVUzKG7AAAB
+2026-04-23 10:44:38 [INFO]: [Arena] Socket disconnected: hGKqVv-b-uVUzKG7AAAB
+2026-04-23 10:44:40 [INFO]: [0mGET /api/auth/me [32m200[0m 49.414 ms - 457[0m
+2026-04-23 10:44:40 [INFO]: [0mGET /api/auth/me [36m304[0m 89.066 ms - -[0m
+2026-04-23 10:44:41 [INFO]: [0mGET /api/skills/my-states [36m304[0m 122.134 ms - -[0m
+2026-04-23 10:44:41 [INFO]: [0mGET /api/skills/my-states [32m200[0m 123.753 ms - 6375[0m
+2026-04-23 10:44:41 [INFO]: [0mGET /api/problems [32m200[0m 160.447 ms - 31597[0m
+2026-04-23 10:44:41 [INFO]: [Arena] Socket connected: 7F3Ae3JoJV1qvCxBAAAE
+2026-04-23 10:44:41 [INFO]: [0mGET /api/problems [32m200[0m 349.065 ms - 31597[0m
+2026-04-23 10:44:44 [INFO]: [Arena] Socket disconnected: 7F3Ae3JoJV1qvCxBAAAE
+2026-04-23 10:44:45 [INFO]: [0mGET /api/auth/me [36m304[0m 43.239 ms - -[0m
+2026-04-23 10:44:45 [INFO]: [0mGET /api/auth/me [32m200[0m 40.541 ms - 457[0m
+2026-04-23 10:44:45 [INFO]: [0mGET /api/skills/my-states [36m304[0m 102.550 ms - -[0m
+2026-04-23 10:44:45 [INFO]: [0mGET /api/skills/my-states [32m200[0m 122.729 ms - 6375[0m
+2026-04-23 10:44:45 [INFO]: [0mGET /api/problems [36m304[0m 141.231 ms - -[0m
+2026-04-23 10:44:45 [INFO]: [0mGET /api/problems [32m200[0m 140.110 ms - 31597[0m
+2026-04-23 10:44:45 [INFO]: [Arena] Socket connected: zm9SPoY0w-T4S69qAAAH
+2026-04-23 10:44:57 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 10:44:57 [INFO]: [0mPOST /api/auth/login [32m200[0m 233.374 ms - 442[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 67.109 ms - -[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/problems [36m304[0m 103.522 ms - -[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/users/recommendations [32m200[0m 115.331 ms - 2080[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 71.033 ms - -[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/problems [36m304[0m 80.184 ms - -[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/users/recommendations [36m304[0m 111.268 ms - -[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 55.888 ms - -[0m
+2026-04-23 10:44:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 65.360 ms - -[0m
+2026-04-23 10:45:00 [INFO]: [Arena] Socket connected: hdZecdbrbzHBXxL7AAAK
+2026-04-23 10:45:00 [INFO]: [0mGET /api/problems [36m304[0m 93.456 ms - -[0m
+2026-04-23 10:45:00 [INFO]: [0mGET /api/problems [36m304[0m 97.239 ms - -[0m
+2026-04-23 10:45:05 [INFO]: [Arena] Room E2F8B1 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 10:45:15 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room E2F8B1
+2026-04-23 10:45:17 [INFO]: [Arena] Match started in room E2F8B1. Mode: coop-split
+2026-04-23 10:45:41 [INFO]: Socket connected: f6gyQLs_LYELltuMAAAO
+2026-04-23 10:51:18 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:51:18 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:51:19 [INFO]: MongoDB connected successfully
+2026-04-23 10:51:19 [INFO]: Server running on port 5000 in development mode
+2026-04-23 10:51:19 [INFO]: [0mGET /api/auth/me [32m200[0m 187.740 ms - 607[0m
+2026-04-23 10:51:19 [INFO]: Socket connected: 26WIhOXVLHFSakw3AAAC
+2026-04-23 10:51:19 [INFO]: [0mGET /api/auth/me [36m304[0m 225.474 ms - -[0m
+2026-04-23 10:51:19 [INFO]: Piston Execution API connected successfully
+2026-04-23 10:51:20 [INFO]: [0mGET /api/auth/me [36m304[0m 103.356 ms - -[0m
+2026-04-23 10:51:20 [INFO]: [0mGET /api/auth/me [32m200[0m 103.391 ms - 457[0m
+2026-04-23 10:51:53 [INFO]: [0mGET /api/auth/me [36m304[0m 32.161 ms - -[0m
+2026-04-23 10:51:53 [INFO]: [0mGET /api/auth/me [36m304[0m 27.869 ms - -[0m
+2026-04-23 10:51:54 [INFO]: [Arena] Socket connected: Q8Uq7hyqitJzY5qgAAAG
+2026-04-23 10:51:54 [INFO]: [0mGET /api/skills/my-states [36m304[0m 107.199 ms - -[0m
+2026-04-23 10:51:54 [INFO]: [0mGET /api/problems [36m304[0m 118.416 ms - -[0m
+2026-04-23 10:51:54 [INFO]: [0mGET /api/skills/my-states [36m304[0m 65.193 ms - -[0m
+2026-04-23 10:51:54 [INFO]: [0mGET /api/problems [36m304[0m 111.556 ms - -[0m
+2026-04-23 10:51:55 [INFO]: [0mGET /api/auth/me [36m304[0m 26.296 ms - -[0m
+2026-04-23 10:51:55 [INFO]: [0mGET /api/auth/me [32m200[0m 29.820 ms - 457[0m
+2026-04-23 10:51:55 [INFO]: [Arena] Socket connected: 2bGRxOF5oem4gSLxAAAJ
+2026-04-23 10:51:55 [INFO]: [0mGET /api/skills/my-states [36m304[0m 56.366 ms - -[0m
+2026-04-23 10:51:55 [INFO]: [0mGET /api/skills/my-states [32m200[0m 56.536 ms - 6375[0m
+2026-04-23 10:51:56 [INFO]: [0mGET /api/problems [36m304[0m 139.613 ms - -[0m
+2026-04-23 10:51:56 [INFO]: [0mGET /api/problems [32m200[0m 289.710 ms - 31597[0m
+2026-04-23 10:52:02 [INFO]: [Arena] Room 057CB9 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 10:52:15 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 057CB9
+2026-04-23 10:52:18 [INFO]: [Arena] Match started in room 057CB9. Mode: coop-split
+2026-04-23 10:56:55 [INFO]: [Arena] Socket disconnected: 2bGRxOF5oem4gSLxAAAJ
+2026-04-23 10:56:55 [INFO]: [Arena] Angeerasa Reddy left room 057CB9. 1 remaining.
+2026-04-23 10:57:15 [INFO]: [Arena] Socket disconnected: Q8Uq7hyqitJzY5qgAAAG
+2026-04-23 10:57:15 [INFO]: [Arena] Supreeth Reddy left room 057CB9. 0 remaining.
+2026-04-23 10:57:15 [INFO]: [Arena] Room 057CB9 deleted (empty).
+2026-04-23 10:57:15 [INFO]: [Arena] Socket connected: q9X1E-s97pDaNAinAAAL
+2026-04-23 10:57:15 [INFO]: [0mGET /api/problems [36m304[0m 136.212 ms - -[0m
+2026-04-23 10:59:41 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 10:59:41 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 10:59:41 [INFO]: MongoDB connected successfully
+2026-04-23 11:01:04 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:01:04 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:01:05 [INFO]: MongoDB connected successfully
+2026-04-23 11:01:05 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:01:05 [INFO]: Piston Execution API connected successfully
+2026-04-23 11:01:10 [INFO]: [Arena] Socket connected: mWcH_8Tha0pNIXl8AAAB
+2026-04-23 11:01:16 [INFO]: [Arena] Socket disconnected: mWcH_8Tha0pNIXl8AAAB
+2026-04-23 11:01:22 [INFO]: [0mGET /api/auth/me [36m304[0m 83.106 ms - -[0m
+2026-04-23 11:01:22 [INFO]: [0mGET /api/auth/me [36m304[0m 29.764 ms - -[0m
+2026-04-23 11:01:22 [INFO]: [Arena] Socket connected: K16PK3HY5eHIgsLBAAAF
+2026-04-23 11:01:22 [INFO]: [0mGET /api/skills/my-states [36m304[0m 116.128 ms - -[0m
+2026-04-23 11:01:22 [INFO]: [0mGET /api/problems [36m304[0m 131.909 ms - -[0m
+2026-04-23 11:01:22 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.845 ms - -[0m
+2026-04-23 11:01:22 [INFO]: [0mGET /api/problems [36m304[0m 90.516 ms - -[0m
+2026-04-23 11:01:27 [INFO]: [0mGET /api/auth/me [36m304[0m 31.585 ms - -[0m
+2026-04-23 11:01:27 [INFO]: [0mGET /api/auth/me [32m200[0m 31.639 ms - 457[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/skills/my-states [36m304[0m 69.613 ms - -[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/skills/my-states [32m200[0m 77.338 ms - 6375[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/skills/my-states [32m200[0m 68.833 ms - 6375[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/users/recommendations [36m304[0m 126.683 ms - -[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/skills/my-states [32m200[0m 73.135 ms - 6375[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/problems [32m200[0m 94.346 ms - 31597[0m
+2026-04-23 11:01:28 [INFO]: [0mGET /api/problems [36m304[0m 338.405 ms - -[0m
+2026-04-23 11:01:29 [INFO]: [0mGET /api/users/recommendations [32m200[0m 1315.057 ms - 2080[0m
+2026-04-23 11:01:38 [INFO]: [Arena] Room 312CED created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 11:01:41 [INFO]: Socket connected: RBBRDDbX0dPrCXAsAAAH
+2026-04-23 11:01:43 [INFO]: [Arena] Socket connected: JJKRFW0MyHOmaGLeAAAJ
+2026-04-23 11:01:43 [INFO]: [0mGET /api/problems [32m200[0m 87.228 ms - 31597[0m
+2026-04-23 11:01:43 [INFO]: [0mGET /api/problems [36m304[0m 103.779 ms - -[0m
+2026-04-23 11:01:52 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 312CED
+2026-04-23 11:01:54 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:01:58 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:00 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:00 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:00 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:00 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:00 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:01 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:01 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:01 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:07 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:09 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:09 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:09 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:15 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:15 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:15 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:16 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:24 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:02:24 [INFO]: [Arena] Match started in room 312CED. Mode: coop-split
+2026-04-23 11:08:19 [INFO]: [Arena] Socket disconnected: JJKRFW0MyHOmaGLeAAAJ
+2026-04-23 11:08:19 [INFO]: [Arena] Angeerasa Reddy left room 312CED. 1 remaining.
+2026-04-23 11:08:19 [INFO]: [Arena] Socket connected: acS8bCkkPhxxAQ7hAAAL
+2026-04-23 11:08:20 [INFO]: [0mGET /api/problems [36m304[0m 208.657 ms - -[0m
+2026-04-23 11:08:20 [INFO]: [Arena] Socket disconnected: K16PK3HY5eHIgsLBAAAF
+2026-04-23 11:08:20 [INFO]: [Arena] Supreeth Reddy left room 312CED. 0 remaining.
+2026-04-23 11:08:20 [INFO]: [Arena] Room 312CED deleted (empty).
+2026-04-23 11:08:20 [INFO]: [Arena] Socket connected: IWIY87f__Zf-S5sCAAAN
+2026-04-23 11:08:20 [INFO]: [0mGET /api/problems [36m304[0m 103.037 ms - -[0m
+2026-04-23 11:09:43 [INFO]: [0mGET /api/problems [36m304[0m 97.033 ms - -[0m
+2026-04-23 11:09:44 [INFO]: [0mGET /api/problems [36m304[0m 113.829 ms - -[0m
+2026-04-23 11:11:21 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:11:21 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:11:21 [INFO]: MongoDB connected successfully
+2026-04-23 11:11:35 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:11:35 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:11:35 [INFO]: MongoDB connected successfully
+2026-04-23 11:11:35 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:11:35 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 11:11:37 [INFO]: [Arena] Socket connected: 3Vxs85xI3bYqaju8AAAB
+2026-04-23 11:11:38 [INFO]: Socket connected: 2tk88gGbX2VXsHPOAAAD
+2026-04-23 11:11:41 [INFO]: [Arena] Socket connected: IYJe8IWs51_AJwU_AAAF
+2026-04-23 11:11:49 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:11:49 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:11:50 [INFO]: MongoDB connected successfully
+2026-04-23 11:11:50 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:11:50 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 11:11:50 [INFO]: [Arena] Socket connected: 2ZUl6OS8NUKsP9n4AAAB
+2026-04-23 11:11:51 [INFO]: [Arena] Socket connected: Ja7eAQalbA_BOaqaAAAD
+2026-04-23 11:11:52 [INFO]: Socket connected: _TCw5LBf-j8Pi9O7AAAF
+2026-04-23 11:11:55 [INFO]: [Arena] Socket disconnected: Ja7eAQalbA_BOaqaAAAD
+2026-04-23 11:11:55 [INFO]: [0mGET /api/auth/me [36m304[0m 36.010 ms - -[0m
+2026-04-23 11:11:55 [INFO]: [0mGET /api/auth/me [32m200[0m 31.535 ms - 457[0m
+2026-04-23 11:11:55 [INFO]: [Arena] Socket connected: 6l1sRTbV_sGo9spXAAAH
+2026-04-23 11:11:55 [INFO]: [0mGET /api/skills/my-states [36m304[0m 62.534 ms - -[0m
+2026-04-23 11:11:56 [INFO]: [0mGET /api/problems [36m304[0m 81.561 ms - -[0m
+2026-04-23 11:11:56 [INFO]: [0mGET /api/skills/my-states [32m200[0m 239.394 ms - 6375[0m
+2026-04-23 11:11:56 [INFO]: [0mGET /api/problems [32m200[0m 260.498 ms - 31597[0m
+2026-04-23 11:12:02 [INFO]: [Arena] Socket disconnected: 2ZUl6OS8NUKsP9n4AAAB
+2026-04-23 11:12:03 [INFO]: [0mGET /api/auth/me [36m304[0m 31.929 ms - -[0m
+2026-04-23 11:12:03 [INFO]: [0mGET /api/auth/me [36m304[0m 30.996 ms - -[0m
+2026-04-23 11:12:03 [INFO]: [Arena] Socket connected: 5_M816ixjZ4ATCnkAAAL
+2026-04-23 11:12:03 [INFO]: [0mGET /api/skills/my-states [36m304[0m 91.489 ms - -[0m
+2026-04-23 11:12:03 [INFO]: [0mGET /api/problems [36m304[0m 110.785 ms - -[0m
+2026-04-23 11:12:03 [INFO]: [0mGET /api/skills/my-states [36m304[0m 62.984 ms - -[0m
+2026-04-23 11:12:03 [INFO]: [0mGET /api/problems [36m304[0m 94.509 ms - -[0m
+2026-04-23 11:12:13 [INFO]: [Arena] Room 55DD99 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 11:12:24 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 55DD99
+2026-04-23 11:12:26 [INFO]: [Arena] Match started in room 55DD99. Mode: coop-split
+2026-04-23 11:12:27 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 91.738 ms - -[0m
+2026-04-23 11:12:27 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 82.967 ms - 2091[0m
+2026-04-23 11:12:27 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 82.835 ms - 2091[0m
+2026-04-23 11:12:27 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 104.026 ms - -[0m
+2026-04-23 11:17:39 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:17:39 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:17:40 [INFO]: MongoDB connected successfully
+2026-04-23 11:17:40 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:17:40 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 11:17:40 [INFO]: Socket connected: HO95nyf5ZdtBF9fcAAAB
+2026-04-23 11:17:40 [INFO]: [Arena] Socket connected: yXXeDnnEnypDpS4uAAAD
+2026-04-23 11:17:41 [INFO]: [Arena] Socket connected: uBtjfurEvI0XFotiAAAF
+2026-04-23 11:17:52 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:17:52 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:17:52 [INFO]: MongoDB connected successfully
+2026-04-23 11:17:52 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:17:52 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 11:17:52 [INFO]: Socket connected: Ix1mreXt--oWNYoLAAAB
+2026-04-23 11:17:52 [INFO]: [Arena] Socket connected: ciWvGogXckDE3ogHAAAD
+2026-04-23 11:17:52 [INFO]: [Arena] Socket connected: 5UjFRxKyZtXRrW3rAAAF
+2026-04-23 11:21:48 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:21:48 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:21:48 [INFO]: MongoDB connected successfully
+2026-04-23 11:22:06 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:22:06 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:22:07 [INFO]: MongoDB connected successfully
+2026-04-23 11:22:07 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:22:07 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 11:22:09 [INFO]: [Arena] Socket connected: bW-h-_iggDI34zVqAAAB
+2026-04-23 11:22:09 [INFO]: Socket connected: 2TaYVZ7khf6H1bnjAAAD
+2026-04-23 11:22:21 [INFO]: [Arena] Socket connected: 8LYmZIABGfZ7s-BxAAAF
+2026-04-23 11:23:44 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:23:44 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:23:45 [INFO]: MongoDB connected successfully
+2026-04-23 11:23:45 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:23:45 [INFO]: Piston Execution API connected successfully
+2026-04-23 11:23:47 [INFO]: [Arena] Socket connected: k3fCDGIn-UzPp4eRAAAB
+2026-04-23 11:23:47 [INFO]: Socket connected: xYcSdq0h4SzcRpsGAAAD
+2026-04-23 11:23:52 [INFO]: [Arena] Socket connected: RKKuK7k-us-T3HjiAAAF
+2026-04-23 11:23:55 [INFO]: [Arena] Socket disconnected: k3fCDGIn-UzPp4eRAAAB
+2026-04-23 11:23:58 [INFO]: [0mGET /api/auth/me [36m304[0m 57.866 ms - -[0m
+2026-04-23 11:23:58 [INFO]: [0mGET /api/auth/me [36m304[0m 30.561 ms - -[0m
+2026-04-23 11:23:58 [INFO]: [Arena] Socket connected: ZLH1q7fYYVlASJhQAAAI
+2026-04-23 11:23:58 [INFO]: [0mGET /api/skills/my-states [36m304[0m 83.148 ms - -[0m
+2026-04-23 11:23:58 [INFO]: [0mGET /api/skills/my-states [36m304[0m 63.110 ms - -[0m
+2026-04-23 11:24:00 [INFO]: [Arena] Socket disconnected: RKKuK7k-us-T3HjiAAAF
+2026-04-23 11:24:02 [INFO]: [0mGET /api/auth/me [36m304[0m 37.288 ms - -[0m
+2026-04-23 11:24:02 [INFO]: [0mGET /api/auth/me [36m304[0m 29.629 ms - -[0m
+2026-04-23 11:24:02 [INFO]: [0mGET /api/skills/my-states [36m304[0m 74.204 ms - -[0m
+2026-04-23 11:24:02 [INFO]: [0mGET /api/skills/my-states [32m200[0m 82.274 ms - 6375[0m
+2026-04-23 11:24:06 [INFO]: [Arena] Socket connected: QYbMa1kEdGs9BRQ8AAAK
+2026-04-23 11:24:08 [INFO]: [Arena] Socket disconnected: QYbMa1kEdGs9BRQ8AAAK
+2026-04-23 11:24:08 [INFO]: [0mGET /api/skills [36m304[0m 77.498 ms - -[0m
+2026-04-23 11:24:09 [INFO]: [0mGET /api/skills [32m200[0m 67.360 ms - 4858[0m
+2026-04-23 11:24:09 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 98.536 ms - -[0m
+2026-04-23 11:24:09 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 285.491 ms - 23596[0m
+2026-04-23 11:24:10 [INFO]: [Arena] Socket connected: WRXLkK6-zsaccE0tAAAM
+2026-04-23 11:24:10 [INFO]: [0mGET /api/problems [36m304[0m 87.567 ms - -[0m
+2026-04-23 11:24:10 [INFO]: [0mGET /api/problems [32m200[0m 101.806 ms - 31597[0m
+2026-04-23 11:24:16 [INFO]: [0mGET /api/problems [36m304[0m 86.773 ms - -[0m
+2026-04-23 11:24:16 [INFO]: [0mGET /api/problems [36m304[0m 84.331 ms - -[0m
+2026-04-23 11:24:22 [INFO]: [Arena] Room 24DD04 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 11:24:32 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 24DD04
+2026-04-23 11:24:34 [INFO]: [Arena] Match started in room 24DD04. Mode: coop-split
+2026-04-23 11:24:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 139.861 ms - -[0m
+2026-04-23 11:24:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 79.342 ms - -[0m
+2026-04-23 11:24:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 79.228 ms - -[0m
+2026-04-23 11:24:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 79.295 ms - -[0m
+2026-04-23 11:30:43 [INFO]: [Arena] Socket disconnected: WRXLkK6-zsaccE0tAAAM
+2026-04-23 11:30:43 [INFO]: [Arena] Angeerasa Reddy left room 24DD04. 1 remaining.
+2026-04-23 11:30:43 [INFO]: [Arena] Socket disconnected: ZLH1q7fYYVlASJhQAAAI
+2026-04-23 11:30:43 [INFO]: [Arena] Supreeth Reddy left room 24DD04. 0 remaining.
+2026-04-23 11:30:43 [INFO]: [Arena] Room 24DD04 deleted (empty).
+2026-04-23 11:30:43 [INFO]: [0mGET /api/auth/me [36m304[0m 43.045 ms - -[0m
+2026-04-23 11:30:43 [INFO]: [0mGET /api/auth/me [32m200[0m 32.175 ms - 457[0m
+2026-04-23 11:31:30 [INFO]: [0mGET /api/auth/me [36m304[0m 25.289 ms - -[0m
+2026-04-23 11:31:30 [INFO]: [0mGET /api/auth/me [32m200[0m 25.164 ms - 457[0m
+2026-04-23 11:31:31 [INFO]: [0mGET /api/auth/me [36m304[0m 29.419 ms - -[0m
+2026-04-23 11:31:31 [INFO]: [0mGET /api/auth/me [36m304[0m 25.819 ms - -[0m
+2026-04-23 11:32:06 [INFO]: [0mGET /api/auth/me [36m304[0m 27.271 ms - -[0m
+2026-04-23 11:32:06 [INFO]: [0mGET /api/auth/me [32m200[0m 26.260 ms - 457[0m
+2026-04-23 11:32:07 [INFO]: [0mGET /api/auth/me [36m304[0m 25.101 ms - -[0m
+2026-04-23 11:32:07 [INFO]: [0mGET /api/auth/me [36m304[0m 26.486 ms - -[0m
+2026-04-23 11:32:42 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:32:42 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:32:42 [INFO]: MongoDB connected successfully
+2026-04-23 11:32:42 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:32:43 [INFO]: Piston Execution API connected successfully
+2026-04-23 11:32:43 [INFO]: Socket connected: ZSoa3f5gTUPSRLBAAAAB
+2026-04-23 11:35:27 [INFO]: [0mGET /api/auth/me [36m304[0m 70.059 ms - -[0m
+2026-04-23 11:35:27 [INFO]: [0mGET /api/auth/me [36m304[0m 30.262 ms - -[0m
+2026-04-23 11:35:28 [INFO]: [Arena] Socket connected: 2iaIoIp3I6N77t5QAAAE
+2026-04-23 11:35:28 [INFO]: [0mGET /api/skills/my-states [36m304[0m 91.357 ms - -[0m
+2026-04-23 11:35:28 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.484 ms - -[0m
+2026-04-23 11:35:32 [INFO]: [0mGET /api/problems [36m304[0m 154.366 ms - -[0m
+2026-04-23 11:35:32 [INFO]: [0mGET /api/problems [36m304[0m 96.846 ms - -[0m
+2026-04-23 11:35:37 [INFO]: [Arena] Room D90A82 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 11:35:45 [INFO]: [0mGET /api/auth/me [36m304[0m 27.870 ms - -[0m
+2026-04-23 11:35:45 [INFO]: [0mGET /api/auth/me [32m200[0m 29.233 ms - 457[0m
+2026-04-23 11:35:45 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.715 ms - -[0m
+2026-04-23 11:35:45 [INFO]: [0mGET /api/skills/my-states [32m200[0m 70.123 ms - 6375[0m
+2026-04-23 11:35:45 [INFO]: [Arena] Socket connected: 33qMMNiX3behw0esAAAH
+2026-04-23 11:35:49 [INFO]: [0mGET /api/problems [32m200[0m 90.621 ms - 31597[0m
+2026-04-23 11:35:49 [INFO]: [0mGET /api/problems [36m304[0m 100.490 ms - -[0m
+2026-04-23 11:35:59 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room D90A82
+2026-04-23 11:36:03 [INFO]: [Arena] Match started in room D90A82. Mode: coop-split
+2026-04-23 11:36:04 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 86.634 ms - -[0m
+2026-04-23 11:36:04 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 87.023 ms - -[0m
+2026-04-23 11:36:04 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 81.876 ms - -[0m
+2026-04-23 11:36:04 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 79.014 ms - 2091[0m
+2026-04-23 11:39:11 [INFO]: [Arena] Socket disconnected: 2iaIoIp3I6N77t5QAAAE
+2026-04-23 11:39:11 [INFO]: [Arena] Supreeth Reddy left room D90A82. 1 remaining.
+2026-04-23 11:39:12 [INFO]: [0mGET /api/auth/me [36m304[0m 58.407 ms - -[0m
+2026-04-23 11:39:12 [INFO]: [0mGET /api/auth/me [36m304[0m 45.937 ms - -[0m
+2026-04-23 11:39:13 [INFO]: [Arena] Socket connected: Ftem3UY1Yt0GMORVAAAK
+2026-04-23 11:39:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 77.170 ms - -[0m
+2026-04-23 11:39:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 60.809 ms - -[0m
+2026-04-23 11:40:04 [INFO]: [0mGET /api/problems [36m304[0m 101.422 ms - -[0m
+2026-04-23 11:40:04 [INFO]: [0mGET /api/problems [36m304[0m 103.667 ms - -[0m
+2026-04-23 11:40:30 [INFO]: [Arena] Room 8A5134 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 11:40:37 [INFO]: [0mGET /api/problems [36m304[0m 83.838 ms - -[0m
+2026-04-23 11:40:37 [INFO]: [0mGET /api/problems [32m200[0m 86.397 ms - 31597[0m
+2026-04-23 11:40:49 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 8A5134
+2026-04-23 11:40:52 [INFO]: [Arena] Match started in room 8A5134. Mode: coop-split
+2026-04-23 11:40:52 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 89.604 ms - -[0m
+2026-04-23 11:40:52 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 89.019 ms - -[0m
+2026-04-23 11:40:53 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 367.179 ms - -[0m
+2026-04-23 11:40:53 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 389.986 ms - 2091[0m
+2026-04-23 11:46:57 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 11:46:57 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 11:47:00 [INFO]: MongoDB connected successfully
+2026-04-23 11:47:00 [INFO]: Server running on port 5000 in development mode
+2026-04-23 11:47:00 [INFO]: Piston Execution API connected successfully
+2026-04-23 11:47:01 [INFO]: [Arena] Socket connected: u1_s3uOWsmdQD05iAAAB
+2026-04-23 11:47:02 [INFO]: [Arena] Socket connected: U15_WiXfOUNWx60cAAAD
+2026-04-23 11:47:02 [INFO]: Socket connected: v_rvPU-oHckcv7ubAAAF
+2026-04-23 11:47:55 [INFO]: [Arena] Socket disconnected: U15_WiXfOUNWx60cAAAD
+2026-04-23 11:47:55 [INFO]: [Arena] Socket disconnected: u1_s3uOWsmdQD05iAAAB
+2026-04-23 11:47:55 [INFO]: [Arena] Socket connected: 0PGy_W-ZL_OSbvAXAAAH
+2026-04-23 11:47:55 [INFO]: [Arena] Socket connected: NGheFUbotj76EPLcAAAJ
+2026-04-23 11:52:01 [INFO]: [0mGET /api/problems [36m304[0m 137.524 ms - -[0m
+2026-04-23 11:52:01 [INFO]: [0mGET /api/problems [32m200[0m 120.343 ms - 31597[0m
+2026-04-23 11:52:03 [INFO]: [Arena] Socket disconnected: NGheFUbotj76EPLcAAAJ
+2026-04-23 11:52:03 [INFO]: [0mGET /api/auth/me [36m304[0m 36.531 ms - -[0m
+2026-04-23 11:52:03 [INFO]: [0mGET /api/auth/me [32m200[0m 34.097 ms - 457[0m
+2026-04-23 11:52:03 [INFO]: [0mGET /api/problems [36m304[0m 97.466 ms - -[0m
+2026-04-23 11:52:03 [INFO]: [0mGET /api/skills/my-states [32m200[0m 71.110 ms - 6375[0m
+2026-04-23 11:52:03 [INFO]: [0mGET /api/problems [32m200[0m 102.007 ms - 31597[0m
+2026-04-23 11:52:04 [INFO]: [0mGET /api/skills/my-states [36m304[0m 326.699 ms - -[0m
+2026-04-23 11:52:04 [INFO]: [Arena] Socket connected: xQfzYPWuo6J5ZH5NAAAM
+2026-04-23 12:12:16 [INFO]: Socket disconnected: v_rvPU-oHckcv7ubAAAF
+2026-04-23 12:12:23 [INFO]: [Arena] Socket disconnected: xQfzYPWuo6J5ZH5NAAAM
+2026-04-23 12:31:30 [INFO]: [Arena] Socket disconnected: 0PGy_W-ZL_OSbvAXAAAH
+2026-04-23 12:31:34 [INFO]: Socket connected: yfi64fqaGwg8c0RhAAAO
+2026-04-23 12:31:35 [INFO]: [0mGET /api/auth/me [36m304[0m 116.371 ms - -[0m
+2026-04-23 12:31:35 [INFO]: [0mGET /api/auth/me [32m200[0m 51.991 ms - 457[0m
+2026-04-23 12:31:35 [INFO]: [Arena] Socket connected: Yq2_iwbOEIw40BmIAAAR
+2026-04-23 12:31:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 167.208 ms - -[0m
+2026-04-23 12:31:35 [INFO]: [0mGET /api/problems [36m304[0m 166.839 ms - -[0m
+2026-04-23 12:31:35 [INFO]: [0mGET /api/skills/my-states [32m200[0m 168.915 ms - 6375[0m
+2026-04-23 12:34:35 [INFO]: [0mGET /api/problems [0m-[0m - ms - -[0m
+2026-04-23 12:34:35 [INFO]: Socket disconnected: yfi64fqaGwg8c0RhAAAO
+2026-04-23 12:34:35 [INFO]: [Arena] Socket disconnected: Yq2_iwbOEIw40BmIAAAR
+2026-04-23 12:34:37 [INFO]: [Arena] Socket connected: r3zpRhSJYPq3lflxAAAU
+2026-04-23 12:34:37 [INFO]: [0mGET /api/auth/me [36m304[0m 848.561 ms - -[0m
+2026-04-23 12:34:37 [INFO]: [0mGET /api/auth/me [32m200[0m 882.330 ms - 457[0m
+2026-04-23 12:34:38 [INFO]: [0mGET /api/skills/my-states [36m304[0m 630.649 ms - -[0m
+2026-04-23 12:34:38 [INFO]: [Arena] Socket connected: c0SQdJqIRXmZmiFaAAAX
+2026-04-23 12:34:38 [INFO]: [0mGET /api/problems [32m200[0m 843.962 ms - 31597[0m
+2026-04-23 12:34:38 [INFO]: [0mGET /api/skills/my-states [32m200[0m 888.614 ms - 6375[0m
+2026-04-23 12:34:38 [INFO]: [0mGET /api/problems [32m200[0m 3039.113 ms - 31597[0m
+2026-04-23 12:34:38 [INFO]: [0mGET /api/problems [36m304[0m 1003.693 ms - -[0m
+2026-04-23 12:34:42 [INFO]: Socket connected: NEGsHnT-5engaQkDAAAa
+2026-04-23 12:36:09 [INFO]: [Arena] Socket disconnected: r3zpRhSJYPq3lflxAAAU
+2026-04-23 12:36:10 [INFO]: [0mGET /api/auth/me [36m304[0m 55.935 ms - -[0m
+2026-04-23 12:36:11 [INFO]: [0mGET /api/auth/me [36m304[0m 48.572 ms - -[0m
+2026-04-23 12:36:11 [INFO]: [0mGET /api/skills/my-states [36m304[0m 105.845 ms - -[0m
+2026-04-23 12:36:11 [INFO]: [Arena] Socket connected: QRVKjjwKgIttiU4EAAAe
+2026-04-23 12:36:11 [INFO]: [0mGET /api/skills/my-states [36m304[0m 117.404 ms - -[0m
+2026-04-23 12:36:14 [INFO]: [0mGET /api/problems [36m304[0m 128.714 ms - -[0m
+2026-04-23 12:36:14 [INFO]: [0mGET /api/problems [36m304[0m 171.019 ms - -[0m
+2026-04-23 12:36:44 [INFO]: [Arena] Room BF20A8 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 12:37:11 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room BF20A8
+2026-04-23 12:37:13 [INFO]: [Arena] Match started in room BF20A8. Mode: coop-split
+2026-04-23 12:37:13 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [32m200[0m 134.582 ms - 1853[0m
+2026-04-23 12:37:13 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [32m200[0m 175.197 ms - 1853[0m
+2026-04-23 12:37:13 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [32m200[0m 143.780 ms - 1853[0m
+2026-04-23 12:37:13 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [36m304[0m 146.326 ms - -[0m
+2026-04-23 12:38:27 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 12:38:27 [INFO]: [0mPOST /api/submissions/run [32m200[0m 4242.819 ms - 217[0m
+2026-04-23 12:38:27 [INFO]: [Arena] Room BF20A8: Supreeth Reddy passed test 0/1
+2026-04-23 12:38:36 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 12:38:36 [INFO]: [0mPOST /api/submissions/run [32m200[0m 3400.735 ms - 217[0m
+2026-04-23 12:38:36 [INFO]: [Arena] Room BF20A8: Supreeth Reddy passed test 0/1
+2026-04-23 12:38:44 [INFO]: Test run complete: 0/3 passed (java)
+2026-04-23 12:38:45 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10aa correct=false xp=0
+2026-04-23 12:38:45 [INFO]: [0mPOST /api/submissions [32m201[0m 7286.507 ms - 2967[0m
+2026-04-23 12:38:45 [INFO]: [Arena] Room BF20A8: Supreeth Reddy submitted. 0/3 passed.
+2026-04-23 12:39:30 [INFO]: [Arena] Socket disconnected: QRVKjjwKgIttiU4EAAAe
+2026-04-23 12:39:30 [INFO]: [Arena] Supreeth Reddy disconnected from room BF20A8. Starting grace period.
+2026-04-23 12:39:31 [INFO]: [0mGET /api/skills [32m200[0m 113.577 ms - 4858[0m
+2026-04-23 12:39:31 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 131.289 ms - 23596[0m
+2026-04-23 12:39:31 [INFO]: [0mGET /api/skills [36m304[0m 109.365 ms - -[0m
+2026-04-23 12:39:31 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 163.859 ms - -[0m
+2026-04-23 12:39:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 174.177 ms - -[0m
+2026-04-23 12:39:34 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 154.426 ms - -[0m
+2026-04-23 12:39:56 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 12:39:56 [INFO]: [0mPOST /api/auth/login [32m200[0m 413.904 ms - 442[0m
+2026-04-23 12:39:56 [INFO]: [0mGET /api/skills/my-states [32m200[0m 109.441 ms - 6439[0m
+2026-04-23 12:39:56 [INFO]: [0mGET /api/problems [36m304[0m 199.350 ms - -[0m
+2026-04-23 12:39:56 [INFO]: [0mGET /api/users/recommendations [36m304[0m 226.589 ms - -[0m
+2026-04-23 12:39:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 212.562 ms - -[0m
+2026-04-23 12:39:57 [INFO]: [0mGET /api/problems [36m304[0m 183.407 ms - -[0m
+2026-04-23 12:39:57 [INFO]: [0mGET /api/users/recommendations [36m304[0m 190.701 ms - -[0m
+2026-04-23 12:39:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 157.728 ms - -[0m
+2026-04-23 12:39:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 108.927 ms - -[0m
+2026-04-23 12:40:00 [INFO]: [Arena] Grace period expired for Supreeth Reddy in room BF20A8. Forfeiting.
+2026-04-23 12:40:01 [INFO]: [0mGET /api/skills/my-states [36m304[0m 113.768 ms - -[0m
+2026-04-23 12:40:01 [INFO]: [0mGET /api/submissions/history?limit=500 [32m200[0m 223.322 ms - 40933[0m
+2026-04-23 12:40:01 [INFO]: [0mGET /api/skills/my-states [36m304[0m 134.959 ms - -[0m
+2026-04-23 12:40:01 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 139.227 ms - -[0m
+2026-04-23 12:47:44 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10aa [36m304[0m 253.367 ms - -[0m
+2026-04-23 12:55:02 [INFO]: [Arena] Socket disconnected: c0SQdJqIRXmZmiFaAAAX
+2026-04-23 12:55:02 [INFO]: [Arena] Angeerasa Reddy disconnected from room BF20A8. Starting grace period.
+2026-04-23 12:55:03 [INFO]: [0mGET /api/auth/me [36m304[0m 77.202 ms - -[0m
+2026-04-23 12:55:03 [INFO]: [0mGET /api/auth/me [32m200[0m 55.175 ms - 457[0m
+2026-04-23 12:55:03 [INFO]: [0mGET /api/skills/my-states [36m304[0m 78.915 ms - -[0m
+2026-04-23 12:55:03 [INFO]: [0mGET /api/skills/my-states [32m200[0m 83.431 ms - 6375[0m
+2026-04-23 12:55:03 [INFO]: [Arena] Socket connected: G63uBKUB_ooRcKzWAAAh
+2026-04-23 12:55:06 [INFO]: [0mGET /api/auth/me [32m200[0m 28.391 ms - 607[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/auth/me [36m304[0m 28.808 ms - -[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 90.163 ms - -[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 119.290 ms - -[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.784 ms - -[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 107.610 ms - -[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 70.967 ms - -[0m
+2026-04-23 12:55:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 66.882 ms - -[0m
+2026-04-23 12:55:09 [INFO]: [0mGET /api/problems [36m304[0m 105.049 ms - -[0m
+2026-04-23 12:55:09 [INFO]: [0mGET /api/problems [32m200[0m 141.532 ms - 31597[0m
+2026-04-23 12:55:35 [INFO]: [Arena] Socket connected: lZLsAwTTRJ9GOXI_AAAk
+2026-04-23 12:55:35 [INFO]: [0mGET /api/problems [36m304[0m 99.995 ms - -[0m
+2026-04-23 12:55:35 [INFO]: [0mGET /api/problems [36m304[0m 154.874 ms - -[0m
+2026-04-23 12:55:47 [INFO]: [Arena] Room 87220A created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 12:55:59 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 87220A
+2026-04-23 12:56:01 [INFO]: [Arena] Match started in room 87220A. Mode: coop-split
+2026-04-23 12:56:02 [INFO]: [Arena] Socket disconnected: lZLsAwTTRJ9GOXI_AAAk
+2026-04-23 12:56:02 [INFO]: [Arena] Supreeth Reddy disconnected from room 87220A. Starting grace period.
+2026-04-23 12:56:02 [INFO]: [Arena] Socket disconnected: G63uBKUB_ooRcKzWAAAh
+2026-04-23 12:56:02 [INFO]: [Arena] Angeerasa Reddy disconnected from room 87220A. Starting grace period.
+2026-04-23 12:56:12 [INFO]: [0mGET /api/auth/me [36m304[0m 51.847 ms - -[0m
+2026-04-23 12:56:12 [INFO]: [0mGET /api/auth/me [36m304[0m 44.996 ms - -[0m
+2026-04-23 12:56:12 [INFO]: [Arena] Socket connected: 1JNJ1zwXmdEUtNXOAAAn
+2026-04-23 12:56:12 [INFO]: [0mGET /api/skills/my-states [36m304[0m 93.997 ms - -[0m
+2026-04-23 12:56:12 [INFO]: [0mGET /api/problems [36m304[0m 154.542 ms - -[0m
+2026-04-23 12:56:12 [INFO]: [0mGET /api/skills/my-states [36m304[0m 92.723 ms - -[0m
+2026-04-23 12:56:12 [INFO]: [0mGET /api/problems [36m304[0m 149.147 ms - -[0m
+2026-04-23 12:56:14 [INFO]: [0mGET /api/auth/me [36m304[0m 44.508 ms - -[0m
+2026-04-23 12:56:14 [INFO]: [0mGET /api/auth/me [32m200[0m 45.007 ms - 457[0m
+2026-04-23 12:56:14 [INFO]: [0mGET /api/skills/my-states [36m304[0m 95.052 ms - -[0m
+2026-04-23 12:56:14 [INFO]: [0mGET /api/skills/my-states [32m200[0m 94.348 ms - 6375[0m
+2026-04-23 12:56:14 [INFO]: [Arena] Socket connected: hJvnrcvlH8yXEGxLAAAq
+2026-04-23 12:56:15 [INFO]: [0mGET /api/problems [36m304[0m 146.339 ms - -[0m
+2026-04-23 12:56:15 [INFO]: [0mGET /api/problems [32m200[0m 152.498 ms - 31597[0m
+2026-04-23 12:56:23 [INFO]: [Arena] Room 620BAB created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 12:56:32 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 620BAB
+2026-04-23 12:56:34 [INFO]: [Arena] Match started in room 620BAB. Mode: coop-split
+2026-04-23 12:56:34 [INFO]: [Arena] Socket disconnected: 1JNJ1zwXmdEUtNXOAAAn
+2026-04-23 12:56:34 [INFO]: [Arena] Supreeth Reddy disconnected from room 620BAB. Starting grace period.
+2026-04-23 12:56:34 [INFO]: [Arena] Socket disconnected: hJvnrcvlH8yXEGxLAAAq
+2026-04-23 12:56:34 [INFO]: [Arena] Angeerasa Reddy disconnected from room 620BAB. Starting grace period.
+2026-04-23 13:00:06 [INFO]: [0mGET /api/auth/me [32m200[0m 28.118 ms - 457[0m
+2026-04-23 13:00:06 [INFO]: [0mGET /api/auth/me [36m304[0m 32.950 ms - -[0m
+2026-04-23 13:00:06 [INFO]: [0mGET /api/auth/me [36m304[0m 28.799 ms - -[0m
+2026-04-23 13:00:06 [INFO]: [0mGET /api/auth/me [36m304[0m 37.887 ms - -[0m
+2026-04-23 13:00:06 [INFO]: [Arena] Socket connected: 4L7BzOEze10_2xEgAAAt
+2026-04-23 13:00:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 66.577 ms - -[0m
+2026-04-23 13:00:06 [INFO]: [0mGET /api/skills/my-states [32m200[0m 68.739 ms - 6375[0m
+2026-04-23 13:00:06 [INFO]: [Arena] Socket connected: ep7WXyplUMcucmbeAAAw
+2026-04-23 13:00:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 74.845 ms - -[0m
+2026-04-23 13:00:06 [INFO]: [0mGET /api/skills/my-states [36m304[0m 70.679 ms - -[0m
+2026-04-23 13:00:14 [INFO]: [0mGET /api/problems [36m304[0m 114.865 ms - -[0m
+2026-04-23 13:00:14 [INFO]: [0mGET /api/problems [32m200[0m 373.642 ms - 31597[0m
+2026-04-23 13:01:39 [INFO]: [Arena] Socket disconnected: ep7WXyplUMcucmbeAAAw
+2026-04-23 13:01:40 [INFO]: [0mGET /api/auth/me [36m304[0m 32.827 ms - -[0m
+2026-04-23 13:01:40 [INFO]: [0mGET /api/auth/me [36m304[0m 31.388 ms - -[0m
+2026-04-23 13:01:40 [INFO]: [Arena] Socket connected: 6w-gmAsCOCtJptw9AAAz
+2026-04-23 13:01:40 [INFO]: [0mGET /api/skills/my-states [36m304[0m 67.345 ms - -[0m
+2026-04-23 13:01:40 [INFO]: [0mGET /api/skills/my-states [36m304[0m 64.360 ms - -[0m
+2026-04-23 13:01:42 [INFO]: [0mGET /api/problems [36m304[0m 97.226 ms - -[0m
+2026-04-23 13:01:42 [INFO]: [0mGET /api/problems [36m304[0m 129.877 ms - -[0m
+2026-04-23 13:01:42 [INFO]: [Arena] Socket disconnected: 6w-gmAsCOCtJptw9AAAz
+2026-04-23 13:01:43 [INFO]: [0mGET /api/auth/me [36m304[0m 30.907 ms - -[0m
+2026-04-23 13:01:43 [INFO]: [0mGET /api/auth/me [36m304[0m 32.937 ms - -[0m
+2026-04-23 13:01:43 [INFO]: [0mGET /api/skills/my-states [36m304[0m 73.659 ms - -[0m
+2026-04-23 13:01:43 [INFO]: [0mGET /api/problems [36m304[0m 97.520 ms - -[0m
+2026-04-23 13:01:43 [INFO]: [0mGET /api/skills/my-states [36m304[0m 68.516 ms - -[0m
+2026-04-23 13:01:43 [INFO]: [Arena] Socket connected: PJXi225u1h165PF9AAA3
+2026-04-23 13:01:43 [INFO]: [0mGET /api/problems [36m304[0m 95.834 ms - -[0m
+2026-04-23 13:01:48 [INFO]: [Arena] Room 152FF8 created by Supreeth Reddy (69b55b4c2a4ff06cb7d760fa). Mode: coop-split
+2026-04-23 13:01:59 [INFO]: [Arena] Angeerasa Reddy (69e9a75de78c372318bfb9c4) joined room 152FF8
+2026-04-23 13:02:01 [INFO]: [Arena] Match started in room 152FF8. Mode: coop-split
+2026-04-23 13:02:01 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 111.132 ms - -[0m
+2026-04-23 13:02:01 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 104.936 ms - -[0m
+2026-04-23 13:02:01 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 109.531 ms - 2091[0m
+2026-04-23 13:02:01 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 101.448 ms - -[0m
+2026-04-23 13:02:46 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 13:02:46 [INFO]: [0mPOST /api/submissions/run [32m200[0m 2803.614 ms - 535[0m
+2026-04-23 13:02:46 [INFO]: [Arena] Room 152FF8: Supreeth Reddy passed test 0/1
+2026-04-23 13:02:55 [INFO]: Test run complete: 0/1 passed (java)
+2026-04-23 13:02:55 [INFO]: [0mPOST /api/submissions/run [32m200[0m 1378.321 ms - 535[0m
+2026-04-23 13:02:55 [INFO]: [Arena] Room 152FF8: Supreeth Reddy passed test 0/1
+2026-04-23 13:03:01 [INFO]: Test run complete: 0/3 passed (java)
+2026-04-23 13:03:02 [INFO]: Submission created: user=69b55b4c2a4ff06cb7d760fa problem=69b551a430f4ccf0382a10ab correct=false xp=0
+2026-04-23 13:03:02 [INFO]: [0mPOST /api/submissions [32m201[0m 5578.782 ms - 3521[0m
+2026-04-23 13:03:02 [INFO]: [Arena] Room 152FF8: Supreeth Reddy submitted. 0/3 passed.
+2026-04-23 13:38:59 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 13:38:59 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 13:39:00 [INFO]: MongoDB connected successfully
+2026-04-23 13:39:19 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 13:39:20 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 13:39:20 [INFO]: MongoDB connected successfully
+2026-04-23 13:39:20 [INFO]: Server running on port 5000 in development mode
+2026-04-23 13:39:20 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 13:39:35 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 13:39:35 [INFO]: [0mPOST /api/auth/login [32m200[0m 243.266 ms - 442[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/skills/my-states [32m200[0m 111.540 ms - 6439[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/problems [32m200[0m 154.698 ms - 31597[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/users/recommendations [32m200[0m 185.078 ms - 2080[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 92.950 ms - -[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/problems [36m304[0m 134.791 ms - -[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/users/recommendations [36m304[0m 110.117 ms - -[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 90.271 ms - -[0m
+2026-04-23 13:39:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 86.184 ms - -[0m
+2026-04-23 13:40:02 [INFO]: [Arena] Socket connected: dpbORhIktCWIa3TsAAAC
+2026-04-23 13:40:02 [INFO]: [0mGET /api/problems [36m304[0m 105.382 ms - -[0m
+2026-04-23 13:40:02 [INFO]: [0mGET /api/problems [36m304[0m 100.466 ms - -[0m
+2026-04-23 13:40:03 [INFO]: [Arena] Socket disconnected: dpbORhIktCWIa3TsAAAC
+2026-04-23 13:40:03 [INFO]: [0mGET /api/skills [32m200[0m 69.667 ms - 4858[0m
+2026-04-23 13:40:03 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 94.519 ms - 23596[0m
+2026-04-23 13:40:03 [INFO]: [0mGET /api/skills [36m304[0m 64.967 ms - -[0m
+2026-04-23 13:40:03 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 94.504 ms - -[0m
+2026-04-23 13:40:04 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 109.433 ms - 2091[0m
+2026-04-23 13:40:04 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 90.578 ms - -[0m
+2026-04-23 13:50:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 168.135 ms - -[0m
+2026-04-23 13:50:27 [INFO]: [0mGET /api/problems [36m304[0m 120.062 ms - -[0m
+2026-04-23 13:50:27 [INFO]: [0mGET /api/users/recommendations [36m304[0m 131.639 ms - -[0m
+2026-04-23 13:50:27 [INFO]: [0mGET /api/skills/my-states [36m304[0m 211.853 ms - -[0m
+2026-04-23 13:50:27 [INFO]: [0mGET /api/problems [36m304[0m 225.446 ms - -[0m
+2026-04-23 13:50:27 [INFO]: [0mGET /api/users/recommendations [36m304[0m 147.267 ms - -[0m
+2026-04-23 14:37:43 [INFO]: [Arena] /arena namespace initialised
+2026-04-23 14:37:43 [INFO]: MongoDB connection attempt 1/3
+2026-04-23 14:37:44 [INFO]: MongoDB connected successfully
+2026-04-23 14:37:44 [INFO]: Server running on port 5000 in development mode
+2026-04-23 14:37:44 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
+2026-04-23 14:37:52 [INFO]: [0mGET /api/auth/me [32m200[0m 79.442 ms - 607[0m
+2026-04-23 14:37:52 [INFO]: [0mGET /api/auth/me [36m304[0m 41.650 ms - -[0m
+2026-04-23 14:37:52 [INFO]: [0mGET /api/skills/my-states [36m304[0m 138.529 ms - -[0m
+2026-04-23 14:37:52 [INFO]: [0mGET /api/problems [36m304[0m 152.891 ms - -[0m
+2026-04-23 14:37:52 [INFO]: [0mGET /api/users/recommendations [36m304[0m 178.790 ms - -[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 93.687 ms - -[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/problems [36m304[0m 129.870 ms - -[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/users/recommendations [36m304[0m 130.601 ms - -[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 85.654 ms - -[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/submissions/history?limit=5 [32m200[0m 371.272 ms - 6769[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 76.886 ms - -[0m
+2026-04-23 14:37:53 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 82.482 ms - -[0m
+2026-04-23 14:38:05 [INFO]: [0mGET /api/skills [36m304[0m 87.178 ms - -[0m
+2026-04-23 14:38:05 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 109.753 ms - -[0m
+2026-04-23 14:38:05 [INFO]: [0mGET /api/skills [36m304[0m 78.539 ms - -[0m
+2026-04-23 14:38:05 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 118.719 ms - -[0m
+2026-04-23 14:38:09 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 119.197 ms - -[0m
+2026-04-23 14:38:10 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 118.292 ms - -[0m
+2026-04-23 14:38:52 [INFO]: [0mGET /api/skills/my-states [36m304[0m 97.305 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 97.752 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/problems [36m304[0m 129.936 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/users/recommendations [36m304[0m 143.130 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 85.290 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 92.855 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/problems [36m304[0m 118.682 ms - -[0m
+2026-04-23 14:38:53 [INFO]: [0mGET /api/users/recommendations [36m304[0m 140.718 ms - -[0m
+2026-04-23 14:38:56 [INFO]: [Arena] Socket connected: 088ScmkAvcno8bVcAAAB
+2026-04-23 14:38:56 [INFO]: [0mGET /api/problems [36m304[0m 121.944 ms - -[0m
+2026-04-23 14:38:56 [INFO]: [0mGET /api/problems [36m304[0m 169.329 ms - -[0m
+2026-04-23 14:38:57 [INFO]: [Arena] Socket disconnected: 088ScmkAvcno8bVcAAAB
+2026-04-23 14:39:00 [INFO]: Socket connected: ppWqOdKbdOa8s5ZIAAAD
+2026-04-23 14:39:00 [INFO]: Socket ppWqOdKbdOa8s5ZIAAAD joined room user:69b55b4c2a4ff06cb7d760fa
+2026-04-23 14:39:00 [INFO]: [0mGET /api/leaderboard [32m200[0m 91.634 ms - 315[0m
+2026-04-23 14:39:00 [INFO]: [0mGET /api/leaderboard [36m304[0m 81.540 ms - -[0m
+2026-04-23 14:39:00 [WARN]: Redis error — leaderboard will use MongoDB fallback {"error":"WRONGPASS invalid username-password pair"}
+2026-04-23 14:39:01 [INFO]: Socket disconnected: ppWqOdKbdOa8s5ZIAAAD
+2026-04-23 14:39:01 [INFO]: [0mGET /api/skills/my-states [36m304[0m 102.951 ms - -[0m
+2026-04-23 14:39:01 [INFO]: [0mGET /api/submissions/history?limit=500 [32m200[0m 132.098 ms - 42240[0m
+2026-04-23 14:39:01 [INFO]: [0mGET /api/skills/my-states [36m304[0m 84.404 ms - -[0m
+2026-04-23 14:39:01 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 124.031 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 78.839 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 83.631 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/problems [36m304[0m 116.525 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/skills/my-states [36m304[0m 104.195 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/users/recommendations [36m304[0m 191.499 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 138.006 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/problems [36m304[0m 139.618 ms - -[0m
+2026-04-23 14:39:05 [INFO]: [0mGET /api/users/recommendations [36m304[0m 119.179 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/auth/me [36m304[0m 41.322 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/auth/me [36m304[0m 39.567 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 80.789 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 83.875 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/users/recommendations [36m304[0m 118.476 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/problems [36m304[0m 132.782 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 78.880 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 78.982 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/problems [36m304[0m 90.990 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 83.995 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/users/recommendations [36m304[0m 123.195 ms - -[0m
+2026-04-23 14:44:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 80.603 ms - -[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/auth/me [32m200[0m 116.725 ms - 607[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/auth/me [36m304[0m 37.945 ms - -[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/skills/my-states [32m200[0m 101.958 ms - 6439[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/submissions/history?limit=5 [32m200[0m 88.302 ms - 6769[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/problems [32m200[0m 129.058 ms - 31597[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/users/recommendations [32m200[0m 146.469 ms - 2080[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/skills/my-states [36m304[0m 88.100 ms - -[0m
+2026-04-23 15:11:57 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 106.363 ms - -[0m
+2026-04-23 15:11:58 [INFO]: [0mGET /api/problems [36m304[0m 98.108 ms - -[0m
+2026-04-23 15:11:58 [INFO]: [0mGET /api/skills/my-states [36m304[0m 79.284 ms - -[0m
+2026-04-23 15:11:58 [INFO]: [0mGET /api/users/recommendations [36m304[0m 132.668 ms - -[0m
+2026-04-23 15:11:58 [INFO]: [0mGET /api/skills/my-states [36m304[0m 80.074 ms - -[0m
+2026-04-23 15:22:56 [INFO]: [0mGET /api/skills [36m304[0m 238.196 ms - -[0m
+2026-04-23 15:22:56 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 218.585 ms - -[0m
+2026-04-23 15:22:57 [INFO]: [0mGET /api/skills [36m304[0m 104.126 ms - -[0m
+2026-04-23 15:22:57 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 153.105 ms - -[0m
+2026-04-23 15:22:58 [INFO]: [0mGET /api/skills/my-states [36m304[0m 170.036 ms - -[0m
+2026-04-23 15:22:58 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 257.263 ms - -[0m
+2026-04-23 15:22:58 [INFO]: [0mGET /api/skills/my-states [36m304[0m 142.622 ms - -[0m
+2026-04-23 15:22:59 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 187.396 ms - -[0m
+2026-04-23 15:23:00 [INFO]: [0mGET /api/skills [36m304[0m 114.619 ms - -[0m
+2026-04-23 15:23:00 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 144.641 ms - -[0m
+2026-04-23 15:23:00 [INFO]: [0mGET /api/skills [36m304[0m 83.890 ms - -[0m
+2026-04-23 15:23:00 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 125.295 ms - -[0m
+2026-04-23 15:23:03 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 149.635 ms - -[0m
+2026-04-23 15:23:03 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 145.638 ms - -[0m
+2026-04-23 15:25:10 [INFO]: [0mGET /api/auth/me [36m304[0m 351.320 ms - -[0m
+2026-04-23 15:25:10 [INFO]: [0mGET /api/auth/me [36m304[0m 36.197 ms - -[0m
+2026-04-23 15:25:10 [INFO]: [0mGET /api/skills/my-states [36m304[0m 100.856 ms - -[0m
+2026-04-23 15:25:10 [INFO]: [0mGET /api/skills/my-states [36m304[0m 77.050 ms - -[0m
+2026-04-23 15:25:10 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 396.461 ms - -[0m
+2026-04-23 15:25:10 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 151.222 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 117.123 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/problems [36m304[0m 177.714 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/users/recommendations [36m304[0m 197.713 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/skills/my-states [36m304[0m 123.006 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 392.202 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/problems [36m304[0m 215.778 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/users/recommendations [36m304[0m 211.403 ms - -[0m
+2026-04-23 15:25:13 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 87.926 ms - -[0m
+2026-04-23 15:34:02 [INFO]: [0mGET /api/skills [36m304[0m 216.673 ms - -[0m
+2026-04-23 15:34:02 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 203.105 ms - -[0m
+2026-04-23 15:34:02 [INFO]: [0mGET /api/skills [36m304[0m 407.978 ms - -[0m
+2026-04-23 15:34:02 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 408.361 ms - -[0m
+2026-04-23 15:34:05 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 163.370 ms - -[0m
+2026-04-23 15:34:05 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 136.035 ms - -[0m
+2026-04-23 15:42:33 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-04-23 15:42:33 [INFO]: [0mPOST /api/auth/login [32m200[0m 609.504 ms - 442[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 297.705 ms - -[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 280.926 ms - -[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/users/recommendations [36m304[0m 284.795 ms - -[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 163.356 ms - -[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 161.772 ms - -[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/users/recommendations [36m304[0m 234.031 ms - -[0m
+2026-04-23 15:42:34 [INFO]: [0mGET /api/skills/my-states [36m304[0m 125.581 ms - -[0m
+2026-04-23 15:42:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 139.431 ms - -[0m
+2026-04-23 15:42:35 [INFO]: [0mGET /api/problems [36m304[0m 776.942 ms - -[0m
+2026-04-23 15:42:35 [INFO]: [0mGET /api/problems [36m304[0m 177.922 ms - -[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/auth/me [36m304[0m 44.013 ms - -[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/auth/me [36m304[0m 40.451 ms - -[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/skills [32m200[0m 78.748 ms - 4858[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/skills/my-states [36m304[0m 104.929 ms - -[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/problems?page=1&limit=15 [32m200[0m 142.103 ms - 23596[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/skills [36m304[0m 79.223 ms - -[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/skills/my-states [36m304[0m 89.969 ms - -[0m
+2026-04-23 15:42:48 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 119.195 ms - -[0m
+2026-04-23 15:42:56 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 143.728 ms - 2091[0m
+2026-04-23 15:42:57 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 147.897 ms - -[0m

@@ -81,6 +81,54 @@ const parsePythonSignature = (starterCode) => {
 };
 
 // ─────────────────────────────────────────────────────────────
+// Smart Argument Splitter — splits "2, [[1,0]]" → ["2", "[[1,0]]"]
+// respecting bracket/brace nesting so inner commas aren't split
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Splits a comma-separated argument string into individual args,
+ * respecting nested brackets, braces, and quotes.
+ *
+ * @param {string} raw - The raw input string, e.g. "2, [[1,0],[2,0]]"
+ * @param {number} expectedCount - How many args we expect
+ * @returns {string[]} Array of individual arg strings
+ */
+const smartSplitArgs = (raw, expectedCount) => {
+  const args = [];
+  let depth = 0;
+  let current = '';
+  let inQuote = false;
+
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    
+    if (c === '"' || c === "'") {
+      inQuote = !inQuote;
+      current += c;
+    } else if (inQuote) {
+      current += c;
+    } else if (c === '[' || c === '{' || c === '(') {
+      depth++;
+      current += c;
+    } else if (c === ']' || c === '}' || c === ')') {
+      depth--;
+      current += c;
+    } else if (c === ',' && depth === 0) {
+      args.push(current.trim());
+      current = '';
+    } else {
+      current += c;
+    }
+  }
+  
+  if (current.trim()) {
+    args.push(current.trim());
+  }
+
+  return args;
+};
+
+// ─────────────────────────────────────────────────────────────
 // Wrapper Generators — build the full executable code
 // ─────────────────────────────────────────────────────────────
 
@@ -614,7 +662,41 @@ const runTestCases = async (code, testCases, language = 'javascript', problem = 
       const idx = i + chunkIdx;
       try {
         const startTime = Date.now();
-        const executionResult = await executeCode(wrappedCode, testCase.input || '', language);
+
+        // ─── Normalize stdin for Java/Python multi-param signatures ───
+        // If the test case input is a single line with comma-separated args
+        // but the wrapper expects one arg per line, split intelligently.
+        let stdinInput = testCase.input || '';
+        if (starterCode && stdinInput.trim()) {
+          let expectedArgCount = 0;
+          if (language === 'java') {
+            const sig = parseJavaSignature(starterCode);
+            expectedArgCount = sig.params.length;
+          } else if (language === 'javascript') {
+            const sig = parseJSSignature(starterCode);
+            expectedArgCount = sig.params.length;
+          } else if (language === 'python') {
+            const sig = parsePythonSignature(starterCode);
+            expectedArgCount = sig.params.length;
+          }
+          
+          const inputLines = stdinInput.split('\n').filter(l => l.trim());
+          if (expectedArgCount > 1 && inputLines.length === 1) {
+            // Single line with multiple args — attempt smart split
+            // e.g. "2, [[1,0]]" → ["2", "[[1,0]]"]
+            const raw = stdinInput.trim();
+            const splitArgs = smartSplitArgs(raw, expectedArgCount);
+            if (splitArgs.length === expectedArgCount) {
+              stdinInput = splitArgs.join('\n');
+              logger.debug('Auto-split single-line input into multi-line', { 
+                original: raw.substring(0, 100), 
+                lines: splitArgs.length 
+              });
+            }
+          }
+        }
+
+        const executionResult = await executeCode(wrappedCode, stdinInput, language);
         const executionTime = Date.now() - startTime;
 
         const stdoutTrimmed = executionResult.stdout.trim();

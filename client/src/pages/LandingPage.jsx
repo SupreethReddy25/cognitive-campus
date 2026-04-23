@@ -244,7 +244,7 @@ const LandingPage = () => {
   const [statsRef,statsVis]=useScrollFade();
 
   return(
-    <div style={{minHeight:'100vh',background:T.bg,color:T.text,overflowX:'hidden',position:'relative',fontFamily:"-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif"}}>
+    <div style={{minHeight:'100vh',background:T.bg,color:T.text,overflowX:'hidden',position:'relative',fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif"}}>
       <style dangerouslySetInnerHTML={{__html:`
         @keyframes fadeSlideUp{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:translateY(0)}}
         .anim{opacity:0;animation:fadeSlideUp .85s cubic-bezier(.16,1,.3,1) forwards}
@@ -279,26 +279,52 @@ const LandingPage = () => {
       {isDark?<WaveBackground/>:<LightBackground/>}
       {isDark&&<TubesCursor/>}
 
-      {/* NAVBAR */}
-      <nav className="anim d1" style={{...gs(),position:'fixed',top:0,left:0,width:'100%',zIndex:100,borderBottom:`1px solid ${T.border}`,boxSizing:'border-box'}}>
-        <div style={{maxWidth:1400,margin:'0 auto',padding:'0 48px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div style={{fontSize:17,letterSpacing:'-.02em'}}>
-            <span style={{color:T.muted,fontWeight:300}}>Cognitive</span>
-            <span style={{color:T.text,fontWeight:700,marginLeft:4}}>Campus</span>
+      {/* NAVBAR — PieterKoopt® floating style */}
+      <nav className="anim d1" style={{
+        position:'fixed', top:16, left:24, right:24, zIndex:100,
+        background: isDark ? 'rgba(8,8,16,0.65)' : 'rgba(255,255,255,0.70)',
+        backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)',
+        border:`1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+        borderRadius: 14,
+        boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.08)',
+      }}>
+        <div style={{maxWidth:1400,margin:'0 auto',padding:'0 32px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          {/* Brand — uppercase tracking */}
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span style={{fontFamily:"'Playfair Display', serif", fontSize:16, fontWeight:600, letterSpacing:'.04em', color:T.text, textTransform:'uppercase'}}>
+              Cognitive Campus
+            </span>
+            <span style={{fontSize:9, fontWeight:600, letterSpacing:'.12em', color:T.faint, verticalAlign:'super'}}>®</span>
           </div>
-          <div style={{display:'flex',gap:32,fontSize:14,fontWeight:500,color:T.muted}}>
-            {[['#features','Features'],['/problems','Problems'],['/leaderboard','Leaderboard']].map(([h,l],i)=>
+
+          {/* Center nav items — wide spacing, uppercase */}
+          <div style={{display:'flex',gap:40,fontSize:12,fontWeight:500,letterSpacing:'.12em',textTransform:'uppercase',color:T.muted}}>
+            {[['#features','How It Works'],['/problems','Problems'],['/leaderboard','Leaderboard']].map(([h,l],i)=>
               h.startsWith('#')
-                ?<a key={i} href={h} style={{color:'inherit',textDecoration:'none'}} onMouseOver={e=>e.target.style.color=T.text} onMouseOut={e=>e.target.style.color=T.muted}>{l}</a>
-                :<button key={i} onClick={()=>navigate(h)} style={{background:'none',border:'none',cursor:'pointer',color:T.muted,fontSize:14,fontWeight:500,padding:0}} onMouseOver={e=>e.target.style.color=T.text} onMouseOut={e=>e.target.style.color=T.muted}>{l}</button>
+                ?<a key={i} href={h} style={{color:'inherit',textDecoration:'none',transition:'color .2s'}} onMouseOver={e=>e.target.style.color=T.text} onMouseOut={e=>e.target.style.color=T.muted}>{l}</a>
+                :<button key={i} onClick={()=>navigate(h)} style={{background:'none',border:'none',cursor:'pointer',color:T.muted,fontSize:12,fontWeight:500,letterSpacing:'.12em',textTransform:'uppercase',padding:0,transition:'color .2s'}} onMouseOver={e=>e.target.style.color=T.text} onMouseOut={e=>e.target.style.color=T.muted}>{l}</button>
             )}
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <button onClick={()=>setIsDark(!isDark)} className="bsc" style={{...gs(),width:38,height:38,borderRadius:'50%',cursor:'pointer',color:T.muted,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              {isDark?<Sun size={16}/>:<Moon size={16}/>}
+
+          {/* Right — theme toggle + auth */}
+          <div style={{display:'flex',alignItems:'center',gap:16}}>
+            <button onClick={()=>setIsDark(!isDark)} className="bsc" style={{width:36,height:36,borderRadius:'50%',cursor:'pointer',color:T.muted,display:'flex',alignItems:'center',justifyContent:'center',background:'transparent',border:`1px solid ${T.border}`}}>
+              {isDark?<Sun size={14}/>:<Moon size={14}/>}
             </button>
-            <button onClick={()=>navigate('/login')} style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontWeight:500,color:T.muted,padding:'0 12px'}} onMouseOver={e=>e.target.style.color=T.text} onMouseOut={e=>e.target.style.color=T.muted}>Log in</button>
-            <button onClick={()=>navigate('/register')} className="bsc" style={{background:T.btnBg,color:T.btnTxt,fontSize:14,fontWeight:600,padding:'8px 20px',borderRadius:999,border:'none',cursor:'pointer'}}>Get Started</button>
+            <button onClick={()=>navigate('/login')} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,fontWeight:500,letterSpacing:'.1em',textTransform:'uppercase',color:T.muted,padding:'0 8px',transition:'color .2s'}} onMouseOver={e=>e.target.style.color=T.text} onMouseOut={e=>e.target.style.color=T.muted}>Log in</button>
+            <button onClick={()=>navigate('/register')} className="bsc" style={{
+              background:'transparent',color:T.text,fontSize:12,fontWeight:600,
+              letterSpacing:'.1em',textTransform:'uppercase',
+              padding:'10px 24px',borderRadius:8,
+              border:`1.5px solid ${T.text}`,cursor:'pointer',
+              display:'flex',alignItems:'center',gap:8,
+              transition:'all .25s'
+            }}
+              onMouseOver={e=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}}
+              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=T.text;}}
+            >
+              Get Started <span className="arr" style={{fontSize:14}}>›</span>
+            </button>
           </div>
         </div>
       </nav>

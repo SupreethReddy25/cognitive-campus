@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Settings } from "lucide-react";
-
 const SECTIONS = [{
   id: "workspace",
   label: "WORKSPACE"
@@ -17,18 +15,17 @@ const SECTIONS = [{
   id: "mentor",
   label: "MENTOR"
 }];
-
 export function GridNav() {
   const [active, setActive] = useState("workspace");
   return <aside className="relative flex h-screen flex-col border-r border-white/[0.04]">
       {/* Logo mark — 44px, flush with top bar */}
-      <Link to="/metrics" className="flex h-[44px] items-center justify-center border-b border-white/[0.04] press hover:bg-white/[0.05] transition-colors" title="Back to Dashboard">
+      <div className="flex h-[44px] items-center justify-center border-b border-white/[0.04]">
         <div className="grid-cross relative">
-          <div className="h-4 w-4 border border-[var(--signal)]/80 shadow-[0_0_8px_var(--signal)] rounded-[1px]">
-            <div className="h-full w-full border-l border-t border-[var(--signal)]/50" />
+          <div className="h-4 w-4 border border-white/20">
+            <div className="h-full w-full border-l border-t border-white/[0.06]" />
           </div>
         </div>
-      </Link>
+      </div>
 
       {/* Vertical section labels — San Rita editorial */}
       <div className="flex flex-1 flex-col">
@@ -53,7 +50,7 @@ export function GridNav() {
 
       {/* Footer — settings + grid mark */}
       <div className="flex h-12 items-center justify-center border-t border-white/[0.04]">
-        <button aria-label="Settings" className="press ease-signature flex h-7 w-7 items-center justify-center text-zinc-600 transition-colors duration-300 hover:text-[var(--signal)]">
+        <button aria-label="Settings" className="press ease-signature flex h-7 w-7 items-center justify-center text-zinc-600 transition-colors duration-300 hover:text-zinc-300">
           <Settings className="h-3.5 w-3.5" strokeWidth={1.5} />
         </button>
       </div>

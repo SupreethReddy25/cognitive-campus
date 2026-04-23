@@ -2,11 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const babel = require('@babel/core');
 
-const plugins = [
-  '@babel/plugin-syntax-jsx'
-];
 const presets = [
-  ['@babel/preset-typescript', { isTSX: true, allExtensions: true }]
+  ['@babel/preset-typescript', { isTSX: true, allExtensions: true }],
+  ['@babel/preset-react', { runtime: 'automatic' }]
 ];
 
 function compileDir(srcDir, destDir) {
@@ -23,7 +21,6 @@ function compileDir(srcDir, destDir) {
       try {
         const result = babel.transformFileSync(srcPath, {
           presets,
-          plugins,
           filename: srcPath // important for TSX
         });
         fs.writeFileSync(destPath, result.code);
@@ -49,7 +46,7 @@ compileDir(
 try {
   const result = babel.transformFileSync(
     path.join(__dirname, 'src/WorkspaceV2/v0-cognitive-campus-ui-main/app/WorkspaceContainer.tsx'),
-    { presets, plugins, filename: 'WorkspaceContainer.tsx' }
+    { presets, filename: 'WorkspaceContainer.tsx' }
   );
   fs.writeFileSync(path.join(__dirname, 'src/pages/WorkspaceV2/WorkspaceContainer.jsx'), result.code);
 } catch(e) {}
