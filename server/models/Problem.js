@@ -22,7 +22,7 @@ const problemSchema = new mongoose.Schema(
     skillId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Skill',
-      required: [true, 'Skill ID is required']
+      default: null
     },
     testCases: {
       type: [
@@ -39,7 +39,7 @@ const problemSchema = new mongoose.Schema(
     },
     starterCode: {
       type: String,
-      required: [true, 'Starter code is required']
+      default: null
     },
     starterCodeMap: {
       javascript: { type: String },
@@ -64,6 +64,38 @@ const problemSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+
+    // ─── Interview Intel Engine fields ───
+    authorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    status: {
+      type: String,
+      enum: ['quarantine', 'waitlisted', 'approved'],
+      default: 'approved'
+    },
+    company: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    round: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    warStory: {
+      type: String,
+      default: null
+    },
+    confidenceLevel: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null
     }
   },
   { timestamps: true }

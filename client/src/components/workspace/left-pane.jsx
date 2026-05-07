@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { useWorkspace } from "./WorkspaceContext";
 import { submissionsService } from "@/services/api";
-import { BookmarkPlus, Share2 } from "lucide-react";
+import { BookmarkPlus, Share2, Building2, Shield } from "lucide-react";
 
-const TABS = ["Description", "Solution", "Editorial", "Submissions"];
+const BASE_TABS = ["Description", "Solution", "Editorial", "Submissions"];
 
 export function LeftPane() {
   const { problem, id, setCode, language, result } = useWorkspace();
   const [tab, setTab] = useState("Description");
+
+  // Conditionally show Intel tab when problem was community-submitted
+  const hasIntel = !!(problem.authorId || problem.company || problem.warStory);
+  const TABS = hasIntel ? [...BASE_TABS, "Intel"] : BASE_TABS;
   
   return <section className="relative flex h-full flex-col">
       {/* Vertical spine label */}
@@ -72,6 +76,7 @@ export function LeftPane() {
           {tab === "Solution" && <LockedPane label="Solution walkthrough locked. Submit first." />}
           {tab === "Editorial" && <LockedPane label="Editorial unlocks at 70% mastery." />}
           {tab === "Submissions" && <Submissions id={id} setCode={setCode} />}
+          {tab === "Intel" && hasIntel && <IntelTab problem={problem} />}
         </div>
       </div>
 
@@ -244,4 +249,75 @@ function DifficultyChip({ difficulty }) {
       <span className={`inline-block h-1.5 w-1.5 rounded-full ${color}`} />
       <span className="font-mono text-[10px] tracking-widest text-zinc-400">{difficulty?.toUpperCase()}</span>
     </span>;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTEL TAB — Classified Interview Intelligence Briefing
+   ═══════════════════════════════════════════════════════════════ */
+function IntelTab({ problem }) {
+  const authorName = problem.authorId?.name || 'Anonymous Operative';
+  const confLevel = problem.confidenceLevel || 0;
+  const confLabel = confLevel >= 80 ? 'HIGH' : confLevel >= 50 ? 'MEDIUM' : 'LOW';
+  const confColor = confLevel >= 80 ? 'text-[var(--signal)]' : confLevel >= 50 ? 'text-amber-400' : 'text-rose-400';
+
+  return <div className="mt-6 space-y-6">
+    {/* Header */}
+    <div className="flex items-center gap-2 font-mono text-[9px] tracking-[0.25em] text-zinc-600">
+      <Shield className="h-3 w-3 text-[var(--signal)]" strokeWidth={1.5} />
+      <span className="text-[var(--signal)]">CLASSIFIED INTEL</span>
+      <span className="h-px flex-1 bg-white/[0.04]" />
+    </div>
+
+    {/* Company / Round badge */}
+    {(problem.company || problem.round) && (
+      <div className="flex items-center gap-0 font-mono text-[12px] tracking-[0.12em] text-zinc-200">
+        <Building2 className="h-3.5 w-3.5 text-zinc-500 mr-2" strokeWidth={1.5} />
+        {problem.company && <span className="uppercase">{problem.company}</span>}
+        {problem.company && problem.round && <span className="mx-2 text-zinc-700">|</span>}
+        {problem.round && <span className="uppercase text-zinc-400">{problem.round}</span>}
+      </div>
+    )}
+
+    {/* Confidence */}
+    {confLevel > 0 && (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-600">MEMORY CONFIDENCE</span>
+          <span className={`font-mono text-[10px] tabular-nums ${confColor}`}>{confLevel}% · {confLabel}</span>
+        </div>
+        <div className="h-[3px] w-full bg-white/[0.04]">
+          <div
+            className="h-full bg-[var(--signal)]/40 transition-all duration-700"
+            style={{ width: `${confLevel}%` }}
+          />
+        </div>
+      </div>
+    )}
+
+    {/* War Story */}
+    {problem.warStory && (
+      <div>
+        <div className="mb-3 flex items-center gap-2 font-mono text-[9px] tracking-[0.2em] text-zinc-600">
+          <span>FIELD REPORT</span>
+          <span className="h-px flex-1 bg-white/[0.04]" />
+        </div>
+        <blockquote className="border-l-2 border-[var(--signal)]/30 pl-4 py-2">
+          <p className="text-[13.5px] leading-relaxed text-zinc-400 italic" style={{ fontFamily: "'Playfair Display', serif" }}>
+            "{problem.warStory}"
+          </p>
+        </blockquote>
+      </div>
+    )}
+
+    {/* Attribution */}
+    <div className="flex items-center gap-3 border-t border-white/[0.04] pt-4">
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1a2332] text-[9px] font-semibold text-zinc-300">
+        {authorName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+      </div>
+      <div className="flex flex-col">
+        <span className="font-mono text-[10px] tracking-[0.12em] text-zinc-400">Reported by</span>
+        <span className="text-[12px] text-zinc-200">{authorName}</span>
+      </div>
+    </div>
+  </div>;
 }

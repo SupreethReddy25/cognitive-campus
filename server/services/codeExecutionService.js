@@ -581,7 +581,6 @@ const executeCode = async (code, stdin = '', language = 'javascript') => {
     }
 
     const { run, compile } = response.data;
-    console.log(`RAW PISTON RESPONSE FOR TEST: ${JSON.stringify(run)}`);
 
     // Capture compilation errors (Java, C++) — Piston puts them in compile.stderr
     const compileStderr = (compile && compile.stderr) ? compile.stderr : '';

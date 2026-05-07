@@ -1,17 +1,16 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { skillsService } from "../../services/api";
 import { 
-  Compass, LayoutDashboard, Settings, Terminal, Trophy, User, 
-  Pin, PinOff, Swords
+  LayoutDashboard, Settings, Terminal, Trophy, User, 
+  Pin, PinOff, Swords, LogOut, Shield
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard",   href: "/dashboard",    icon: LayoutDashboard },
   { label: "Workspace",   href: "/problems",     icon: Terminal },
+  { label: "Intel",       href: "/intel",         icon: Shield },
   { label: "Arena",       href: "/arena",         icon: Swords },
-  { label: "Explore",     href: "/explore",       icon: Compass },
   { label: "Leaderboard", href: "/leaderboard",   icon: Trophy },
   { label: "Profile",     href: "/profile",       icon: User },
 ];
@@ -36,6 +35,7 @@ function isActive(pathname, href) {
  */
 export function GlobalNav() {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathname = location.pathname;
   const { user, logout } = useAuth();
 
@@ -52,28 +52,6 @@ export function GlobalNav() {
 
   // Derived states
   const showLabels = pinned || hovered;
-  const isOverlay = !pinned && hovered;
-
-  // ─── Current Focus: fetch actual skill mastery data ───
-  const [focusSkill, setFocusSkill] = useState(null);
-
-  useEffect(() => {
-    skillsService.getMySkillStates()
-      .then(r => {
-        const states = r.data?.data?.skillStates || [];
-        if (states.length > 0) {
-          const inProgress = states.filter(s => (s.masteryP || 0) < 0.95 && (s.masteryP || 0) > 0.1);
-          const focus = inProgress.length > 0
-            ? inProgress.sort((a, b) => (b.masteryP || 0) - (a.masteryP || 0))[0]
-            : states[0];
-          setFocusSkill({
-            name: focus.skillId?.name || 'Skill',
-            mastery: Math.round((focus.masteryP || 0) * 100)
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'CC';
   const firstName = user?.name?.split(' ')[0] || 'User';
@@ -82,11 +60,11 @@ export function GlobalNav() {
   const level = user?.level || 1;
   const tier = level >= 40 ? "Legend" : level >= 30 ? "Archon" : level >= 15 ? "Adept" : "Apprentice";
 
-  // ─── The sidebar "content" (brand, nav, focus card, user chip) ───
+  // ─── The sidebar "content" (brand, nav, user chip) ───
   const sidebarContent = (
     <>
-      {/* ── Brand ─── */}
-      <div className="flex h-14 items-center gap-3 px-4">
+      {/* ── Brand — links back to Landing Page ─── */}
+      <Link to="/" className="flex h-14 items-center gap-3 px-4 group transition-colors hover:bg-white/[0.02]">
         <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a2332]">
           <span className="h-2 w-2 rounded-full bg-[var(--signal)]" />
           <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-[#0d1117] bg-[var(--signal)]" />
@@ -95,7 +73,7 @@ export function GlobalNav() {
           <span className="text-[13px] font-medium text-zinc-100 tracking-[0.06em] uppercase" style={{fontFamily:"'Playfair Display', serif"}}>Cognitive</span>
           <span className="text-[11px] font-medium text-[var(--signal)] tracking-[0.1em] uppercase" style={{fontFamily:"'Playfair Display', serif"}}>Campus</span>
         </div>}
-      </div>
+      </Link>
 
       {/* ── Primary nav ─── */}
       <nav className="mt-4 flex flex-col gap-1 px-3">
@@ -120,24 +98,6 @@ export function GlobalNav() {
           </Link>;
         })}
       </nav>
-
-      {/* ── Current Focus card ─── */}
-      {showLabels && focusSkill && <div className="mx-3 mt-8 rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
-          <span className="font-mono text-[9px] tracking-[0.22em] text-zinc-500 uppercase">Current Focus</span>
-        </div>
-        <p className="text-[13px] font-medium text-zinc-200 leading-snug mb-3">
-          {focusSkill.name} · {focusSkill.name.toLowerCase().includes('graph') ? 'cycle detection' : 'mastery path'}
-        </p>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="font-mono text-[10px] tracking-[0.18em] text-zinc-500">Mastery</span>
-          <span className="font-mono text-[11px] tabular-nums text-zinc-300">{focusSkill.mastery}%</span>
-        </div>
-        <div className="h-[3px] w-full rounded-full bg-white/[0.06]">
-          <div className="h-full rounded-full bg-[var(--signal)] transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]" style={{ width: `${focusSkill.mastery}%` }} />
-        </div>
-      </div>}
 
       {/* ── Spacer ─── */}
       <div className="flex-1" />
@@ -164,26 +124,41 @@ export function GlobalNav() {
         </button>
       </div>}
 
-      {/* ── User chip ─── */}
+      {/* ── User chip + Settings + Logout ─── */}
       <div className="border-t border-white/[0.06] px-3 py-3">
-        <button 
-          onClick={logout} 
-          className="group flex w-full items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.03]"
-        >
-          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2a3441] text-[11px] font-semibold text-zinc-200">
-            {initials}
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0d1117] bg-[var(--signal)]" />
-          </div>
-          {showLabels && <>
-            <div className="flex flex-1 flex-col items-start leading-tight overflow-hidden">
+        <div className="flex items-center gap-2">
+          {/* Avatar + name */}
+          <div className="flex flex-1 items-center gap-3 rounded-lg px-2 py-2 min-w-0">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2a3441] text-[11px] font-semibold text-zinc-200">
+              {initials}
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0d1117] bg-[var(--signal)]" />
+            </div>
+            {showLabels && <div className="flex flex-1 flex-col items-start leading-tight overflow-hidden min-w-0">
               <span className="text-[13px] font-semibold text-zinc-200 truncate">{displayShort}</span>
               <span className="font-mono text-[10px] tracking-[0.14em] text-zinc-600">
                 Lvl {level} · {tier}
               </span>
-            </div>
-            <Settings className="h-4 w-4 text-zinc-700 transition-colors group-hover:text-zinc-400" strokeWidth={1.5} />
-          </>}
-        </button>
+            </div>}
+          </div>
+
+          {/* Settings → navigates to /profile */}
+          {showLabels && <button
+            onClick={() => navigate('/profile')}
+            title="Settings"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition-colors hover:bg-white/[0.04] hover:text-zinc-400"
+          >
+            <Settings className="h-4 w-4" strokeWidth={1.5} />
+          </button>}
+
+          {/* Logout — separate, distinct button */}
+          {showLabels && <button
+            onClick={logout}
+            title="Sign out"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-700 transition-colors hover:bg-white/[0.04] hover:text-rose-400"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.5} />
+          </button>}
+        </div>
       </div>
     </>
   );

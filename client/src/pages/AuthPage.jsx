@@ -90,7 +90,7 @@ function ParticleCanvas() {
         p.x += p.vx;
         p.y += p.vy;
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.6})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.35})`;
         ctx.fillRect(p.x, p.y, p.size, p.size);
       }
 
@@ -180,10 +180,10 @@ const AuthPage = () => {
 
   const inputCls = (field) => `
     w-full bg-transparent border-b 
-    ${focused === field ? 'border-white/40' : 'border-white/[0.08]'}
-    py-3 px-0 text-[15px] text-zinc-100 placeholder-zinc-700 
-    outline-none transition-colors duration-300
-    focus:border-white/40
+    ${focused === field ? 'border-[var(--signal)]/60' : 'border-white/[0.08]'}
+    py-3 px-0 text-[15px] text-zinc-200 placeholder-zinc-700 
+    outline-none transition-all duration-300
+    focus:border-[var(--signal)]/60 focus:shadow-[0_2px_12px_rgba(74,124,89,0.15)]
     font-[Inter,sans-serif] tracking-wide
   `;
 
@@ -208,24 +208,24 @@ const AuthPage = () => {
         </Link>
       </header>
 
-      {/* Auth form — glass card centered */}
+      {/* Auth form — Glass Shield centered */}
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
-        <div className="w-full max-w-[380px]">
+        <div className="w-full max-w-[420px] border border-white/[0.05] bg-[#0a0a0a]/60 backdrop-blur-2xl px-10 py-12" style={{ WebkitBackdropFilter: 'blur(40px)' }}>
           {/* Title */}
           <div className="mb-12 text-center">
-            <h1 className="text-[42px] font-extralight tracking-tight text-zinc-100 leading-[1.1]">
+            <h1 className="text-[46px] font-extralight tracking-[-0.03em] text-zinc-100 leading-[1.05]" style={{ fontFamily: "'Playfair Display', serif" }}>
               {isRegister ? 'Create' : 'Welcome'}
             </h1>
-            <p className="mt-2 text-[13px] tracking-[0.2em] text-zinc-600 uppercase">
+            <p className="mt-3 text-[10px] tracking-[0.3em] text-zinc-600 uppercase">
               {isRegister ? 'Build your identity' : 'Continue your journey'}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-7">
             {isRegister && (
               <div>
-                <label className="block text-[10px] tracking-[0.25em] text-zinc-600 uppercase mb-1">Name</label>
+                <label className="block text-[10px] tracking-[0.25em] text-zinc-500 uppercase mb-2">Name</label>
                 <input
                   id="auth-name" name="name" type="text"
                   value={formData.name} onChange={handleChange}
@@ -239,7 +239,7 @@ const AuthPage = () => {
             )}
 
             <div>
-              <label className="block text-[10px] tracking-[0.25em] text-zinc-600 uppercase mb-1">Email</label>
+              <label className="block text-[10px] tracking-[0.25em] text-zinc-500 uppercase mb-2">Email</label>
               <input
                 id="auth-email" name="email" type="email"
                 value={formData.email} onChange={handleChange}
@@ -252,7 +252,7 @@ const AuthPage = () => {
             </div>
 
             <div>
-              <label className="block text-[10px] tracking-[0.25em] text-zinc-600 uppercase mb-1">Password</label>
+              <label className="block text-[10px] tracking-[0.25em] text-zinc-500 uppercase mb-2">Password</label>
               <div className="relative">
                 <input
                   id="auth-password" name="password"
@@ -279,7 +279,7 @@ const AuthPage = () => {
 
             <button 
               type="submit" disabled={submitting}
-              className="group relative w-full overflow-hidden border border-white/[0.12] bg-transparent py-3.5 text-[12px] font-medium tracking-[0.25em] text-zinc-300 uppercase transition-all duration-500 hover:bg-white hover:text-black hover:border-white disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group relative w-full overflow-hidden border border-white/[0.12] bg-transparent py-3.5 text-[11px] font-medium tracking-[0.3em] text-zinc-300 uppercase transition-all duration-500 hover:bg-[var(--signal)] hover:text-white hover:border-[var(--signal)] disabled:opacity-40 disabled:cursor-not-allowed mt-2"
             >
               {submitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -295,11 +295,17 @@ const AuthPage = () => {
           {/* Toggle link */}
           <p className="mt-8 text-center text-[11px] tracking-[0.15em] text-zinc-700">
             {isRegister ? (
-              <>Already have an account? <Link to="/login" className="text-zinc-400 hover:text-white transition-colors">Sign in</Link></>
+              <>Already have an account? <Link to="/login" className="text-zinc-400 hover:text-[var(--signal)] transition-colors">Sign in</Link></>
             ) : (
-              <>No account? <Link to="/register" className="text-zinc-400 hover:text-white transition-colors">Create one</Link></>
+              <>No account? <Link to="/register" className="text-zinc-400 hover:text-[var(--signal)] transition-colors">Create one</Link></>
             )}
           </p>
+
+          {/* Decorative corner marks */}
+          <div className="pointer-events-none absolute top-3 left-3 h-4 w-4 border-l border-t border-white/[0.06]" />
+          <div className="pointer-events-none absolute top-3 right-3 h-4 w-4 border-r border-t border-white/[0.06]" />
+          <div className="pointer-events-none absolute bottom-3 left-3 h-4 w-4 border-l border-b border-white/[0.06]" />
+          <div className="pointer-events-none absolute bottom-3 right-3 h-4 w-4 border-r border-b border-white/[0.06]" />
         </div>
       </div>
 

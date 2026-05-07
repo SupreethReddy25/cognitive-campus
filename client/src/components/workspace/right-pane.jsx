@@ -83,7 +83,18 @@ export function RightPane() {
 
   const glowActive = lighthouse;
 
-  return <aside className={`relative flex h-full flex-col overflow-hidden transition-shadow duration-500 ${glowActive ? 'shadow-[inset_0_0_30px_rgba(74,124,89,0.08)]' : ''}`}>
+  return <aside className={`relative flex h-full flex-col overflow-hidden transition-all duration-500 ${glowActive ? 'shadow-[inset_0_0_30px_rgba(74,124,89,0.08)]' : ''}`}
+    style={glowActive ? {
+      borderLeft: '1px solid rgba(74,124,89,0.25)',
+      animation: 'mentorBreathe 3.2s ease-in-out infinite'
+    } : {}}>
+    {/* Breathing glow keyframes */}
+    <style>{`
+      @keyframes mentorBreathe {
+        0%, 100% { box-shadow: inset 0 0 20px rgba(74,124,89,0.06); }
+        50% { box-shadow: inset 0 0 40px rgba(74,124,89,0.14), 0 0 12px rgba(74,124,89,0.06); }
+      }
+    `}</style>
     {/* ── Ambient glow overlay when lighthouse is ON ── */}
     {glowActive && <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-[var(--signal)]/[0.03] via-transparent to-[var(--signal)]/[0.02]" />}
 
@@ -96,7 +107,15 @@ export function RightPane() {
         </span>
         {hintsUsed > 0 && <span className="font-mono text-[9px] tabular-nums text-zinc-700">({hintsUsed})</span>}
       </div>
-      <LighthouseToggle value={lighthouse} onChange={setLighthouse} />
+      <div className="flex items-center gap-2">
+        {/* Nudge depth indicator — 3 bars */}
+        <div className="flex items-center gap-0.5 mr-1">
+          {[1, 2, 3].map(d => (
+            <span key={d} className={`inline-block h-2 w-[3px] transition-all duration-300 ${nudgeDepth >= d ? 'bg-[var(--signal)]' : 'bg-white/[0.06]'}`} />
+          ))}
+        </div>
+        <LighthouseToggle value={lighthouse} onChange={setLighthouse} />
+      </div>
     </div>
 
     {/* ── Conversation ── */}
@@ -104,13 +123,27 @@ export function RightPane() {
       {turns.length === 0 ? (
         /* Empty state — clean and minimal */
         <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-          <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300 ${glowActive ? 'bg-[var(--signal)]/10' : 'bg-white/[0.03]'}`}>
-            <Lightbulb className={`h-4 w-4 transition-colors duration-300 ${glowActive ? 'text-[var(--signal)]' : 'text-zinc-700'}`} strokeWidth={1.5} />
+          {/* Orbital animation */}
+          <div className={`relative mb-5 h-16 w-16`}>
+            <div className={`absolute inset-0 flex items-center justify-center rounded-full transition-colors duration-300 ${glowActive ? 'bg-[var(--signal)]/10' : 'bg-white/[0.03]'}`}>
+              <Lightbulb className={`h-5 w-5 transition-all duration-300 ${glowActive ? 'text-[var(--signal)] drop-shadow-[0_0_8px_rgba(74,124,89,0.5)]' : 'text-zinc-700'}`} strokeWidth={1.5} />
+            </div>
+            {/* Orbiting dot */}
+            {glowActive && <div className="absolute inset-0" style={{ animation: 'orbitSpin 4s linear infinite' }}>
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-[var(--signal)]" style={{ boxShadow: '0 0 6px rgba(74,124,89,0.6)' }} />
+            </div>}
+            <style>{`@keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
           </div>
           <p className="text-[12px] text-zinc-600 leading-relaxed max-w-[180px]">
             Write some code, then ask for a nudge.
           </p>
           {glowActive && <p className="mt-2 font-mono text-[9px] tracking-[0.2em] text-[var(--signal)]/60 uppercase">Lighthouse active</p>}
+          <div className="mt-3 flex items-center gap-1">
+            {[1, 2, 3].map(d => (
+              <span key={d} className="inline-block h-[3px] w-4 bg-white/[0.06]" />
+            ))}
+            <span className="ml-1 font-mono text-[8px] text-zinc-800">depth awaiting</span>
+          </div>
         </div>
       ) : (
         <div className="space-y-4 px-3 py-3">

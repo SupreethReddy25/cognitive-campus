@@ -46,12 +46,15 @@ export function CenterPane() {
           }
         ]);
         
-        // Auto-clear after 4 seconds
-        setTimeout(() => {
-           if (editorRef.current) {
-               decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, []);
-           }
-        }, 4000);
+        // Clear decorations on keystroke — NOT on a timer
+        const disposable = editor.onDidChangeModelContent(() => {
+          if (editorRef.current) {
+            decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, []);
+          }
+          disposable.dispose();
+        });
+
+        return () => disposable.dispose();
       }
     }
   }, [citedLines, lighthouse]);

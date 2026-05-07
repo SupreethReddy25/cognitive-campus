@@ -48,7 +48,8 @@ export const skillsService = {
 export const problemsService = {
   getProblems: (params = {}) => api.get('/problems', { params }),
   getProblemById: (id) => api.get(`/problems/${id}`),
-  getAiNudge: (id, code, language, nudgeDepth = 1, lastError = null) => api.post(`/problems/${id}/nudge`, { code, language, nudgeDepth, lastError })
+  getAiNudge: (id, code, language, nudgeDepth = 1, lastError = null) => api.post(`/problems/${id}/nudge`, { code, language, nudgeDepth, lastError }),
+  proposeProblem: (data) => api.post('/problems/propose', data)
 };
 
 // ─── Submissions ───

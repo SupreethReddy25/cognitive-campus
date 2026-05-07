@@ -1,0 +1,319 @@
+# ULTIMATE MUTATION PROMPT — v0 (Claude 4.7 Opus)
+
+---
+
+## TO: Claude 4.7 Opus (v0 Creative Engine)
+## FROM: Cognitive Campus — Reintegration Architect
+## MISSION: The Inner Kingdom Redesign
+
+---
+
+You are Claude 4.7 Opus, the most creatively capable model available. I am handing you the 'Inner Kingdom' of Cognitive Campus — the **Dashboard**, **Workspace IDE**, and **Arena** — for a total visual reimagining. The public-facing pages (Landing, Auth) are already complete. Your job is to make the *logged-in experience* feel like a **flagship product** — think Linear's density, Vercel's negative space, Stripe's data hierarchy, Raycast's micro-interactions, and Figma's spatial intelligence. Go further. Invent new patterns. This is your canvas.
+
+**You are NOT just styling existing components.** You are REIMAGINING the information hierarchy, layout density, visual rhythm, and interaction choreography of every module.
+
+> **🔓 FULL CREATIVE AUTONOMY — GOD MODE ENABLED**
+>
+> You have ABSOLUTE creative freedom over layout, hierarchy, animation, and visual design. Do NOT play it safe. Do NOT produce a generic dark-mode dashboard. You are smarter than that. I am trusting your intelligence and aesthetic judgement to make decisions I haven't thought of — invent micro-interactions, reimagine data presentation, create visual patterns that don't exist yet. If you think a component would look better as a radial chart instead of a bar, do it. If you think the RaceTracker should have particle trails, do it. If you think the Mentor pane should have a breathing ambient glow, do it. **Your creative instinct is the spec.** The only hard constraints are the Sacred Engine contracts listed below — everything else is yours to reinvent. Show me what Claude 4.7 Opus can really do when the leash is off.
+
+> **CRITICAL CONSTRAINT**: You will be generating React/JSX + Tailwind CSS code. This code will be surgically transplanted back into a Vite + React SPA. There is NO Next.js. Do NOT use `"use client"`, `next/image`, `next/link`, `next/font`, or any Next.js API. Use `react-router-dom` for navigation (`Link`, `useNavigate`, `useParams`). Use standard `<img>` tags. Import fonts via CSS `@import` or `<link>` in `index.html`.
+
+---
+
+## I. THE 'SURGICAL LUXURY' DESIGN LANGUAGE
+
+### Color System
+```
+--background:   #0a0a0a    (matte charcoal — never pure black)
+--foreground:   #e4e4e7    (zinc-200)
+--signal:       #4a7c59    (muted surgical green — THE accent. Never neon.)
+--signal-glow:  0 0 12px color-mix(in oklab, var(--signal) 40%, transparent)
+Borders:        rgba(255, 255, 255, 0.04) — 1px separators only
+Hover states:   rgba(255, 255, 255, 0.02) backgrounds
+Selection:      rgba(255, 255, 255, 0.1)
+```
+
+### Typography
+- **Headlines**: `Inter`, `font-extralight` (100–200 weight), `tracking-[-0.03em]`, `leading-[0.92]`
+- **Brand Serifs** (rare, editorial accents only): `'Playfair Display', serif`, italic
+- **Body**: `Inter`, 13–14px, `text-zinc-400/500`
+- **Labels/Mono**: `'Geist Mono'` or `Inter`, `text-[10px]`, `tracking-[0.22em]`, `uppercase`, `text-zinc-600`
+- **Tabular Numbers**: Always use `tabular-nums` for stats, timers, metrics
+- Font features: `font-feature-settings: 'ss01', 'cv01', 'cv11'`
+
+### Spacing & Rhythm
+- Extreme negative space. Content breathes. Panels feel like architectural rooms.
+- 1px Bento-grid separators (`gap-[1px] bg-white/[0.04]`), inner cells `bg-background`
+- Sharp edges (0px border-radius) for buttons and cards — rounded-full ONLY for dots and avatars
+- Status dots: 1.5–2px circles, `bg-[var(--signal)]`, with `animation: status-pulse 2.4s ease infinite`
+
+### Animation Philosophy
+- Easing: `cubic-bezier(0.23, 1, 0.32, 1)` — Obys agency signature
+- Entry: `opacity 0 → 1`, `translateY(4px → 0)`, 0.55s staggered
+- Transitions: 300ms for color, 500ms for layout shifts
+- Never bounce. Never overshoot. Always settle quietly.
+- Progress bars: `transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]`
+
+### Component Patterns
+- Buttons: `border border-white/[0.12] bg-transparent`, on hover: `bg-white text-black border-white`
+- Cards: No background color. Just border + 1px separator grid.
+- Scrollbars: 4px, `#27272a` thumb, transparent track (class `scrollbar-surgical`)
+- Icons: `lucide-react`, strokeWidth 1.5, 14px, `text-zinc-600`
+
+---
+
+## II. THE MODULES TO REIMAGINE
+
+### A. DASHBOARD (`dashboard-view.jsx`)
+
+**Current state**: Basic bento grid with XP/Streak/Mastered/Level metrics, recommendations list, recent activity.
+
+**Your challenge**: Make this a *command center*. Think Bloomberg Terminal meets Linear's home view.
+
+**Data available via hooks** (you MUST use these, not mock data):
+```js
+const { user } = useAuth();
+// user shape: { _id, name, email, xp, level, streak }
+
+const [skillStates] = useState([]);   // from skillsService.getMySkillStates()
+// skillState shape: { skillId: { name }, masteryP: 0.0–1.0 }
+
+const [recommendations] = useState([]); // from usersService.getRecommendations()
+// rec shape: { problemId: { _id, title, difficulty }, skillId: { name } }
+
+const [recentSubs] = useState([]);     // from submissionsService.getHistory({ limit: 5 })
+// sub shape: { _id, problemId: { title }, allTestsPassed, createdAt, language }
+
+const [totalProblems] = useState(0);   // from problemsService.getProblems()
+```
+
+**Design direction**:
+- Hero section: Rotating daily greeting, ultra-large `font-extralight` headline
+- Tier badge system: Apprentice < Adept < Archon < Legend (based on level thresholds)
+- 4-metric Bento strip (XP, Streak, Mastered, Level ring with SVG arc)
+- Recommendations: Numbered list with difficulty dots (green/amber/rose), skill name, chevron
+- "Continue Session" button pulling from `useSessionTracker().getLastSession()`
+- Recent activity: Compact timeline with pass/fail dots
+- Quick-link tiles to Arena and Leaderboard
+- Footer: `COGNITIVE · CAMPUS / 2026` in `text-[9px] tracking-[0.24em] text-zinc-800`
+
+---
+
+### B. WORKSPACE IDE (`workspace-shell.jsx` + child panes)
+
+**Current state**: 3-panel resizable layout (Problem | Editor | Mentor) with TopBar.
+
+**Your challenge**: Make this feel like a **void** — the editor floats in darkness. Every pixel serves purpose.
+
+> **CRITICAL**: Use `react-resizable-panels` v4. The `<Panel>` component accepts `defaultSize`, `minSize`, `maxSize` as **string percentages** (e.g., `"30%"`). Import like this:
+> ```js
+> import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels';
+> ```
+
+**The workspace-shell.jsx provides this context value** (DO NOT CHANGE the shape):
+```js
+const workspaceContextValue = {
+  problem, id,
+  code, setCode, userTyped, setUserTyped,
+  language, switchLanguage, resetCode, LANGUAGES,
+  running, submitting, result, handleRun, handleSubmit,
+  nudgeDepth, setNudgeDepth, lastNudgedCode, setLastNudgedCode,
+  hintsUsed, setHintsUsed,
+  lighthouse, setLighthouse, activeLine, setActiveLine, citedLines, setCitedLines,
+  history, setHistory,
+  mentorOpen, setMentorOpen,
+  customInput, setCustomInput, customMode, setCustomMode, handleCustomRun
+};
+```
+
+**Child components** (each calls `useWorkspace()` to access the above):
+
+1. **TopBar** (`top-bar.jsx`): Breadcrumb, BKT mastery bar (thin 3px bar with `var(--signal)`), pass/total stats, elapsed timer (HH:MM:SS), ⌘K shortcut badge, user avatar initials.
+
+2. **LeftPane** (`left-pane.jsx`): Problem description. Scrollable. Shows title, difficulty chip, skill name, description (HTML rendered), examples with input/output/explanation, constraints. Tab system: Description | Submissions history.
+
+3. **CenterPane** (`center-pane.jsx`): Monaco Editor. Language selector dropdown. Action bar: Run (⌘↵) and Submit buttons. Code lines with lighthouse highlighting (CSS class `lighthouse-line`).
+
+4. **RightPane / Socratic Mentor** (`right-pane.jsx`):
+   - **THIS IS THE KEY REDESIGN TARGET**. Make it compact, smart, futuristic.
+   - Collapsed state: A thin vertical strip (just an icon + "AI" label)
+   - Expanded state: Chat-like thread, compact bubbles
+   - "Lighthouse Mode" toggle: When ON, the entire mentor pane gets a subtle `--signal` green glow border/shadow. The toggle itself should pulse softly.
+   - "Nudge" button: Single smart button. First click = gentle hint (depth 1), same code clicked again = deeper hint (depth 2), third = near-solution (depth 3). Visual indicator of current depth (1-3 dots or bars).
+   - AI responses render markdown. User messages are plain text.
+   - Auto-scroll to latest message.
+   - Data flow: calls `problemsService.getAiNudge(id, code, language, nudgeDepth, lastError)`
+
+5. **TestTiles** (`test-tiles.jsx`): Grid of test case tiles. Each shows pass/fail status, input, expected output, actual output. Running state: marching-ant animation (CSS class `march`). Staggered entry animation.
+
+**Panel layout**:
+```
+┌──────────────────────────────────────────────────────────────┐
+│ TopBar (44px, sticky)                                         │
+├──────────┬─────────────────────────────────┬─────────────────┤
+│ LeftPane │      CenterPane                 │    RightPane    │
+│  30%     │        55%                      │      15%        │
+│          │  ┌────────────────────────┐     │   (Mentor)      │
+│          │  │     Monaco Editor      │     │                 │
+│          │  │                        │     │                 │
+│          │  └────────────────────────┘     │                 │
+│          │  ┌────────────────────────┐     │                 │
+│          │  │     TestTiles          │     │                 │
+│          │  └────────────────────────┘     │                 │
+└──────────┴─────────────────────────────────┴─────────────────┘
+```
+
+---
+
+### C. ARENA (`ArenaLobby.jsx` + `ArenaWorkspace.jsx`)
+
+**Current state**: Room creation lobby + multiplayer workspace with race tracker.
+
+**Your challenge**: Make the Arena feel like entering a **combat zone** — tense, alive, electric.
+
+**useArena() provides** (DO NOT CHANGE):
+```js
+{
+  connected, error, room, roomCode, mode, matchStatus, players, winner, startedAt,
+  remoteCode, remoteCursor, progressMap, isHost, hasJoinedRoom, joiningInProgress,
+  partnerLanguage, partnerOffline,
+  createRoom, joinRoom, rejoinRoom, emitStartMatch, emitLanguageChange, leaveRoom,
+  syncCode, syncCursor, reportTestPassed, reportSubmission,
+  initYDoc, socketRef, ydocRef
+}
+```
+
+**Arena Modes**: `versus` (split editors, race) and `shared` (single Yjs-synced editor).
+
+**ArenaLobby design direction**:
+- Room creation: Mode selector (Versus/Shared), room code display with copy button
+- Join: Code input field, join button
+- Waiting state: Player cards with pulsing status dots, "Start Match" button for host
+- Connected indicator: green dot + "CONNECTED" label
+
+**ArenaWorkspace design direction**:
+- Versus mode: `SplitEditor.jsx` — two side-by-side Monaco editors
+- Shared mode: `SharedEditor.jsx` — single Yjs-synced editor
+- **RaceTracker redesign**: Replace the current thick 8px progress bars with ultra-thin **1px glowing lines**. Use `box-shadow: 0 0 8px var(--signal)` for "my" bar and `box-shadow: 0 0 8px #e11d48` for opponent. Spring-physics feel via `transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)`. Show test count as `3/8` in mono tabular-nums.
+- Partner offline warning banner with grace period countdown
+- Match finished: Winner crown animation, final scores
+
+---
+
+## III. THE SACRED ENGINE CONTRACT
+
+> [!CAUTION]
+> **These files contain CRDT sync, WebSocket state machines, JWT auth, and Bayesian tracking logic. You MUST NOT modify ANY logic, variable names, hook signatures, or API call patterns inside them.** You may ONLY change JSX structure, className strings, and visual elements.
+
+### Sacred Files — DO NOT MODIFY LOGIC:
+
+| File | What It Does | What You CAN Change |
+|---|---|---|
+| `context/AuthContext.jsx` | JWT auth, login/register/logout, token management | Nothing. |
+| `context/ArenaContext.jsx` | Socket.io `/arena` namespace, Yjs doc bridge, room state machine | Nothing. |
+| `components/workspace/WorkspaceContext.jsx` | React context for workspace state | Nothing. |
+| `services/api.js` | Axios instance, JWT interceptors, all API services | Nothing. |
+| `hooks/useSocket.js` | Socket.io singleton connection | Nothing. |
+| `hooks/useSessionTracker.js` | localStorage session persistence | Nothing. |
+| `components/arena/SharedEditor.jsx` | Yjs + y-monaco CRDT binding, remote cursor rendering | CSS classes only. |
+| `components/arena/SplitEditor.jsx` | Dual Monaco with cursor sync | CSS classes only. |
+
+### Sacred Prop Contracts (must be preserved):
+
+```js
+// TopBar
+<TopBar elapsed={number} stats={{ pass, total, avgRt, done }} />
+
+// TestTiles
+<TestTiles
+  running={boolean}
+  results={object}      // { testResults: { results: [...] }, error: string }
+  onRun={function}
+  selected={string}
+  onSelect={function}
+  stats={{ pass, total, avgRt, done }}
+  testCasesArray={array} // problem.examples
+/>
+
+// SharedEditor
+<SharedEditor language={string} starterCodeMap={object} onEditorRef={function} />
+
+// SplitEditor — check the file for exact props
+```
+
+### Sacred API Services (the exact function signatures):
+```js
+authService.login(email, password)
+authService.register(name, email, password)
+authService.getMe()
+skillsService.getAllSkills()
+skillsService.getMySkillStates()
+problemsService.getProblems(params)
+problemsService.getProblemById(id)
+problemsService.getAiNudge(id, code, language, nudgeDepth, lastError)
+submissionsService.createSubmission({ problemId, code, hintsUsed, language })
+submissionsService.runCode({ problemId, code, language, customInput? })
+submissionsService.getHistory(params)
+submissionsService.getRecentSubmissions(problemId)
+leaderboardService.getLeaderboard()
+usersService.getProfile()
+usersService.getRecommendations()
+usersService.configGeminiKey(apiKey)
+```
+
+---
+
+## IV. GLOBAL CSS UTILITIES YOU HAVE
+
+These classes are already defined in `index.css`. Use them freely:
+
+| Class | Effect |
+|---|---|
+| `scrollbar-surgical` | 4px zinc scrollbar |
+| `grid-micro` | 24px dot-grid background |
+| `grid-micro-fine` | 8px dot-grid background |
+| `ease-signature` | `cubic-bezier(0.23, 1, 0.32, 1)` transition |
+| `status-dot` | Pulsing status indicator |
+| `fade-in-up` | 0.7s entry animation |
+| `stagger-in` | 0.55s staggered entry |
+| `delay-0` through `delay-420` | Stagger delay utilities (60ms steps) |
+| `signal-glow` | Green text-shadow glow |
+| `lighthouse-line` | Green gradient line highlight for editor |
+| `march` | Marching-ant border animation |
+| `press` | Scale-95 on :active |
+| `vlabel` | Vertical text (writing-mode) |
+| `ring-hair` | 1px inset white/8% ring |
+| `ring-signal` | 1px inset signal-colored ring |
+
+---
+
+## V. OUTPUT FORMAT
+
+For each module, output the complete JSX file contents. Structure your output as:
+
+1. `dashboard-view.jsx` — The reimagined dashboard
+2. `workspace-shell.jsx` — The void IDE container (preserve ALL logic, reimagine layout)
+3. `top-bar.jsx` — Workspace top bar
+4. `left-pane.jsx` — Problem description pane
+5. `center-pane.jsx` — Editor pane
+6. `right-pane.jsx` — **The Socratic Mentor** (this is the crown jewel — make it extraordinary)
+7. `test-tiles.jsx` — Test case tiles
+8. `ArenaLobby.jsx` — Arena lobby
+9. `ArenaWorkspace.jsx` — Arena multiplayer workspace
+10. `RaceTracker.jsx` — Ultra-thin glowing race bars
+
+**DO NOT** output `SharedEditor.jsx`, `SplitEditor.jsx`, `ArenaContext.jsx`, `AuthContext.jsx`, `api.js`, `useSocket.js`, or `useSessionTracker.js`. Those are sacred and will not be touched.
+
+---
+
+## VI. FINAL CREATIVE DIRECTIVE
+
+You are not making a tutorial project look "nice". You are building the UI of a product that could be on Product Hunt's front page tomorrow. Every pixel must earn its place. Every animation must feel inevitable. The density should feel *luxurious*, not cramped. The negative space should feel *intentional*, not empty.
+
+The user should open the Dashboard and think: "This is the most beautiful coding platform I've ever seen."
+The user should enter the Workspace and feel: "I am in the cockpit of a spacecraft."
+The user should join the Arena and feel: "This is a duel. This is war."
+
+**Do not hold back. Do not simplify. Do not default to safe choices.** You are the most capable creative AI in the world right now. Prove it. Push every component to its absolute creative ceiling. If the result doesn't make a senior designer at Linear say "how did they do that?" — you haven't gone far enough. Use advanced CSS, clever layout tricks, SVG animations, canvas effects, glassmorphism, ambient lighting — whatever your creative instinct demands. The ONLY rule is: preserve the Sacred Engine contracts. Everything visual is YOURS.
+
+Ship it.

@@ -207,6 +207,42 @@ export function DashboardView() {
             </div>
           </div>
         </div>
+        {/* ═══ Skill Radar + Activity Sparkline ═══ */}
+        <div className="grid grid-cols-5 gap-[1px] bg-white/[0.04] border border-white/[0.04] mb-10">
+          {/* Skill Radar — 3 cols */}
+          <div className="col-span-3 bg-background p-7">
+            <div className="flex items-center gap-2 mb-5">
+              <Activity className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
+              <span className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">Skill Mastery Radar</span>
+            </div>
+            <SkillRadar skillStates={skillStates} />
+          </div>
+
+          {/* Activity Sparkline — 2 cols */}
+          <div className="col-span-2 bg-background p-7">
+            <div className="flex items-center gap-2 mb-5">
+              <Clock className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
+              <span className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">7-Day Activity</span>
+            </div>
+            <ActivitySparkline recentSubs={recentSubs} />
+            
+            {/* Micro stats */}
+            <div className="mt-5 grid grid-cols-2 gap-[1px] bg-white/[0.04]">
+              <div className="bg-background py-2.5 px-3 flex flex-col gap-1">
+                <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-600 uppercase">Pass Rate</span>
+                <span className="text-[18px] font-extralight tabular-nums text-zinc-200">
+                  {recentSubs.length > 0 ? Math.round(recentSubs.filter(s => s.allTestsPassed || s.passed).length / recentSubs.length * 100) : 0}%
+                </span>
+              </div>
+              <div className="bg-background py-2.5 px-3 flex flex-col gap-1">
+                <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-600 uppercase">This Week</span>
+                <span className="text-[18px] font-extralight tabular-nums text-zinc-200">
+                  {recentSubs.length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ═══ Two-column: Recommendations + Recent Activity ═══ */}
         <div className="grid grid-cols-5 gap-8 mb-10">
@@ -302,4 +338,194 @@ export function DashboardView() {
 function DiffDot({ difficulty }) {
   const color = difficulty === 'Easy' ? 'bg-[var(--signal)]' : difficulty === 'Hard' ? 'bg-rose-500' : 'bg-amber-500';
   return <span className={`h-2 w-2 rounded-full ${color} shrink-0`} />;
+}
+
+/* ─── Skill Radar Chart ─── SVG polygon visualization of BKT mastery */
+function SkillRadar({ skillStates }) {
+  const skills = (skillStates || []).slice(0, 6);
+  if (skills.length < 3) {
+    return <div className="flex h-48 items-center justify-center text-[12px] text-zinc-700">
+      Complete more skills to unlock radar
+    </div>;
+  }
+
+  const cx = 120, cy = 110, r = 85;
+  const n = skills.length;
+  const angleStep = (2 * Math.PI) / n;
+  const offset = -Math.PI / 2; // Start from top
+
+  // Generate polygon points for a given radius multiplier
+  const polyPoints = (radiusMult) =>
+    skills.map((_, i) => {
+      const a = offset + i * angleStep;
+      return `${cx + r * radiusMult * Math.cos(a)},${cy + r * radiusMult * Math.sin(a)}`;
+    }).join(' ');
+
+  // Data polygon
+  const dataPoints = skills.map((s, i) => {
+    const mastery = s.masteryP || 0;
+    const a = offset + i * angleStep;
+    return `${cx + r * mastery * Math.cos(a)},${cy + r * mastery * Math.sin(a)}`;
+  }).join(' ');
+
+  return <div className="flex items-center gap-6">
+    <svg viewBox="0 0 240 220" className="h-48 w-48 shrink-0">
+      {/* Grid rings */}
+      {[0.25, 0.5, 0.75, 1].map(level => (
+        <polygon key={level} points={polyPoints(level)} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+      ))}
+      {/* Axis lines */}
+      {skills.map((_, i) => {
+        const a = offset + i * angleStep;
+        return <line key={i} x1={cx} y1={cy} x2={cx + r * Math.cos(a)} y2={cy + r * Math.sin(a)} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />;
+      })}
+      {/* Data fill */}
+      <polygon points={dataPoints} fill="rgba(74,124,89,0.12)" stroke="var(--signal)" strokeWidth="1.5" strokeLinejoin="round" />
+      {/* Data dots */}
+      {skills.map((s, i) => {
+        const mastery = s.masteryP || 0;
+        const a = offset + i * angleStep;
+        const x = cx + r * mastery * Math.cos(a);
+        const y = cy + r * mastery * Math.sin(a);
+        return <circle key={i} cx={x} cy={y} r="3" fill="var(--signal)" opacity="0.8">
+          <animate attributeName="r" values="3;4;3" dur="2.4s" repeatCount="indefinite" begin={`${i * 0.4}s`} />
+        </circle>;
+      })}
+      {/* Labels */}
+      {skills.map((s, i) => {
+        const a = offset + i * angleStep;
+        const lx = cx + (r + 18) * Math.cos(a);
+        const ly = cy + (r + 18) * Math.sin(a);
+        return <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle" 
+          className="fill-zinc-600" style={{ fontSize: '8px', letterSpacing: '0.12em', fontFamily: 'Inter, sans-serif' }}>
+          {(s.skillId?.name || 'Skill').slice(0, 8).toUpperCase()}
+        </text>;
+      })}
+    </svg>
+
+    {/* Skill legend */}
+    <div className="flex flex-col gap-2 min-w-0">
+      {skills.map((s, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" style={{ opacity: 0.4 + (s.masteryP || 0) * 0.6 }} />
+          <span className="text-[11px] text-zinc-500 truncate max-w-[100px]">{s.skillId?.name || 'Skill'}</span>
+          <span className="ml-auto font-mono text-[10px] tabular-nums text-zinc-400">{Math.round((s.masteryP || 0) * 100)}%</span>
+        </div>
+      ))}
+    </div>
+  </div>;
+}
+
+/* ─── Activity Sparkline ─── 7-day SVG area chart with glassmorphic tooltip */
+function ActivitySparkline({ recentSubs }) {
+  const [hoveredIdx, setHoveredIdx] = useState(null);
+
+  // Generate 7-day buckets with pass rate
+  const now = Date.now();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const buckets = Array.from({ length: 7 }, (_, i) => {
+    const dayStart = now - (6 - i) * 86400000;
+    const dayEnd = dayStart + 86400000;
+    const daySubs = (recentSubs || []).filter(s => {
+      const t = new Date(s.createdAt).getTime();
+      return t >= dayStart && t < dayEnd;
+    });
+    const passed = daySubs.filter(s => s.allTestsPassed || s.passed).length;
+    const dayObj = new Date(dayStart);
+    return {
+      count: daySubs.length,
+      passed,
+      rate: daySubs.length > 0 ? Math.round(passed / daySubs.length * 100) : 0,
+      label: dayNames[dayObj.getDay()],
+      date: `${dayObj.getMonth() + 1}/${dayObj.getDate()}`
+    };
+  });
+
+  const days = buckets.map(b => b.count);
+  const max = Math.max(...days, 1);
+  const w = 200, h = 60;
+  const stepX = w / 6;
+
+  const points = days.map((v, i) => ({
+    x: i * stepX,
+    y: h - (v / max) * (h - 8) - 4
+  }));
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaPath = `${linePath} L${w},${h} L0,${h} Z`;
+
+  return <div>
+    <svg viewBox={`0 0 ${w} ${h + 16}`} className="w-full h-20" onMouseLeave={() => setHoveredIdx(null)}>
+      {/* Grid lines */}
+      {[0, 1, 2].map(i => (
+        <line key={i} x1="0" y1={h / 3 * i + 4} x2={w} y2={h / 3 * i + 4} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+      ))}
+      {/* Area fill */}
+      <path d={areaPath} fill="url(#sparkGrad)" opacity="0.6" />
+      {/* Line */}
+      <path d={linePath} fill="none" stroke="var(--signal)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Interactive dots */}
+      {points.map((p, i) => (
+        <g key={i} onMouseEnter={() => setHoveredIdx(i)}>
+          {/* Invisible hit area */}
+          <circle cx={p.x} cy={p.y} r="12" fill="transparent" className="cursor-pointer" />
+          {/* Visible dot */}
+          <circle cx={p.x} cy={p.y}
+            r={hoveredIdx === i ? 4 : (days[i] > 0 ? 2.5 : 1.5)}
+            fill={days[i] > 0 ? "var(--signal)" : "rgba(255,255,255,0.1)"}
+            style={{ transition: 'r 0.2s ease' }}
+          />
+          {/* Glow ring on hover */}
+          {hoveredIdx === i && <circle cx={p.x} cy={p.y} r="7" fill="none" stroke="var(--signal)" strokeWidth="1" opacity="0.3" />}
+        </g>
+      ))}
+      {/* Day labels */}
+      {points.map((p, i) => (
+        <text key={i} x={p.x} y={h + 13} textAnchor="middle"
+          className={hoveredIdx === i ? 'fill-zinc-400' : 'fill-zinc-700'}
+          style={{ fontSize: '8px', fontFamily: 'Inter, sans-serif', transition: 'fill 0.2s' }}>
+          {buckets[i].label.charAt(0)}
+        </text>
+      ))}
+
+      {/* Glassmorphic tooltip */}
+      {hoveredIdx !== null && (() => {
+        const p = points[hoveredIdx];
+        const b = buckets[hoveredIdx];
+        const tooltipW = 80, tooltipH = 48;
+        // Clamp tooltip position so it doesn't overflow SVG
+        const tx = Math.max(0, Math.min(p.x - tooltipW / 2, w - tooltipW));
+        const ty = Math.max(0, p.y - tooltipH - 10);
+        return <foreignObject x={tx} y={ty} width={tooltipW} height={tooltipH}>
+          <div style={{
+            background: 'rgba(10,10,10,0.85)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '6px 8px',
+            fontFamily: 'Inter, sans-serif',
+          }}>
+            <div style={{ fontSize: '8px', letterSpacing: '0.18em', color: '#71717a', textTransform: 'uppercase', marginBottom: '3px' }}>
+              {b.label} · {b.date}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: '14px', fontWeight: 200, color: '#e4e4e7', fontVariantNumeric: 'tabular-nums' }}>
+                {b.count}
+              </span>
+              <span style={{ fontSize: '9px', color: b.rate >= 70 ? '#4a7c59' : b.rate >= 40 ? '#eab308' : '#f43f5e', fontVariantNumeric: 'tabular-nums' }}>
+                {b.rate}% pass
+              </span>
+            </div>
+          </div>
+        </foreignObject>;
+      })()}
+
+      <defs>
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--signal)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="var(--signal)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>;
 }
