@@ -1,6 +1,7 @@
 "use client";
 import { useWorkspace } from "./WorkspaceContext";
-import { ChevronRight, Command } from "lucide-react";
+import { ChevronRight, Command, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function formatHMS(s) {
   const h = Math.floor(s / 3600);
@@ -17,8 +18,11 @@ export function TopBar({ elapsed, stats }) {
   const bkt = Math.round(currentBkt * 100);
 
   return <header className="relative flex h-[44px] items-center justify-between px-4">
-      {/* Left — breadcrumb + problem id + difficulty */}
+      {/* Left — back + breadcrumb + problem id + difficulty */}
       <div className="flex items-center gap-3 font-mono text-[11px] tracking-wider">
+        <Link to="/dashboard" className="press text-zinc-500 hover:text-zinc-200 transition-colors mr-2">
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+        </Link>
         {(problem?.skillId?.name ? [problem.skillId.name, problem.title] : ["Algorithms", problem?.title || "Problem"]).map((seg, i, arr) => <span key={seg} className="flex items-center gap-3">
             <span className={i === arr.length - 1 ? "text-zinc-300 truncate max-w-[200px]" : "text-zinc-600 hidden sm:inline"}>
               {seg}

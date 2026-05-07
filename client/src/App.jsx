@@ -38,6 +38,9 @@ const App = () => {
           <PublicRoute><AuthPage /></PublicRoute>
         } />
 
+        {/* Landing page accessible to logged-in users (for presentation) */}
+        <Route path="/landing" element={<ErrorBoundary><LandingPage /></ErrorBoundary>} />
+
         {/* Protected routes — AppShell (sidebar + Outlet) */}
         <Route element={
           <ProtectedRoute><AppShell /></ProtectedRoute>

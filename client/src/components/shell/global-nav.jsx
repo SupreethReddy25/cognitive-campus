@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { 
   LayoutDashboard, Settings, Terminal, Trophy, User, 
-  Pin, PinOff, Swords, LogOut, Shield
+  Pin, PinOff, Swords, LogOut, Shield, Home
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard",   href: "/dashboard",    icon: LayoutDashboard },
+  { label: "Landing",     href: "/landing",      icon: Home },
   { label: "Workspace",   href: "/problems",     icon: Terminal },
   { label: "Intel",       href: "/intel",         icon: Shield },
   { label: "Arena",       href: "/arena",         icon: Swords },

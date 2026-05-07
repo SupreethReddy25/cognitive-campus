@@ -4444,3 +4444,85 @@
 2026-05-06 08:00:09 [INFO]: [0mPOST /api/submissions/run [32m200[0m 1334.829 ms - 203[0m
 2026-05-06 08:00:14 [INFO]: User 69b55b4c2a4ff06cb7d760fa using BYOK for AI Mentor.
 2026-05-06 08:00:23 [INFO]: [0mPOST /api/problems/69b551a430f4ccf0382a10a6/nudge [32m200[0m 9129.453 ms - 263[0m
+2026-05-07 10:34:21 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:34:21 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:34:22 [INFO]: MongoDB connected successfully
+2026-05-07 10:34:22 [INFO]: Server running on port 5000 in development mode
+2026-05-07 10:34:22 [INFO]: Piston Execution API connected successfully
+2026-05-07 10:34:34 [INFO]: [0mGET /api/auth/me [33m401[0m 18.892 ms - 44[0m
+2026-05-07 10:34:34 [INFO]: [0mGET /api/auth/me [33m401[0m 2.351 ms - 44[0m
+2026-05-07 10:34:49 [INFO]: User logged in: supreethreddypannala@gmail.com
+2026-05-07 10:34:49 [INFO]: [0mPOST /api/auth/login [32m200[0m 325.753 ms - 443[0m
+2026-05-07 10:34:49 [INFO]: [0mGET /api/skills/my-states [32m200[0m 209.120 ms - 6454[0m
+2026-05-07 10:34:49 [INFO]: [0mGET /api/users/recommendations [32m200[0m 287.365 ms - 2183[0m
+2026-05-07 10:34:49 [INFO]: [0mGET /api/skills/my-states [36m304[0m 167.140 ms - -[0m
+2026-05-07 10:34:49 [INFO]: [0mGET /api/users/recommendations [36m304[0m 220.536 ms - -[0m
+2026-05-07 10:34:50 [INFO]: [0mGET /api/problems [32m200[0m 597.279 ms - 85[0m
+2026-05-07 10:34:50 [INFO]: [0mGET /api/submissions/history?limit=5 [32m200[0m 614.075 ms - 8270[0m
+2026-05-07 10:34:50 [INFO]: [0mGET /api/problems [36m304[0m 76.489 ms - -[0m
+2026-05-07 10:34:50 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 160.868 ms - -[0m
+2026-05-07 10:35:07 [INFO]: [0mGET /api/skills/my-states [36m304[0m 170.755 ms - -[0m
+2026-05-07 10:35:07 [INFO]: [0mGET /api/submissions/history?limit=500 [32m200[0m 379.174 ms - 50404[0m
+2026-05-07 10:35:07 [INFO]: [0mGET /api/skills/my-states [36m304[0m 207.326 ms - -[0m
+2026-05-07 10:35:07 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 214.470 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/problems [36m304[0m 91.650 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 176.827 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/problems [36m304[0m 75.741 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/users/recommendations [36m304[0m 268.843 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 146.245 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/users/recommendations [36m304[0m 304.062 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 641.539 ms - -[0m
+2026-05-07 10:35:16 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 183.071 ms - -[0m
+2026-05-07 10:35:33 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 276.394 ms - 2211[0m
+2026-05-07 10:35:33 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 241.237 ms - -[0m
+2026-05-07 10:36:09 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10ab [32m200[0m 99.762 ms - 3631[0m
+2026-05-07 10:36:09 [INFO]: [0mGET /api/submissions/recent/69b551a430f4ccf0382a10ab [36m304[0m 134.805 ms - -[0m
+2026-05-07 10:38:22 [INFO]: [Intel] User 69b55b4c2a4ff06cb7d760fa using BYOK for Intel pipeline.
+2026-05-07 10:38:22 [INFO]: [Intel] Step A: Refining raw intel for user 69b55b4c2a4ff06cb7d760fa
+2026-05-07 10:38:22 [INFO]: [Intel] Calling Gemini to refine raw intel {"descriptionLength":103,"company":"Reltio","confidence":88}
+2026-05-07 10:38:23 [ERROR]: [Intel] Gemini refinement failed {"error":"[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\nPlease retry in 37.680263925s. [{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.0-flash\"}},{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.0-flash\"}},{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\",\"quotaId\":\"GenerateContentInputTokensPerModelPerMinute-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.0-flash\"}}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"37s\"}]"}
+2026-05-07 10:38:23 [INFO]: [0mPOST /api/problems/propose [33m422[0m 843.734 ms - 1962[0m
+2026-05-07 10:38:36 [INFO]: [0mGET /api/problems [36m304[0m 87.244 ms - -[0m
+2026-05-07 10:38:36 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 132.522 ms - -[0m
+2026-05-07 10:38:36 [INFO]: [0mGET /api/problems [36m304[0m 96.333 ms - -[0m
+2026-05-07 10:38:36 [INFO]: [0mGET /api/skills/my-states [36m304[0m 201.838 ms - -[0m
+2026-05-07 10:38:37 [INFO]: [0mGET /api/users/recommendations [36m304[0m 274.371 ms - -[0m
+2026-05-07 10:38:37 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 168.608 ms - -[0m
+2026-05-07 10:38:37 [INFO]: [0mGET /api/skills/my-states [36m304[0m 190.704 ms - -[0m
+2026-05-07 10:38:37 [INFO]: [0mGET /api/users/recommendations [36m304[0m 282.010 ms - -[0m
+2026-05-07 10:39:16 [INFO]: [0mGET /api/problems [36m304[0m 112.740 ms - -[0m
+2026-05-07 10:39:16 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 179.684 ms - -[0m
+2026-05-07 10:39:16 [INFO]: [0mGET /api/skills/my-states [36m304[0m 199.899 ms - -[0m
+2026-05-07 10:39:16 [INFO]: [0mGET /api/problems [36m304[0m 90.657 ms - -[0m
+2026-05-07 10:39:16 [INFO]: [0mGET /api/users/recommendations [36m304[0m 316.373 ms - -[0m
+2026-05-07 10:39:17 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 197.406 ms - -[0m
+2026-05-07 10:39:17 [INFO]: [0mGET /api/skills/my-states [36m304[0m 214.115 ms - -[0m
+2026-05-07 10:39:17 [INFO]: [0mGET /api/users/recommendations [36m304[0m 272.916 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/problems [36m304[0m 107.737 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/skills/my-states [36m304[0m 172.355 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 177.241 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/problems [36m304[0m 78.397 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/users/recommendations [36m304[0m 252.928 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/skills/my-states [36m304[0m 176.636 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/submissions/history?limit=5 [36m304[0m 167.874 ms - -[0m
+2026-05-07 10:39:18 [INFO]: [0mGET /api/users/recommendations [36m304[0m 231.627 ms - -[0m
+2026-05-07 10:41:57 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:41:57 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:41:59 [INFO]: MongoDB connected successfully
+2026-05-07 10:43:35 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:43:35 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:43:36 [INFO]: MongoDB connected successfully
+2026-05-07 10:44:24 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:44:24 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:44:25 [INFO]: MongoDB connected successfully
+2026-05-07 10:47:31 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:47:31 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:47:32 [INFO]: MongoDB connected successfully
+2026-05-07 10:48:09 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:48:09 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:48:10 [INFO]: MongoDB connected successfully
+2026-05-07 10:51:01 [INFO]: [Arena] /arena namespace initialised
+2026-05-07 10:51:01 [INFO]: MongoDB connection attempt 1/3
+2026-05-07 10:51:02 [INFO]: MongoDB connected successfully
+2026-05-07 10:51:02 [INFO]: Server running on port 5000 in development mode
+2026-05-07 10:51:02 [WARN]: Piston Execution API unavailable on boot: connect ECONNREFUSED 127.0.0.1:2000 (offline)
