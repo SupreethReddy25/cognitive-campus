@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { usersService, submissionsService, skillsService, arenaService, collegesService } from "../../services/api";
+import { usersService, submissionsService, skillsService, arenaService, collegesService, authService } from "../../services/api";
 import {
   MapPin, Calendar, ExternalLink, Key, ShieldCheck, Eye, EyeOff,
   Edit3, Flame, Zap, CheckCircle2, XCircle, Lock, Unlock,
-  TrendingUp, Target, Award, BarChart3, Activity, GraduationCap, Loader2, ArrowRight
+  TrendingUp, Target, Award, BarChart3, Activity, GraduationCap, Loader2, ArrowRight, Settings as SettingsIcon, LogOut
 } from "lucide-react";
 import { CollegeSelector } from '../placement/CollegeSelector';
 import { Link } from 'react-router-dom';
@@ -509,6 +509,34 @@ export function ProfileView() {
               )}
             </div>
           </div>
+        {/* ─── Settings & Danger Zone ──────────────────── */}
+        <section className="border-t border-white/[0.04] px-8 py-7">
+          <div className="flex items-center gap-2 mb-5">
+            <SettingsIcon className="h-4 w-4 text-zinc-500" strokeWidth={1.6} />
+            <h2 className="text-[15px] font-semibold text-zinc-100">
+              Account <span className="text-[var(--signal)]">Settings</span>
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+            <div>
+              <h3 className="font-mono text-[10px] tracking-[0.1em] text-zinc-500 mb-3 uppercase">BYOK / AI Key Configuration</h3>
+              <BYOKSettings />
+            </div>
+            <div>
+              <h3 className="font-mono text-[10px] tracking-[0.1em] text-zinc-500 mb-3 uppercase">Danger Zone / Actions</h3>
+              <div className="space-y-3">
+                <AdminBootstrap user={user} refreshUser={refreshUser} />
+                <button
+                  onClick={logout}
+                  className="flex w-full items-center justify-between rounded-lg border border-red-500/20 bg-red-500/[0.04] px-4 py-3 text-left transition-colors hover:bg-red-500/10"
+                >
+                  <span className="font-mono text-[11px] font-medium text-red-400 uppercase tracking-widest">Sign Out</span>
+                  <LogOut className="h-4 w-4 text-red-400" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <footer className="flex items-center justify-between border-t border-white/[0.04] px-8 py-3 font-mono text-[9px] tracking-[0.2em] text-zinc-700">
@@ -630,6 +658,44 @@ function BYOKSettings() {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─── Admin Bootstrap (Dev Mode) ─────────────────────────── */
+function AdminBootstrap({ user, refreshUser }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  if (user?.role === 'admin') return null;
+
+  const handleBootstrap = async () => {
+    setLoading(true); setError(null);
+    try {
+      const res = await authService.bootstrapAdmin();
+      if (res.data.success) {
+        await refreshUser();
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to bootstrap admin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button
+        onClick={handleBootstrap}
+        disabled={loading}
+        className="flex w-full items-center justify-between rounded-lg border border-violet-500/20 bg-violet-500/[0.04] px-4 py-3 text-left transition-colors hover:bg-violet-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="font-mono text-[11px] font-medium text-violet-400 uppercase tracking-widest">
+          {loading ? 'Promoting...' : 'Bootstrap Admin'}
+        </span>
+        <ShieldCheck className={`h-4 w-4 text-violet-400 ${loading ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
+      </button>
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
     </div>
   );
 }

@@ -379,3 +379,9 @@
 2026-08-18 20:21:11 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
 2026-08-18 20:21:14 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
 2026-08-18 20:21:14 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 21:53:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 21:53:38 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"timeout of 8000ms exceeded"}
+2026-08-18 22:05:28 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:05:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:09:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:09:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}

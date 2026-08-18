@@ -3209,3 +3209,122 @@
 2026-08-18 20:21:18 [INFO]: [0mGET /api/skills [36m304[0m 188.400 ms - -[0m
 2026-08-18 20:21:18 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 146.825 ms - -[0m
 2026-08-18 20:21:18 [INFO]: [0mGET /api/skills [36m304[0m 147.262 ms - -[0m
+2026-08-18 20:22:40 [INFO]: [Arena] /arena namespace initialised
+2026-08-18 20:22:40 [INFO]: MongoDB connection attempt 1/3
+2026-08-18 20:22:40 [WARN]: Local Piston instance at http://127.0.0.1:2000/api/v2 is unreachable. Falling back to public Piston API (https://emkc.org/api/v2/piston). No Docker required!
+2026-08-18 20:22:41 [INFO]: MongoDB connected successfully
+2026-08-18 20:22:41 [INFO]: Server running on port 5000 in development mode
+2026-08-18 20:22:42 [WARN]: Experience seed file has a syntax error — skipping auto-seed. Run manually: node seeds/seedExperiences.js
+2026-08-18 21:53:19 [INFO]: [0mGET /api/auth/me [32m200[0m 1557.972 ms - 666[0m
+2026-08-18 21:53:19 [INFO]: [0mGET /api/auth/me [36m304[0m 55.406 ms - -[0m
+2026-08-18 21:53:23 [INFO]: Socket connected: _diFI4BCAGj09re0AAAC
+2026-08-18 21:53:23 [INFO]: Socket _diFI4BCAGj09re0AAAC joined room user:69b55b4c2a4ff06cb7d760fa
+2026-08-18 21:53:24 [INFO]: [0mGET /api/companies [36m304[0m 4144.827 ms - -[0m
+2026-08-18 21:53:24 [WARN]: Redis error — leaderboard will use MongoDB fallback {"error":"getaddrinfo ENOTFOUND complete-lionfish-88763.upstash.io"}
+2026-08-18 21:53:29 [INFO]: [0mGET /api/problems [36m304[0m 5815.101 ms - -[0m
+2026-08-18 21:53:29 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 5278.011 ms - -[0m
+2026-08-18 21:53:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 21:53:29 [INFO]: [0mPOST /api/users/dashboard-quote [32m200[0m 5839.571 ms - 111[0m
+2026-08-18 21:53:29 [INFO]: [0mGET /api/users/recommendations [36m304[0m 6236.632 ms - -[0m
+2026-08-18 21:53:34 [INFO]: [0mGET /api/leaderboard [36m304[0m 11250.923 ms - -[0m
+2026-08-18 21:53:36 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 6832.076 ms - -[0m
+2026-08-18 21:53:36 [INFO]: [0mGET /api/skills/my-states [36m304[0m 13414.076 ms - -[0m
+2026-08-18 21:53:38 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"timeout of 8000ms exceeded"}
+2026-08-18 21:53:38 [INFO]: [0mPOST /api/users/dashboard-quote [32m200[0m 9626.579 ms - 117[0m
+2026-08-18 21:53:39 [INFO]: [0mGET /api/users/recommendations [36m304[0m 4283.086 ms - -[0m
+2026-08-18 21:53:39 [INFO]: [0mGET /api/companies [36m304[0m 9704.924 ms - -[0m
+2026-08-18 21:53:39 [INFO]: [0mGET /api/skills/my-states [36m304[0m 2511.807 ms - -[0m
+2026-08-18 21:53:40 [INFO]: [0mGET /api/problems [36m304[0m 11152.138 ms - -[0m
+2026-08-18 21:53:42 [INFO]: [0mGET /api/leaderboard [36m304[0m 5657.711 ms - -[0m
+2026-08-18 22:05:23 [INFO]: Socket disconnected: _diFI4BCAGj09re0AAAC
+2026-08-18 22:05:23 [INFO]: [0mGET /api/auth/me [36m304[0m 116.673 ms - -[0m
+2026-08-18 22:05:23 [INFO]: [0mGET /api/auth/me [36m304[0m 79.987 ms - -[0m
+2026-08-18 22:05:23 [INFO]: Socket connected: TMF24VivUwxvFFuuAAAG
+2026-08-18 22:05:23 [INFO]: Socket TMF24VivUwxvFFuuAAAG joined room user:69b55b4c2a4ff06cb7d760fa
+2026-08-18 22:05:24 [INFO]: Socket disconnected: TMF24VivUwxvFFuuAAAG
+2026-08-18 22:05:28 [INFO]: [0mGET /api/skills/my-states [36m304[0m 4869.497 ms - -[0m
+2026-08-18 22:05:28 [INFO]: [0mGET /api/users/recommendations [36m304[0m 4925.574 ms - -[0m
+2026-08-18 22:05:28 [INFO]: [0mGET /api/problems [36m304[0m 4946.470 ms - -[0m
+2026-08-18 22:05:28 [INFO]: [0mGET /api/skills/my-states [36m304[0m 184.064 ms - -[0m
+2026-08-18 22:05:28 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 5139.229 ms - -[0m
+2026-08-18 22:05:28 [INFO]: [0mGET /api/colleges?q=Am&limit=8 [36m304[0m 69.798 ms - -[0m
+2026-08-18 22:05:28 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:05:28 [INFO]: [0mPOST /api/users/dashboard-quote [32m200[0m 5218.601 ms - 110[0m
+2026-08-18 22:05:28 [INFO]: [0mGET /api/users/recommendations [36m304[0m 318.751 ms - -[0m
+2026-08-18 22:05:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:05:29 [INFO]: [0mPOST /api/users/dashboard-quote [32m200[0m 504.160 ms - 117[0m
+2026-08-18 22:05:29 [INFO]: [0mGET /api/leaderboard [36m304[0m 5422.453 ms - -[0m
+2026-08-18 22:05:29 [INFO]: [0mGET /api/problems [36m304[0m 341.771 ms - -[0m
+2026-08-18 22:05:29 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 348.875 ms - -[0m
+2026-08-18 22:05:29 [INFO]: [0mGET /api/leaderboard [36m304[0m 139.500 ms - -[0m
+2026-08-18 22:05:29 [INFO]: [0mGET /api/colleges?q=Amrita&limit=8 [36m304[0m 64.875 ms - -[0m
+2026-08-18 22:05:30 [INFO]: [0mGET /api/colleges/amrita/dashboard [32m200[0m 180.259 ms - 446[0m
+2026-08-18 22:05:30 [INFO]: [0mPATCH /api/users/profile [32m200[0m 276.757 ms - 785[0m
+2026-08-18 22:05:30 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 243.328 ms - -[0m
+2026-08-18 22:05:35 [INFO]: [Arena] Socket connected: RCKX4QqBd1BrBrCVAAAI
+2026-08-18 22:05:35 [INFO]: [0mGET /api/arena/rating [36m304[0m 50.616 ms - -[0m
+2026-08-18 22:05:36 [INFO]: [Arena] Socket disconnected: RCKX4QqBd1BrBrCVAAAI
+2026-08-18 22:05:38 [INFO]: [0mGET /api/arena/rating [36m304[0m 3610.229 ms - -[0m
+2026-08-18 22:05:40 [INFO]: [0mGET /api/sheets [36m304[0m 3610.130 ms - -[0m
+2026-08-18 22:05:40 [INFO]: [0mGET /api/problems [36m304[0m 5529.501 ms - -[0m
+2026-08-18 22:05:40 [INFO]: [0mGET /api/sheets [36m304[0m 115.628 ms - -[0m
+2026-08-18 22:05:42 [INFO]: [0mGET /api/arena/rating [36m304[0m 303.933 ms - -[0m
+2026-08-18 22:05:49 [INFO]: [0mGET /api/skills/my-states [36m304[0m 7054.558 ms - -[0m
+2026-08-18 22:05:49 [INFO]: [0mGET /api/arena/rating [36m304[0m 6741.355 ms - -[0m
+2026-08-18 22:05:49 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 7148.863 ms - -[0m
+2026-08-18 22:05:51 [INFO]: [0mGET /api/skills [36m304[0m 6706.770 ms - -[0m
+2026-08-18 22:05:53 [INFO]: [0mGET /api/skills/my-states [36m304[0m 4100.705 ms - -[0m
+2026-08-18 22:05:53 [INFO]: [0mGET /api/problems [36m304[0m 12870.419 ms - -[0m
+2026-08-18 22:05:53 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 4247.509 ms - -[0m
+2026-08-18 22:05:53 [INFO]: [0mGET /api/skills [36m304[0m 2596.314 ms - -[0m
+2026-08-18 22:05:56 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 11735.922 ms - -[0m
+2026-08-18 22:05:56 [INFO]: [0mGET /api/problems?page=1&limit=15 [36m304[0m 279.191 ms - -[0m
+2026-08-18 22:06:08 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [32m200[0m 4639.551 ms - 2292[0m
+2026-08-18 22:06:09 [INFO]: [0mGET /api/problems/69b551a430f4ccf0382a10ab [36m304[0m 925.932 ms - -[0m
+2026-08-18 22:09:22 [INFO]: Socket connected: p1berdplVORdb8HYAAAL
+2026-08-18 22:09:22 [INFO]: Socket p1berdplVORdb8HYAAAL joined room user:69b55b4c2a4ff06cb7d760fa
+2026-08-18 22:09:23 [INFO]: Socket disconnected: p1berdplVORdb8HYAAAL
+2026-08-18 22:09:26 [INFO]: [0mGET /api/skills/my-states [36m304[0m 3475.868 ms - -[0m
+2026-08-18 22:09:26 [INFO]: [0mGET /api/users/recommendations [36m304[0m 3856.742 ms - -[0m
+2026-08-18 22:09:26 [INFO]: [Arena] Socket connected: 7p-EP9Zzw4SsLVUDAAAN
+2026-08-18 22:09:28 [INFO]: [Arena] Socket disconnected: 7p-EP9Zzw4SsLVUDAAAN
+2026-08-18 22:09:29 [INFO]: [0mGET /api/skills/my-states [36m304[0m 2812.876 ms - -[0m
+2026-08-18 22:09:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:09:29 [INFO]: [0mPOST /api/users/dashboard-quote [32m200[0m 6685.637 ms - 111[0m
+2026-08-18 22:09:29 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 6973.382 ms - -[0m
+2026-08-18 22:09:29 [INFO]: [0mGET /api/problems [36m304[0m 7068.254 ms - -[0m
+2026-08-18 22:09:29 [ERROR]: Failed to generate dashboard quote, using fallback {"error":"Request failed with status code 404"}
+2026-08-18 22:09:29 [INFO]: [0mPOST /api/users/dashboard-quote [32m200[0m 3599.722 ms - 104[0m
+2026-08-18 22:09:29 [INFO]: [0mGET /api/arena/rating [36m304[0m 153.506 ms - -[0m
+2026-08-18 22:09:29 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 469.723 ms - -[0m
+2026-08-18 22:09:29 [INFO]: [0mGET /api/leaderboard [36m304[0m 7167.131 ms - -[0m
+2026-08-18 22:09:31 [INFO]: [0mGET /api/users/recommendations [36m304[0m 1814.478 ms - -[0m
+2026-08-18 22:09:31 [INFO]: [0mGET /api/sheets [36m304[0m 1439.090 ms - -[0m
+2026-08-18 22:09:31 [INFO]: [0mGET /api/skills/my-states [36m304[0m 1465.329 ms - -[0m
+2026-08-18 22:09:32 [INFO]: [0mGET /api/companies [36m304[0m 2538.253 ms - -[0m
+2026-08-18 22:09:32 [INFO]: [0mGET /api/arena/rating [36m304[0m 1276.779 ms - -[0m
+2026-08-18 22:09:34 [INFO]: [0mGET /api/submissions/history?limit=10 [36m304[0m 3664.347 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/sheets [36m304[0m 2733.716 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/companies [36m304[0m 511.301 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/skills/my-states [36m304[0m 2919.717 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/arena/rating [36m304[0m 258.933 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/arena/rating [36m304[0m 64.473 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/submissions/history?limit=500 [36m304[0m 5680.232 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/problems [36m304[0m 5847.667 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/leaderboard [36m304[0m 4540.228 ms - -[0m
+2026-08-18 22:09:35 [INFO]: [0mGET /api/problems [36m304[0m 289.014 ms - -[0m
+2026-08-18 22:09:36 [INFO]: [0mGET /api/problems [36m304[0m 398.174 ms - -[0m
+2026-08-18 22:13:29 [INFO]: [0mGET /api/colleges?q=amra&limit=8 [32m200[0m 78.949 ms - 49[0m
+2026-08-18 22:13:30 [INFO]: [0mGET /api/colleges?q=amri&limit=8 [32m200[0m 47.229 ms - 224[0m
+2026-08-18 22:13:32 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 177.720 ms - -[0m
+2026-08-18 22:13:32 [INFO]: [0mPATCH /api/users/profile [32m200[0m 247.500 ms - 785[0m
+2026-08-18 22:13:33 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 1213.917 ms - -[0m
+2026-08-18 22:17:21 [INFO]: [0mGET /api/colleges?limit=100 [32m200[0m 206.278 ms - 3693[0m
+2026-08-18 22:19:39 [INFO]: [0mGET /api/auth/me [32m200[0m 102.877 ms - 837[0m
+2026-08-18 22:19:40 [INFO]: [0mGET /api/auth/me [36m304[0m 105.225 ms - -[0m
+2026-08-18 22:19:40 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 106.736 ms - -[0m
+2026-08-18 22:19:40 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 101.981 ms - -[0m
+2026-08-18 22:24:08 [INFO]: [0mGET /api/auth/me [36m304[0m 112.180 ms - -[0m
+2026-08-18 22:24:09 [INFO]: [0mGET /api/auth/me [36m304[0m 114.400 ms - -[0m
+2026-08-18 22:24:09 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 123.560 ms - -[0m
+2026-08-18 22:24:09 [INFO]: [0mGET /api/colleges/amrita/dashboard [36m304[0m 140.262 ms - -[0m
