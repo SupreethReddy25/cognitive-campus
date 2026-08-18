@@ -107,7 +107,7 @@ function SubmissionRow({ sub, index }) {
 
 /* ─── Main ProfileView ────────────────────────────────────── */
 export function ProfileView() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
   const [skillStates, setSkillStates] = useState([]);
   const [recentHistory, setRecentHistory] = useState([]);
   const [arenaRating, setArenaRating] = useState(null);
@@ -509,6 +509,8 @@ export function ProfileView() {
               )}
             </div>
           </div>
+        </section>
+
         {/* ─── Settings & Danger Zone ──────────────────── */}
         <section className="border-t border-white/[0.04] px-8 py-7">
           <div className="flex items-center gap-2 mb-5">
@@ -677,7 +679,8 @@ function AdminBootstrap({ user, refreshUser }) {
         await refreshUser();
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to bootstrap admin');
+      console.error(err);
+      setError(err.response?.data?.error || err.message || JSON.stringify(err));
     } finally {
       setLoading(false);
     }

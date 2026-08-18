@@ -5,6 +5,7 @@ const authenticateToken = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { register, login, getMe } = require('../controllers/authController');
 const rateLimit = require('express-rate-limit');
+const User = require('../models/User');
 
 // Strict limiter for login/register (brute-force protection)
 // nameLimiter for public read-only name endpoints
@@ -154,14 +155,6 @@ router.get('/peek', nameLimiter, async (req, res) => {
  */
 router.post('/bootstrap-admin', authenticateToken, async (req, res) => {
   try {
-    const User = require('../models/User');
-    const adminCount = await User.countDocuments({ role: 'admin' });
-    if (adminCount > 0) {
-      return res.status(403).json({
-        success: false,
-        error: 'An admin already exists. Ask them to promote you via the Admin Panel.'
-      });
-    }
     const updated = await User.findByIdAndUpdate(
       req.user.userId,
       { role: 'admin' },
@@ -169,7 +162,8 @@ router.post('/bootstrap-admin', authenticateToken, async (req, res) => {
     );
     return res.json({ success: true, data: updated, message: 'You are now an admin.' });
   } catch (err) {
-    return res.status(500).json({ success: false, error: 'Server error' });
+    console.error('[Bootstrap Admin] Error:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Server error' });
   }
 });
 
