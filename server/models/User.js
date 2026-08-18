@@ -63,6 +63,28 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['student', 'admin'],
       default: 'student'
+    },
+    /**
+     * College affiliation — links user to their institution.
+     * Set via PATCH /api/users/profile. Null until user selects.
+     */
+    collegeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'College',
+      default: null
+    },
+    /**
+     * Placement targets — optional, set by user for focused prep.
+     */
+    targetCompanyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      default: null
+    },
+    targetRole: {
+      type: String,
+      trim: true,
+      default: null
     }
   },
   { timestamps: true }

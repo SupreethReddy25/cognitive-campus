@@ -678,7 +678,8 @@ const seedProblems = async () => {
               testCases: problemData.testCases,
               examples: problemData.examples,
               hints: problemData.hints,
-              isActive: true
+              isActive: true,
+              status: 'approved'
             }
           },
           { upsert: true }

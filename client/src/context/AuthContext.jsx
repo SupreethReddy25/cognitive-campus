@@ -10,9 +10,27 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('cc_token'));
+  const [user, setUser] = useState(() => {
+    const cached = localStorage.getItem('cc_user');
+    try { return cached ? JSON.parse(cached) : null; } catch { return null; }
+  });
+  const [token, setToken] = useState(() => localStorage.getItem('cc_token') || null);
   const [loading, setLoading] = useState(true);
+
+  // ─── Core Logout Logic ───
+  const logout = useCallback(() => {
+    localStorage.removeItem('cc_token');
+    localStorage.removeItem('cc_user');
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  // ─── Global 401 Listener ───
+  useEffect(() => {
+    const handleUnauthorized = () => logout();
+    window.addEventListener('auth-unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
+  }, [logout]);
 
   // On mount: verify stored token
   useEffect(() => {
@@ -25,13 +43,16 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const response = await authService.getMe();
-        setUser(response.data.data.user);
+        const verifiedUser = response.data.data.user;
+        setUser(verifiedUser);
+        localStorage.setItem('cc_user', JSON.stringify(verifiedUser));
         setToken(storedToken);
-      } catch {
-        localStorage.removeItem('cc_token');
-        localStorage.removeItem('cc_user');
-        setUser(null);
-        setToken(null);
+      } catch (err) {
+        // If the token is rejected with 401, the interceptor will emit auth-unauthorized and clear it
+        if (err?.response?.status !== 401) {
+          // Network failure or 500 — keep the user logged in using cached data
+          setToken(storedToken);
+        }
       } finally {
         setLoading(false);
       }
@@ -41,30 +62,38 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = useCallback(async (email, password) => {
+    // Clear any stale state before attempting login
+    logout();
     const response = await authService.login(email, password);
     const { token: newToken, user: userData } = response.data.data;
     localStorage.setItem('cc_token', newToken);
     localStorage.setItem('cc_user', JSON.stringify(userData));
+    localStorage.setItem('lastKnownUser', JSON.stringify({ email: userData.email, name: userData.name }));
     setToken(newToken);
     setUser(userData);
     return userData;
-  }, []);
+  }, [logout]);
 
   const register = useCallback(async (name, email, password) => {
+    logout();
     const response = await authService.register(name, email, password);
     const { token: newToken, user: userData } = response.data.data;
     localStorage.setItem('cc_token', newToken);
     localStorage.setItem('cc_user', JSON.stringify(userData));
+    localStorage.setItem('lastKnownUser', JSON.stringify({ email: userData.email, name: userData.name }));
     setToken(newToken);
     setUser(userData);
     return userData;
-  }, []);
+  }, [logout]);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('cc_token');
-    localStorage.removeItem('cc_user');
-    setToken(null);
-    setUser(null);
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await authService.getMe();
+      setUser(response.data.data.user);
+      localStorage.setItem('cc_user', JSON.stringify(response.data.data.user));
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+    }
   }, []);
 
   const value = {
@@ -74,6 +103,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    refreshUser,
     isAuthenticated: !!user
   };
 

@@ -314,4 +314,126 @@ const proposeProblem = async (req, res, next) => {
   }
 };
 
-module.exports = { getProblems, getProblemById, getAiNudge, proposeProblem };
+/**
+ * @desc    Get waitlisted problems for the Community Review Queue.
+ *          Only shows problems that have passed Piston verification.
+ *          Accessible to users Level 5+ (enforced client-side; add middleware if needed).
+ * @route   GET /api/problems/review-queue
+ * @access  Protected
+ */
+const getReviewQueue = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const [problems, totalCount] = await Promise.all([
+      Problem.find({ status: 'waitlisted', isActive: true })
+        .select('-testCases') // Don't expose hidden test cases
+        .populate('skillId', 'name')
+        .populate('authorId', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Problem.countDocuments({ status: 'waitlisted', isActive: true })
+    ]);
+
+    // Annotate each problem with whether the current user has voted
+    const annotated = problems.map(p => {
+      const obj = p.toObject();
+      const existingVote = p.votedBy?.find(v => v.userId?.toString() === userId.toString());
+      obj.userVote = existingVote ? existingVote.vote : null;
+      obj.netVotes = (p.upvotes || 0) - (p.downvotes || 0);
+      return obj;
+    });
+
+    return sendSuccess(res, {
+      problems: annotated,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit)
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Vote on a waitlisted problem. Idempotent — voting again toggles off.
+ *          Auto-promotes to 'approved' when net votes >= +3.
+ *          Awards 50 XP to the problem author on promotion.
+ * @route   POST /api/problems/:id/vote
+ * @access  Protected
+ */
+const voteProblem = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { vote } = req.body; // 'up' or 'down'
+
+    if (!['up', 'down'].includes(vote)) {
+      return sendError(res, 'Vote must be "up" or "down"', 400);
+    }
+
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return sendError(res, 'Problem not found', 404);
+    if (problem.status !== 'waitlisted') {
+      return sendError(res, 'Only waitlisted problems can be voted on', 400);
+    }
+
+    // Check for existing vote
+    const existingIdx = problem.votedBy.findIndex(v => v.userId?.toString() === userId.toString());
+
+    if (existingIdx !== -1) {
+      const existing = problem.votedBy[existingIdx];
+      if (existing.vote === vote) {
+        // Toggle off (remove vote)
+        problem.votedBy.splice(existingIdx, 1);
+        if (vote === 'up') problem.upvotes = Math.max(0, problem.upvotes - 1);
+        else problem.downvotes = Math.max(0, problem.downvotes - 1);
+      } else {
+        // Flip vote
+        if (vote === 'up') { problem.upvotes++; problem.downvotes = Math.max(0, problem.downvotes - 1); }
+        else { problem.downvotes++; problem.upvotes = Math.max(0, problem.upvotes - 1); }
+        problem.votedBy[existingIdx].vote = vote;
+      }
+    } else {
+      // New vote
+      problem.votedBy.push({ userId, vote });
+      if (vote === 'up') problem.upvotes++;
+      else problem.downvotes++;
+    }
+
+    const netVotes = problem.upvotes - problem.downvotes;
+
+    // ─── Auto-promote at net +3 ───
+    let promoted = false;
+    if (netVotes >= 3 && problem.status === 'waitlisted') {
+      problem.status = 'approved';
+      promoted = true;
+      logger.info(`[ReviewBoard] Problem "${problem.title}" auto-promoted to approved with ${netVotes} net votes.`);
+
+      // Award 150 XP to the author
+      if (problem.authorId) {
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(problem.authorId, { $inc: { xp: 150 } });
+        logger.info(`[ReviewBoard] Awarded 150 XP to author ${problem.authorId}`);
+      }
+    }
+
+    await problem.save();
+
+    return sendSuccess(res, {
+      upvotes: problem.upvotes,
+      downvotes: problem.downvotes,
+      netVotes,
+      userVote: problem.votedBy.find(v => v.userId?.toString() === userId.toString())?.vote || null,
+      promoted,
+      newStatus: problem.status
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getProblems, getProblemById, getAiNudge, proposeProblem, getReviewQueue, voteProblem };

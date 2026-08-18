@@ -1,5 +1,36 @@
 node_modules
 .env
+.env.local
+.env.production
 dist
 .DS_Store
-.env.local
+
+# Explicit env guards (belt-and-suspenders)
+server/.env
+client/.env
+client/.env.local
+
+# Server logs — never commit these
+server/logs/*.log
+server/logs/
+
+# Jest coverage artifacts
+server/coverage/
+coverage/
+
+# PowerPoint / presentation files
+*.pptx
+*.ppt
+
+# One-off dev/fix scripts — not part of the app
+migrate.mjs
+compileV2.cjs
+dev.js
+fixLength.js
+writePremium.js
+theultimate
+server/fixAuthPage.js
+server/fixSmartQuotes.js
+server/seeds/fixStatus.js
+server/seeds/*.tmp.js
+AuthPage2.jsx

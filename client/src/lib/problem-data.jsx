@@ -8,7 +8,7 @@ export const problem = {
   bktMastery: 0.62,
   topics: ["Graph", "Topological Sort", "BFS", "Kahn's Algorithm"],
   companies: ["Google", "Meta", "Amazon"],
-  breadcrumb: ["COGNITIVE CAMPUS", "GRAPHS", "TOPOLOGICAL SORT"],
+  breadcrumb: ["COGNI", "GRAPHS", "TOPOLOGICAL SORT"],
   description: ["There are a total of numCourses courses you have to take, labeled from 0 to numCourses - 1. You are given an array prerequisites where prerequisites[i] = [aᵢ, bᵢ] indicates that you must take course bᵢ first if you want to take course aᵢ.", "Return the ordering of courses you should take to finish all courses. If there are many valid answers, return any of them. If it is impossible to finish all courses, return an empty array."],
   examples: [{
     input: "numCourses = 2, prerequisites = [[1,0]]",

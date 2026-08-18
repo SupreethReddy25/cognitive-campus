@@ -5,8 +5,9 @@ import { problemsService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Swords, Users, SplitSquareHorizontal, Search, Copy, Check, 
-  ArrowRight, Loader2, Wifi, WifiOff, Crown, Zap
+  ArrowRight, Loader2, Wifi, WifiOff, Crown, Zap, Activity
 } from 'lucide-react';
+import { arenaService } from '../../services/api';
 
 const MODES = [
   {
@@ -41,7 +42,8 @@ export function ArenaLobby() {
   const { 
     connected, error, createRoom, joinRoom, emitStartMatch,
     roomCode, matchStatus, room, players, mode,
-    isHost, hasJoinedRoom, joiningInProgress, socketRef
+    isHost, hasJoinedRoom, joiningInProgress, socketRef,
+    isMatchmaking, matchmakingStatus, findMatch, cancelMatchmaking
   } = useArena();
 
   const [tab, setTab] = useState('create');
@@ -53,16 +55,19 @@ export function ArenaLobby() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [arenaRating, setArenaRating] = useState(null);
 
-  // Fetch problems for selector
+  // Fetch problems & rating
   useEffect(() => {
-    problemsService.getProblems()
-      .then(r => {
-        const probs = r.data?.data?.problems || r.data?.data || [];
-        setProblems(Array.isArray(probs) ? probs : []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      problemsService.getProblems().catch(() => ({ data: [] })),
+      arenaService.getRating().catch(() => ({ data: { data: { elo: 1000, rank: 'Bronze' } } }))
+    ]).then(([problemsRes, ratingRes]) => {
+      const probs = problemsRes.data?.data?.problems || problemsRes.data?.data || [];
+      setProblems(Array.isArray(probs) ? probs : []);
+      setArenaRating(ratingRes.data?.data);
+      setLoading(false);
+    });
   }, []);
 
   // ─── Listen for match_started to navigate BOTH players ───
@@ -125,7 +130,14 @@ export function ArenaLobby() {
           <span className="text-zinc-600">/</span>
           <span>Lobby</span>
         </div>
-        <div className="flex items-center gap-3 text-[12px]">
+        <div className="flex items-center gap-6 text-[12px]">
+          {arenaRating && (
+            <div className="flex items-center gap-2 rounded-full border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-3 py-1 font-mono text-[10px] text-[var(--signal)]">
+              <Activity className="h-3 w-3" />
+              <span>{arenaRating.rank.toUpperCase()} {arenaRating.elo}</span>
+            </div>
+          )}
+
           {connected ? (
             <span className="flex items-center gap-1.5 text-[var(--signal)]">
               <Wifi className="h-3.5 w-3.5" strokeWidth={1.5} /> Connected
@@ -369,6 +381,33 @@ export function ArenaLobby() {
                   </>
                 )}
               </button>
+
+              {/* MATCHMAKING QUEUE (VERSUS MODE) */}
+              <div className="pt-8 border-t border-white/[0.04] mt-8">
+                <h3 className="text-[14px] font-semibold text-zinc-200 mb-2">Automatch Queue</h3>
+                <p className="text-[12px] text-zinc-500 mb-4">Find a random opponent for a Versus match.</p>
+
+                {isMatchmaking ? (
+                  <button
+                    onClick={cancelMatchmaking}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-8 py-3 text-[14px] font-semibold text-rose-400 transition-all hover:bg-rose-500/20"
+                  >
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Searching for opponent... (Cancel)
+                  </button>
+                ) : (
+                  <button
+                    onClick={findMatch}
+                    disabled={!connected}
+                    className={`flex w-full items-center justify-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-8 py-3 text-[14px] font-semibold transition-all ${
+                      !connected ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-300 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <Search className="h-4 w-4" strokeWidth={2} />
+                    Find Match
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

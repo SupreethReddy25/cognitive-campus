@@ -2,23 +2,27 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { 
-  LayoutDashboard, Settings, Terminal, Trophy, User, 
-  Pin, PinOff, Swords, LogOut, Shield, Home
+  LayoutDashboard, Settings, Terminal, User, 
+  Pin, PinOff, LogOut, Shield, BookOpen, Swords, GraduationCap, ShieldCheck
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard",   href: "/dashboard",    icon: LayoutDashboard },
-  { label: "Landing",     href: "/landing",      icon: Home },
-  { label: "Workspace",   href: "/problems",     icon: Terminal },
-  { label: "Intel",       href: "/intel",         icon: Shield },
-  { label: "Arena",       href: "/arena",         icon: Swords },
-  { label: "Leaderboard", href: "/leaderboard",   icon: Trophy },
-  { label: "Profile",     href: "/profile",       icon: User },
+  { label: "Intel",       href: "/intel",       icon: Shield },
+  { label: "Placement",   href: "/placement",   icon: GraduationCap },
+  { label: "Dashboard",   href: "/dashboard",   icon: LayoutDashboard },
+  { label: "Workspace",   href: "/problems",    icon: Terminal },
+  { label: "Arena",       href: "/arena",       icon: Swords },
+  { label: "Sheets",      href: "/sheets",      icon: BookOpen },
+  { label: "Profile",     href: "/profile",     icon: User },
 ];
 
 function isActive(pathname, href) {
   if (!pathname) return false;
   if (href === "/dashboard") return pathname === "/dashboard";
+  // Intel hub also matches /companies/:slug
+  if (href === "/intel") return pathname === "/intel" || pathname.startsWith("/companies");
+  // Placement hub matches /placement and sub-routes
+  if (href === "/placement") return pathname === "/placement" || pathname.startsWith("/placement/");
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -66,14 +70,15 @@ export function GlobalNav() {
     <>
       {/* ── Brand — links back to Landing Page ─── */}
       <Link to="/" className="flex h-14 items-center gap-3 px-4 group transition-colors hover:bg-white/[0.02]">
-        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a2332]">
-          <span className="h-2 w-2 rounded-full bg-[var(--signal)]" />
-          <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-[#0d1117] bg-[var(--signal)]" />
-        </div>
-        {showLabels && <div className="flex flex-col leading-tight overflow-hidden">
-          <span className="text-[13px] font-medium text-zinc-100 tracking-[0.06em] uppercase" style={{fontFamily:"'Playfair Display', serif"}}>Cognitive</span>
-          <span className="text-[11px] font-medium text-[var(--signal)] tracking-[0.1em] uppercase" style={{fontFamily:"'Playfair Display', serif"}}>Campus</span>
-        </div>}
+        {showLabels ? (
+          <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, letterSpacing: '-0.03em', color: '#f4f4f5' }}>
+            <span style={{ color: 'var(--signal)' }}>.</span>cogni
+          </span>
+        ) : (
+          <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 700, letterSpacing: '-0.03em', color: '#f4f4f5', paddingLeft: 4 }}>
+            <span style={{ color: 'var(--signal)' }}>.</span>c
+          </span>
+        )}
       </Link>
 
       {/* ── Primary nav ─── */}
@@ -81,23 +86,44 @@ export function GlobalNav() {
         {NAV_ITEMS.map(item => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
-          return <Link 
-            key={item.href} 
-            to={item.href} 
-            title={!showLabels ? item.label : undefined}
-            className={`group relative flex h-10 items-center gap-3 rounded-lg px-3 transition-all duration-200 ${
+          return <Link
+            key={item.href}
+            to={item.href}
+            className={`group relative flex items-center gap-4 rounded-xl px-3 py-2.5 transition-all duration-300 ${
               active 
-                ? "bg-[var(--signal)]/10 text-zinc-100" 
+                ? "bg-gradient-to-r from-[var(--signal)]/[0.08] to-transparent text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] border border-[var(--signal)]/10 border-l-0" 
                 : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"
             }`}
           >
-            {active && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--signal)]" />}
-            <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${active ? "text-[var(--signal)]" : ""}`} strokeWidth={1.6} />
+            {active && <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--signal)] shadow-[0_0_12px_rgba(74,124,89,0.6)]" />}
+            <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${active ? "text-[var(--signal)] drop-shadow-[0_0_8px_rgba(74,124,89,0.4)]" : ""}`} strokeWidth={1.6} />
             {showLabels && <span className={`text-[13.5px] font-medium tracking-tight transition-colors whitespace-nowrap ${active ? "text-zinc-100" : ""}`}>
               {item.label}
             </span>}
           </Link>;
         })}
+
+        {/* Admin-only nav item */}
+        {user?.role === 'admin' && (() => {
+          const active = isActive(pathname, '/admin');
+          return (
+            <>
+              <div className="my-2 border-t border-white/[0.04]" />
+              <Link
+                to="/admin"
+                className={`group relative flex items-center gap-4 rounded-xl px-3 py-2.5 transition-all duration-300 ${
+                  active
+                    ? 'bg-gradient-to-r from-violet-500/[0.12] to-transparent text-zinc-100 border border-violet-500/20 border-l-0'
+                    : 'text-zinc-600 hover:bg-violet-500/[0.05] hover:text-violet-300'
+                }`}
+              >
+                {active && <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.5)]" />}
+                <ShieldCheck className={`h-[18px] w-[18px] shrink-0 transition-colors ${active ? 'text-violet-400' : ''}`} strokeWidth={1.6} />
+                {showLabels && <span className={`text-[13.5px] font-medium tracking-tight whitespace-nowrap ${active ? 'text-zinc-100' : ''}`}>Admin</span>}
+              </Link>
+            </>
+          );
+        })()}
       </nav>
 
       {/* ── Spacer ─── */}
@@ -132,7 +158,7 @@ export function GlobalNav() {
           <div className="flex flex-1 items-center gap-3 rounded-lg px-2 py-2 min-w-0">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2a3441] text-[11px] font-semibold text-zinc-200">
               {initials}
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0d1117] bg-[var(--signal)]" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0e14] bg-[var(--signal)] shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
             </div>
             {showLabels && <div className="flex flex-1 flex-col items-start leading-tight overflow-hidden min-w-0">
               <span className="text-[13px] font-semibold text-zinc-200 truncate">{displayShort}</span>
@@ -166,7 +192,7 @@ export function GlobalNav() {
 
   // ─── PINNED: sidebar is in-flow at full width ───
   if (pinned) {
-    return <aside className="relative flex h-screen w-[220px] shrink-0 flex-col bg-[#0d1117] border-r border-white/[0.04]">
+    return <aside className="relative flex h-screen w-[220px] shrink-0 flex-col bg-[#0a0e14] border-r border-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
       {sidebarContent}
     </aside>;
   }
@@ -177,18 +203,16 @@ export function GlobalNav() {
     onMouseEnter={() => setHovered(true)}
     onMouseLeave={() => setHovered(false)}
   >
-    {/* The 60px icon rail — always in document flow */}
-    <aside className="flex h-full w-[60px] shrink-0 flex-col bg-[#0d1117] border-r border-white/[0.04]">
-      {!hovered && sidebarContent}
-    </aside>
+    {/* The 60px icon rail spacer — always in document flow */}
+    <div className="w-[60px] h-full shrink-0" />
 
-    {/* The overlay panel — absolute, slides out on hover */}
-    {hovered && (
-      <aside
-        className="absolute left-0 top-0 z-50 flex h-full w-[220px] flex-col bg-[#0d1117] border-r border-white/[0.06] shadow-2xl shadow-black/40 animate-in slide-in-from-left-2 duration-200"
-      >
+    {/* The actual animated sidebar panel */}
+    <aside
+      className={`absolute left-0 top-0 z-50 flex h-full flex-col bg-[#0a0e14] border-r border-white/[0.06] overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${hovered ? 'w-[220px] shadow-2xl shadow-black/50 border-white/[0.08]' : 'w-[60px]'}`}
+    >
+      <div className="w-[220px] h-full flex flex-col">
         {sidebarContent}
-      </aside>
-    )}
+      </div>
+    </aside>
   </div>;
 }

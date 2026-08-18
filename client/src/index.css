@@ -4,42 +4,51 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Surgical Charcoal Palette */
-  --background: #0a0a0a;
-  --foreground: #e4e4e7;
-  --card: #0a0a0a;
-  --card-foreground: #e4e4e7;
-  --popover: #0f0f0f;
-  --popover-foreground: #e4e4e7;
-  --primary: #e4e4e7;
-  --primary-foreground: #0a0a0a;
-  --secondary: #141414;
+  /* ═══ Lifted Dark Palette — enough contrast for cards to breathe ═══ */
+  --background: #080b10;
+  --foreground: #f4f4f5;
+  --card: #0d1117;
+  --card-foreground: #f4f4f5;
+  --popover: #0d1117;
+  --popover-foreground: #f4f4f5;
+  --primary: #f4f4f5;
+  --primary-foreground: #080b10;
+  --secondary: #151b23;
   --secondary-foreground: #e4e4e7;
-  --muted: #141414;
+  --muted: #121820;
   --muted-foreground: #71717a;
-  --accent: #141414;
+  --accent: #131a22;
   --accent-foreground: #e4e4e7;
   --destructive: #b91c1c;
   --destructive-foreground: #fca5a5;
-  --border: rgba(255, 255, 255, 0.04);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: rgba(255, 255, 255, 0.12);
-  --radius: 0.375rem;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: rgba(255, 255, 255, 0.15);
+  --radius: 0.5rem;
 
-  /* Signature surgical green — muted, never neon */
-  --signal: #4a7c59;
-  --signal-foreground: #e8f0ea;
+  /* Vibrant Emerald Signal — slightly brighter */
+  --signal: #34d399;
+  --signal-muted: #10b981;
+  --signal-foreground: #ffffff;
+  --signal-glow: rgba(52, 211, 153, 0.15);
 
-  --chart-1: #4a7c59;
-  --chart-2: #71717a;
-  --chart-3: #a1a1aa;
-  --chart-4: #52525b;
-  --chart-5: #3f3f46;
+  /* Accent palette for variety */
+  --accent-blue: #38bdf8;
+  --accent-violet: #a78bfa;
+  --accent-amber: #fbbf24;
+  --accent-rose: #fb7185;
+
+  --chart-1: #34d399;
+  --chart-2: #38bdf8;
+  --chart-3: #a78bfa;
+  --chart-4: #fbbf24;
+  --chart-5: #fb7185;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), 'Geist Fallback', system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback', ui-monospace, monospace;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-display: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -80,14 +89,15 @@
   html,
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-    font-feature-settings: 'ss01', 'cv01', 'cv11';
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-feature-settings: 'ss01' on, 'cv01' on, 'cv11' on, 'kern' on;
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
   ::selection {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(52, 211, 153, 0.2);
     color: #fafafa;
   }
 }
@@ -115,7 +125,16 @@
     background-color: #3f3f46;
   }
 
-  /* Micro grid background — footer / visualization accents */
+  /* ── Premium font utility classes ── */
+  .font-display {
+    font-family: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-feature-settings: 'kern' on;
+    letter-spacing: -0.02em;
+  }
+  .font-jakarta {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
   .grid-micro {
     background-image:
       linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
@@ -127,6 +146,67 @@
       linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     background-size: 8px 8px;
+  }
+  
+  /* ═══ Ambient mesh — VISIBLE emerald wash behind all pages ═══ */
+  .ambient-mesh {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: 
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(52, 211, 153, 0.06), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(56, 189, 248, 0.04), transparent 60%),
+      radial-gradient(ellipse 40% 40% at 60% 80%, rgba(167, 139, 250, 0.03), transparent 50%);
+  }
+
+  /* ═══ Card glow — subtle emerald top-border glow on hover ═══ */
+  .card-glow {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .card-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      180deg,
+      rgba(52, 211, 153, 0.15) 0%,
+      rgba(52, 211, 153, 0.03) 30%,
+      transparent 60%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .card-glow:hover::before {
+    opacity: 1;
+  }
+  .card-glow:hover {
+    border-color: rgba(52, 211, 153, 0.12);
+    box-shadow: 0 8px 32px -8px rgba(52, 211, 153, 0.08);
+  }
+
+  /* ═══ Card-elevated — slight lift from the dark ═══ */
+  .card-elevated {
+    background: linear-gradient(
+      165deg,
+      rgba(13, 17, 23, 0.9) 0%,
+      rgba(13, 17, 23, 0.7) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
   }
 }
 
@@ -230,7 +310,7 @@
 }
 
 /* ──────────────────────────────────────────────────────────
-   Cognitive Campus — Editorial Brutalism Utilities
+   Cogni — Editorial Brutalism Utilities
    ────────────────────────────────────────────────────────── */
 
 /* Vertical text labels (San Rita style) */
@@ -353,11 +433,111 @@
 .march {
   background-image: repeating-linear-gradient(
     90deg,
-    rgba(74, 124, 89, 0.7) 0 6px,
+    rgba(52, 211, 153, 0.7) 0 6px,
     transparent 6px 12px
   );
   background-size: 24px 1px;
   background-repeat: repeat-x;
   background-position: 0 100%;
   animation: march 0.9s linear infinite;
+}
+
+/* Fluid Glow for Dashboard Cards */
+@keyframes fluid-glow {
+  0% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(120px) hue-rotate(0deg);
+  }
+  33% {
+    transform: translate(-30px, 40px) scale(1.1);
+    filter: blur(120px) hue-rotate(120deg);
+  }
+  66% {
+    transform: translate(20px, -20px) scale(0.9);
+    filter: blur(120px) hue-rotate(240deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(120px) hue-rotate(360deg);
+  }
+}
+
+.animate-fluid-glow {
+  animation: fluid-glow 20s ease-in-out infinite alternate;
+}
+
+/* Pure color spectrum cycle for orbs */
+@keyframes spectrum-cycle {
+  0% { filter: blur(140px) hue-rotate(0deg); }
+  100% { filter: blur(140px) hue-rotate(360deg); }
+}
+
+.animate-spectrum {
+  animation: spectrum-cycle 20s linear infinite;
+}
+
+/* Dashboard Pointing Effect */
+.dashboard-grid:has(.dash-card:hover) .dash-card {
+  opacity: 0.4;
+  transform: scale(0.98);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dashboard-grid:has(.dash-card:hover) .dash-orb,
+.dashboard-grid:has(.dash-card:hover) .dash-orb-inner {
+  animation-play-state: paused !important;
+  opacity: 0 !important;
+}
+.dashboard-grid .dash-card:hover {
+  opacity: 1 !important;
+  transform: scale(1) translateY(-4px) !important;
+  z-index: 20;
+}
+.dashboard-grid .dash-card:hover .dash-orb,
+.dashboard-grid .dash-card:hover .dash-orb-inner {
+  animation-play-state: running !important;
+  opacity: 1 !important;
+}
+
+/* ═══ NEW: Signal accent line — top border glow for sections ═══ */
+.section-accent {
+  position: relative;
+}
+.section-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--signal) 20%,
+    var(--signal) 80%,
+    transparent 100%
+  );
+  opacity: 0.3;
+}
+
+/* ═══ NEW: Gradient text utility ═══ */
+.text-gradient-signal {
+  background: linear-gradient(135deg, #34d399, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══ NEW: Table row hover with accent ═══ */
+.row-interactive {
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.row-interactive:hover {
+  background: rgba(52, 211, 153, 0.03);
+  border-color: rgba(52, 211, 153, 0.08);
+}
+
+/* ═══ NEW: Stat card with left accent border ═══ */
+.stat-accent {
+  border-left: 2px solid var(--signal);
+  padding-left: 12px;
 }

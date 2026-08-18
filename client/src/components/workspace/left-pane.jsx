@@ -14,17 +14,12 @@ export function LeftPane() {
   const TABS = hasIntel ? [...BASE_TABS, "Intel"] : BASE_TABS;
   
   return <section className="relative flex h-full flex-col">
-      {/* Vertical spine label */}
-      <span className="vlabel pointer-events-none absolute left-1 top-4 font-mono text-[9px] text-zinc-700">
-        PROMPT · 01
-      </span>
-
       {/* Scrollable content */}
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-surgical">
         <div className="px-6 pb-10 pl-8 pt-5">
           {/* Meta row */}
-          <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.14em] text-zinc-600">
-            <span>{problem.id || `P-${id?.slice(0,6)}`}</span>
+          <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-600 uppercase">
+            <span>{problem.difficulty?.toUpperCase() || 'MEDIUM'}</span>
             <span className="text-zinc-800">/</span>
             <span>FREQ {problem.frequency || "HIGH"}</span>
             <span className="text-zinc-800">/</span>
@@ -32,12 +27,13 @@ export function LeftPane() {
           </div>
 
           {/* Title */}
-          <h1 className="track-tight-editorial mt-3 font-sans text-[30px] leading-[1.05] text-zinc-100">
-            {problem.title}.
+          <h1 className="mt-3 text-[32px] leading-[1.05] text-zinc-100 font-extralight tracking-tight">
+            {problem.title?.split(' ').slice(0, -1).join(' ')} {problem.title?.split(' ').length > 1 && ' '}
+            <span className="font-serif italic text-zinc-300">{problem.title?.split(' ').slice(-1)}</span>.
           </h1>
 
           {/* Topic tags */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500">
             {(problem.topics || problem.skillId?.name ? [problem.skillId.name] : ["Algorithms"]).map((t, i, arr) => <span key={t || i} className="flex items-center gap-2">
                 <span>{t}</span>
                 {i < arr.length - 1 && <span className="text-zinc-800">·</span>}
@@ -47,7 +43,7 @@ export function LeftPane() {
           {/* Difficulty chip */}
           <div className="mt-3 flex items-center gap-2">
             <DifficultyChip difficulty={problem.difficulty || 'Medium'} />
-            <span className="font-mono text-[9px] tracking-widest text-zinc-600">
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600">
               • BKT MASTERY <span className={result?.newMastery ? 'text-[var(--signal)] font-bold' : ''}>{Math.round((result?.newMastery ?? problem.bktMastery ?? 0) * 100)}%</span>
             </span>
           </div>
@@ -80,10 +76,10 @@ export function LeftPane() {
         </div>
       </div>
 
-      {/* Footer signature */}
-      <div className="flex h-8 items-center justify-between border-t border-white/[0.04] px-4 font-mono text-[9px] tracking-[0.18em] text-zinc-700">
-        <span>SIG · {problem.id || id}</span>
-        <span>SECTION 01 / 04</span>
+      {/* Footer watermark */}
+      <div className="flex h-8 items-center justify-between border-t border-white/[0.06] px-4 font-mono text-[8px] tracking-[0.18em] text-zinc-800">
+        <span>{problem.skillId?.name || 'WORKSPACE'}</span>
+        <span>v2.0</span>
       </div>
     </section>;
 }

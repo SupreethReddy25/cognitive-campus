@@ -13,4 +13,10 @@ router.get('/recommendations', authenticateToken, require('../controllers/userCo
 // POST /api/users/config-key — Securely encrypt and store BYOK Gemini key
 router.post('/config-key', authenticateToken, require('../controllers/userController').configGeminiKey);
 
+// POST /api/users/dashboard-quote — Get AI generated quote with context payload
+router.post('/dashboard-quote', authenticateToken, require('../controllers/userController').getDashboardQuote);
+
+// PATCH /api/users/profile — Update placement profile (college, targetCompany, targetRole)
+router.patch('/profile', authenticateToken, require('../controllers/userController').updateProfile);
+
 module.exports = router;

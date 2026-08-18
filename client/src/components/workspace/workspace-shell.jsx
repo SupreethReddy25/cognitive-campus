@@ -12,6 +12,7 @@ import { LeftPane } from "./left-pane";
 import { CenterPane } from "./center-pane";
 import { RightPane } from "./right-pane";
 import { TestTiles } from "./test-tiles";
+import { SuccessOverlay } from "./SuccessOverlay";
 
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
@@ -38,6 +39,13 @@ export function WorkspaceShell() {
   const [language, setLanguage] = useState("javascript");
   const [userTyped, setUserTyped] = useState(false);
   const [activeLine, setActiveLine] = useState(null);
+  
+  // Editor Settings
+  const [keybindings, setKeybindings] = useState(() => localStorage.getItem('cc_keybindings') || 'standard');
+  const updateKeybindings = useCallback((val) => {
+    setKeybindings(val);
+    localStorage.setItem('cc_keybindings', val);
+  }, []);
 
   // Execution State
   const [running, setRunning] = useState(false);
@@ -54,6 +62,9 @@ export function WorkspaceShell() {
 
   // Mentor pane collapsed state — thin strip by default
   const [mentorOpen, setMentorOpen] = useState(false);
+
+  // Success overlay state
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Timer
   const [elapsed, setElapsed] = useState(0);
@@ -82,7 +93,7 @@ export function WorkspaceShell() {
   const switchLanguage = useCallback((newLang) => {
     if (newLang === language) return;
     const currentCodeRaw = code.trim();
-    const isUntouched = !currentCodeRaw || 
+    const isUntouched = !currentCodeRaw ||
       currentCodeRaw === '// Your code here' ||
       Object.values(problem?.starterCodeMap || {}).some(defaultCode => defaultCode.trim() === currentCodeRaw) ||
       currentCodeRaw === (problem?.starterCode || '').trim();
@@ -91,7 +102,7 @@ export function WorkspaceShell() {
       const ok = window.confirm('Switch language? Your current code will be replaced.');
       if (!ok) return;
     }
-    
+
     setLanguage(newLang);
     setCode(problem?.starterCodeMap?.[newLang] || problem?.starterCode || '');
     setUserTyped(false);
@@ -120,7 +131,7 @@ export function WorkspaceShell() {
       const r = await submissionsService.runCode(payload);
       setResult(r.data.data);
       if (r.data.data?.testResults?.results?.length > 0) {
-         setSelectedTest(r.data.data.testResults.results[0].id || '0');
+        setSelectedTest(r.data.data.testResults.results[0].id || '0');
       }
     } catch (e) {
       setResult({ error: e.response?.data?.message || 'Run execution failed.' });
@@ -151,9 +162,14 @@ export function WorkspaceShell() {
     setResult(null);
     try {
       const r = await submissionsService.createSubmission({ problemId: id, code, hintsUsed, language });
-      setResult(r.data.data);
-      if (r.data.data?.testResults?.results?.length > 0) {
-         setSelectedTest(r.data.data.testResults.results[0].id || '0');
+      const data = r.data.data;
+      setResult(data);
+      if (data?.testResults?.results?.length > 0) {
+        setSelectedTest(data.testResults.results[0].id || '0');
+      }
+      // Trigger success overlay if all tests passed
+      if (data?.submission?.allPassed) {
+        setShowSuccess(true);
       }
     } catch (e) {
       setResult({ error: e.response?.data?.message || 'Submission failed.' });
@@ -164,7 +180,7 @@ export function WorkspaceShell() {
 
   // Derived arrays
   const testCasesArray = problem?.examples || [];
-  
+
   const stats = useMemo(() => {
     if (!result || !result.testResults || !result.testResults.results) {
       return { pass: 0, total: testCasesArray.length || 0, avgRt: 0, done: 0 };
@@ -187,6 +203,7 @@ export function WorkspaceShell() {
     problem, id,
     code, setCode, userTyped, setUserTyped,
     language, switchLanguage, resetCode, LANGUAGES,
+    keybindings, updateKeybindings,
     running, submitting, result, handleRun, handleSubmit,
     nudgeDepth, setNudgeDepth, lastNudgedCode, setLastNudgedCode,
     hintsUsed, setHintsUsed,
@@ -203,7 +220,7 @@ export function WorkspaceShell() {
 
   return (
     <WorkspaceContext.Provider value={workspaceContextValue}>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground">
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground">
         {/* Top Bar — breadcrumb, BKT mastery, stats, timer */}
         <TopBar elapsed={elapsed} stats={stats} />
 
@@ -212,7 +229,7 @@ export function WorkspaceShell() {
           <PanelGroup direction="horizontal" className="h-full">
             {/* LEFT — Problem Description */}
             <Panel defaultSize="30%" minSize="15%" maxSize="50%">
-              <div className="flex h-full flex-col overflow-hidden border-r border-white/[0.04]">
+              <div className="flex h-full flex-col overflow-hidden border-r border-white/[0.06] bg-[#0a0c0e]">
                 <LeftPane />
               </div>
             </Panel>
@@ -223,13 +240,13 @@ export function WorkspaceShell() {
 
             {/* CENTER — Editor + Action Bar + Test Cases */}
             <Panel defaultSize="55%" minSize="30%">
-              <div className="flex h-full min-w-0 flex-col overflow-hidden">
+              <div className="flex h-full min-w-0 flex-col overflow-hidden bg-[#0d1117]">
                 <div className="relative min-h-0 flex-1 overflow-hidden">
                   <CenterPane />
                 </div>
-                <TestTiles 
-                  running={running || submitting} 
-                  results={result} 
+                <TestTiles
+                  running={running || submitting}
+                  results={result}
                   onRun={handleRun}
                   selected={selectedTest}
                   onSelect={setSelectedTest}
@@ -245,12 +262,21 @@ export function WorkspaceShell() {
 
             {/* RIGHT — Compact Socratic Mentor */}
             <Panel defaultSize="15%" minSize="10%" maxSize="30%">
-              <div className="h-full overflow-hidden border-l border-white/[0.04]">
+              <div className="h-full overflow-hidden border-l border-white/[0.06] bg-[#080a0c]">
                 <RightPane />
               </div>
             </Panel>
           </PanelGroup>
         </div>
+
+        {/* Success Overlay — triggered on all-pass submission */}
+        <SuccessOverlay
+          show={showSuccess}
+          onDismiss={() => setShowSuccess(false)}
+          stats={stats}
+          xp={result?.xpEarned || 0}
+          mastery={result?.newMastery || 0}
+        />
       </div>
     </WorkspaceContext.Provider>
   );

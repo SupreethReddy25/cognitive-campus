@@ -95,7 +95,7 @@ const getMentorNudge = async (userId, problem, userCode, language, nudgeDepth = 
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const prompt = `You are the Socratic Mentor for Cognitive Campus. You have access to the user's current code and the problem description.
+    const prompt = `You are the Socratic Mentor for Cogni. You have access to the user's current code and the problem description.
 
 YOUR LOGIC FLOW:
 1. **Check for Correctness:** User's current code is: ${userCode}. If this is correct, do NOT give a hint. Ask a follow-up question about complexity.
@@ -160,4 +160,105 @@ Your Analysis:`;
   }
 };
 
-module.exports = { getMentorNudge };
+const FALLBACK_QUOTES = [
+  { text: "System optimal. Let's ", highlight: "build", highlightColor: "#4a7c59", suffix: "." },
+  { text: "Back for ", highlight: "blood", highlightColor: "#ef4444", suffix: "?" },
+  { text: "Ready to ", highlight: "conquer", highlightColor: "#eab308", suffix: "?" },
+  { text: "Logic is ", highlight: "power", highlightColor: "#a855f7", suffix: "." },
+  { text: "Think. Code. ", highlight: "Dominate", highlightColor: "#ef4444", suffix: "." },
+  { text: "Your compiler ", highlight: "awaits", highlightColor: "#64748b", suffix: "." }
+];
+
+/**
+ * /**
+ * Generates a contextual, 3-6 word dashboard quote with a highlighted word.
+ * Uses Groq API (fast, free) for reliable low-latency generation.
+ */
+const generateDashboardQuote = async (userId, context = {}) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+
+    // Build contextual nudge based on last visited problem — only 30% of the time to keep variety
+    let contextualNudge = "";
+    let usedContextPath = null;
+    const useContext = Math.random() < 0.3;
+    if (useContext && context.lastPath && context.lastPath.startsWith('/problems/')) {
+      try {
+        const problemId = context.lastPath.split('/problems/')[1];
+        if (problemId) {
+          const Problem = require('../models/Problem');
+          const problem = await Problem.findById(problemId);
+          if (problem) {
+            contextualNudge = `The user was recently working on a problem called "${problem.title}". Make the quote a subtle, poetic nudge to jump back in and finish it.`;
+            usedContextPath = context.lastPath;
+          }
+        }
+      } catch(e) {}
+    }
+
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) {
+      return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+    }
+
+    const systemPrompt = `You are an elite DSA coach. Generate a short, punchy 3-6 word motivational dashboard greeting.
+${contextualNudge}
+Return ONLY a single-line valid JSON object with no markdown, no code blocks, no explanation:
+{"text": "prefix text ", "highlight": "oneword", "highlightColor": "#hexcolor", "suffix": "?or."}
+Rules:
+- highlight must be exactly ONE word with strong emotional or thematic resonance
+- highlightColor must match the mood: #ef4444 for intense/blood/fire, #4a7c59 for growth/build, #eab308 for victory/conquer, #a855f7 for power/logic, #3b82f6 for clarity/code, #f97316 for urgency/return
+- text is everything BEFORE the highlight word, suffix is everything AFTER
+- Vary the quotes. Never repeat examples.
+Examples (do not copy these):
+{"text": "Back for ", "highlight": "blood", "highlightColor": "#ef4444", "suffix": "?"}
+{"text": "Logic never ", "highlight": "sleeps", "highlightColor": "#3b82f6", "suffix": "."}
+{"text": "Your next ", "highlight": "breakthrough", "highlightColor": "#a855f7", "suffix": " awaits."}`;
+
+    const axios = require('axios');
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Generate a fresh quote for ${user.name || 'the user'} (Level ${user.level || 1}).` }
+        ],
+        temperature: 1.1,
+        max_tokens: 80,
+        response_format: { type: 'json_object' }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${groqKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 8000
+      }
+    );
+
+    const content = response.data?.choices?.[0]?.message?.content?.trim();
+    if (!content) throw new Error('Empty response from Groq');
+
+    // Safely extract JSON
+    const start = content.indexOf('{');
+    const end = content.lastIndexOf('}') + 1;
+    const json = JSON.parse(content.substring(start, end));
+
+    if (json.text && json.highlight && json.highlightColor) {
+      // Attach contextPath so frontend knows to make quote clickable
+      if (usedContextPath) json.contextPath = usedContextPath;
+      return json;
+    }
+    throw new Error('Invalid JSON shape from Groq');
+  } catch (error) {
+    logger.error('Failed to generate dashboard quote, using fallback', { error: error.message });
+    return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+  }
+};
+
+module.exports = {
+  getMentorNudge,
+  generateDashboardQuote
+};

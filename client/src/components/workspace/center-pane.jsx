@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, lazy, Suspense } from "react";
 import { useWorkspace } from "./WorkspaceContext";
-import { ChevronDown, Command, Eraser, Play, RotateCcw, Send, AlignLeft, Check, Loader2, Trash2 } from "lucide-react";
+import { ChevronDown, Command, Eraser, Play, RotateCcw, Send, AlignLeft, Check, Loader2, Trash2, Keyboard } from "lucide-react";
+import { initVimMode } from "monaco-vim";
 
 // Lazy load Monaco Editor
 const Editor = lazy(() => import('@monaco-editor/react'));
@@ -9,6 +10,7 @@ export function CenterPane() {
   const { 
     code, setCode, setUserTyped,
     language, switchLanguage, resetCode, LANGUAGES,
+    keybindings,
     running, submitting, handleRun, handleSubmit,
     lighthouse, citedLines, activeLine, setActiveLine
   } = useWorkspace();
@@ -17,6 +19,24 @@ export function CenterPane() {
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const decorationsRef = useRef([]);
+  const vimRef = useRef(null);
+  const vimStatusRef = useRef(null);
+
+  // Handle Vim Keybindings
+  useEffect(() => {
+    if (!editorRef.current) return;
+    
+    if (keybindings === 'vim') {
+      if (!vimRef.current && vimStatusRef.current) {
+        vimRef.current = initVimMode(editorRef.current, vimStatusRef.current);
+      }
+    } else {
+      if (vimRef.current) {
+        vimRef.current.dispose();
+        vimRef.current = null;
+      }
+    }
+  }, [keybindings]);
 
   // Handle Lighthouse Decorators
   useEffect(() => {
@@ -100,7 +120,7 @@ export function CenterPane() {
 
   return <section className="flex h-full flex-col">
       {/* ─── File tab strip ─── */}
-      <div className="flex h-9 shrink-0 items-center justify-between border-b border-white/[0.04] px-3">
+      <div className="flex h-9 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0e1218] px-3">
         <div className="flex items-center gap-1 font-mono text-[11px]">
           <div className="press flex h-7 items-center gap-2 border-r border-white/[0.06] bg-white/[0.015] px-3 text-zinc-300">
             <span className="h-1 w-1 rounded-full bg-[var(--signal)]" />
@@ -120,7 +140,7 @@ export function CenterPane() {
           <span className="text-zinc-800">·</span>
           <span>LF</span>
           <span className="text-zinc-800">·</span>
-          <span>VIM</span>
+          <span className="uppercase">{keybindings === 'standard' ? 'STD' : keybindings}</span>
         </div>
       </div>
 
@@ -138,6 +158,37 @@ export function CenterPane() {
             onMount={(editor, monaco) => { 
               editorRef.current = editor; 
               monacoRef.current = monaco;
+
+              // Enhance IntelliSense with snippet injection
+              monaco.languages.registerCompletionItemProvider('javascript', {
+                provideCompletionItems: (model, position) => {
+                  const suggestions = [
+                    {
+                      label: 'clg',
+                      kind: monaco.languages.CompletionItemKind.Snippet,
+                      insertText: 'console.log($1);',
+                      insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                      documentation: 'Log output to console'
+                    },
+                    {
+                      label: 'map',
+                      kind: monaco.languages.CompletionItemKind.Snippet,
+                      insertText: '${1:array}.map((${2:item}) => {\n\t$0\n});',
+                      insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                      documentation: 'Array map function'
+                    },
+                    {
+                      label: 'forloop',
+                      kind: monaco.languages.CompletionItemKind.Snippet,
+                      insertText: 'for (let ${1:i} = 0; ${1:i} < ${2:array}.length; ${1:i}++) {\n\t$0\n}',
+                      insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                      documentation: 'Standard for loop'
+                    }
+                  ];
+                  return { suggestions };
+                }
+              });
+
               // Monaco-level keybindings for when editor is focused
               editor.addAction({
                 id: 'cc-run',
@@ -151,19 +202,46 @@ export function CenterPane() {
                 keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
                 run: () => handleSubmit()
               });
+              
+              // Initial vim setup if keybindings are already set
+              if (keybindings === 'vim' && !vimRef.current && vimStatusRef.current) {
+                vimRef.current = initVimMode(editor, vimStatusRef.current);
+              }
             }}
-            options={{ minimap: { enabled: false }, fontSize: 13, lineNumbers: 'on', scrollBeyondLastLine: false, automaticLayout: true, tabSize: 2, wordWrap: 'on', padding: { top: 12 }, renderLineHighlight: 'all', cursorSmoothCaretAnimation: "on" }} 
+            options={{ 
+              minimap: { enabled: false }, 
+              fontSize: 13, 
+              lineNumbers: 'on', 
+              scrollBeyondLastLine: false, 
+              automaticLayout: true, 
+              tabSize: 2, 
+              wordWrap: 'on', 
+              padding: { top: 12 }, 
+              renderLineHighlight: 'all', 
+              cursorSmoothCaretAnimation: "on",
+              quickSuggestions: true,
+              suggestOnTriggerCharacters: true,
+              parameterHints: { enabled: true },
+              snippetSuggestions: 'inline'
+            }} 
           />
         </Suspense>
 
-        {/* Lighthouse indicator */}
         {lighthouse && citedLines && citedLines.length > 0 && <div className="pointer-events-none absolute right-8 top-4 z-[2] border border-[var(--signal)]/30 bg-[var(--signal)]/5 px-3 py-1.5 font-mono text-[9px] tracking-[0.2em] text-[var(--signal)] backdrop-blur-sm shadow-[0_0_15px_rgba(74,124,89,0.2)] fade-in-up">
             LIGHTHOUSE · PIVOT LOCKED
         </div>}
       </div>
 
+      {/* Vim Status Bar (Only visible if keybindings = 'vim') */}
+      <div 
+        ref={vimStatusRef} 
+        className={`shrink-0 flex items-center px-4 font-mono text-[11px] font-bold tracking-widest text-zinc-300 bg-[var(--signal)]/10 border-t border-[var(--signal)]/20 transition-all duration-300 ${keybindings === 'vim' ? 'h-7 py-1' : 'h-0 py-0 overflow-hidden border-transparent'}`}
+      >
+        {/* monaco-vim will inject its DOM here */}
+      </div>
+
       {/* ─── Bottom Action Bar (V4: Format, Clear, Reset, RUN, SUBMIT) ─── */}
-      <div className="flex shrink-0 items-center justify-center gap-2 border-t border-white/[0.04] bg-[#0a0a0a]/80 px-4 py-2 backdrop-blur-sm">
+      <div className="flex shrink-0 items-center justify-center gap-2 border-t border-white/[0.06] bg-[#0c0f14]/90 px-4 py-2 backdrop-blur-sm">
         <GhostBtn label="Format" onClick={handleFormat}>
           <AlignLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           <span>Format</span>

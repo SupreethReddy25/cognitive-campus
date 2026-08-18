@@ -328,9 +328,9 @@ const runCode = async (req, res, next) => {
       rawTestCases = [{ input: customInput, expectedOutput: null }];
     } else {
       // Limit dry runs to just the "public" examples so users don't extract hidden validation tests
-      rawTestCases = problem.testCases.filter(tc => tc.isPublic) || [];
+      rawTestCases = problem.testCases.filter(tc => !tc.isHidden) || [];
       if (rawTestCases.length === 0) {
-          rawTestCases = [problem.testCases[0]]; // Fallback if no public tests labeled
+          rawTestCases = [problem.testCases[0]]; // Fallback if all are hidden
       }
     }
 

@@ -8,38 +8,59 @@ import {
   ArrowRight, Target, Loader2, Trophy, Clock, Activity, Swords,
   ChevronRight, Sparkles
 } from "lucide-react";
+import { ActivityHeatmap } from "../ui/activity-heatmap";
+import { LeaderboardView } from "../leaderboard/leaderboard-view";
 
-/* ─── Dynamic greetings ─── */
-const GREETINGS = [
-  "Back for blood?",
-  "Hello, legend.",
-  "Optimize the world.",
-  "Logic is power.",
-  "Ready to conquer?",
-  "The grind never sleeps.",
-  "Let's close the gap.",
-  "Think. Code. Dominate.",
-  "Welcome back, architect.",
-  "Build something brilliant.",
-  "Your code awaits.",
-  "Time to level up.",
-];
 
-function getGreeting() {
-  // Rotate daily so it's deterministic but changes each day
-  const dayIndex = Math.floor(Date.now() / 86400000) % GREETINGS.length;
-  return GREETINGS[dayIndex];
-}
 
 export function DashboardView() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { getLastSession } = useSessionTracker();
+  const lastSession = useMemo(() => getLastSession(), []); // Stable, only runs once on mount
   const [skillStates, setSkillStates] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [totalProblems, setTotalProblems] = useState(0);
   const [recsLoading, setRecsLoading] = useState(true);
   const [recentSubs, setRecentSubs] = useState([]);
+  const [focusedCard, setFocusedCard] = useState(null);
+  
+  // Dynamic greeting state (Zero-latency cache)
+  const [greetingData, setGreetingData] = useState(() => {
+    const cached = localStorage.getItem('cached_ai_quote');
+    if (cached) {
+      try { 
+        const parsed = JSON.parse(cached); 
+        if (parsed && parsed.text && parsed.highlight) return parsed;
+      } catch(e) {}
+    }
+    return { text: "Ready when you are, ", highlight: "let's go", highlightColor: "#34d399", suffix: "." };
+  });
+  const [greetingKey, setGreetingKey] = useState(0);
+  const [greetingContext, setGreetingContext] = useState(null); // stores lastPath if quote was problem-based
+
+  const [allSubmissions, setAllSubmissions] = useState([]);
+
+  useEffect(() => {
+    const context = {
+      lastPath: lastSession?.path,
+      timestamp: lastSession?.timestamp
+    };
+    // Fetch dynamic AI quote ONCE on mount with context
+    usersService.getDashboardQuote(context)
+      .then(r => {
+        if (r.data?.data && r.data.data.text && r.data.data.highlight) {
+          const quote = r.data.data;
+          setGreetingData(quote);
+          setGreetingKey(prev => prev + 1);
+          // If backend flagged this as context-based, store the path for click-to-navigate
+          if (quote.contextPath) setGreetingContext(quote.contextPath);
+          const toCache = { text: quote.text, highlight: quote.highlight, highlightColor: quote.highlightColor, suffix: quote.suffix };
+          localStorage.setItem('cached_ai_quote', JSON.stringify(toCache));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     skillsService.getMySkillStates()
@@ -58,10 +79,12 @@ export function DashboardView() {
         setTotalProblems(Array.isArray(probs) ? probs.length : 0);
       })
       .catch(() => {});
-    submissionsService.getHistory({ limit: 5 })
+    submissionsService.getHistory({ limit: 500 })
       .then(r => {
         const subs = r.data?.data?.submissions || r.data?.data || [];
-        setRecentSubs(Array.isArray(subs) ? subs.slice(0, 4) : []);
+        const validSubs = Array.isArray(subs) ? subs : [];
+        setAllSubmissions(validSubs);
+        setRecentSubs(validSubs.slice(0, 4));
       })
       .catch(() => {});
   }, []);
@@ -73,9 +96,35 @@ export function DashboardView() {
   const tier = level >= 40 ? "Legend" : level >= 30 ? "Archon" : level >= 15 ? "Adept" : "Apprentice";
   const xpToNext = (level + 1) * 100;
   const masteredCount = skillStates.filter(s => (s.masteryP || 0) >= 0.85).length;
+  
+  // Heatmap Data — pass raw date map to component (it handles cell layout internally)
+  const { dateMap, totalSolves } = useMemo(() => {
+    const map = {};
+    let count = 0;
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    for (const sub of allSubmissions) {
+      const d = new Date(sub.createdAt);
+      if (d >= oneYearAgo) {
+        const key = d.toISOString().slice(0, 10);
+        map[key] = (map[key] || 0) + 1;
+        count++;
+      }
+    }
+    return { dateMap: map, totalSolves: count };
+  }, [allSubmissions]);
 
-  const greeting = getGreeting();
-  const lastSession = getLastSession();
+  // Extract topRec safely from any API shape
+  const topRec = useMemo(() => {
+    const rec = recommendations[0];
+    if (!rec) return null;
+    return {
+      id: rec._id || rec.id || rec.problem?._id || rec.problemId,
+      title: rec.title || rec.problem?.title || rec.problemTitle || 'Next Problem',
+      difficulty: rec.difficulty || rec.problem?.difficulty,
+    };
+  }, [recommendations]);
+
   const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
   const handleContinue = () => {
@@ -107,6 +156,12 @@ export function DashboardView() {
           <span className="font-semibold text-zinc-200">Dashboard</span>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-3 py-1.5" title={`${streak} Day Streak`}>
+            <Flame className={`h-4 w-4 ${streak > 0 ? 'text-[var(--signal)] drop-shadow-[0_0_8px_rgba(74,124,89,0.8)]' : 'text-zinc-600'}`} strokeWidth={2} />
+            <span className={`font-mono text-[13px] tabular-nums font-semibold ${streak > 0 ? 'text-zinc-200' : 'text-zinc-500'}`}>
+              {streak}
+            </span>
+          </div>
           <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-1.5">
             <Search className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
             <span className="text-[12px] text-zinc-700">Search</span>
@@ -128,116 +183,149 @@ export function DashboardView() {
               Level {level} · {tier}
             </span>
           </div>
-          <h1 className="text-[52px] font-extralight leading-[1.05] tracking-tight text-zinc-100">
-            {greeting}
+          {/* Clickable quote — navigates to last problem only if quote was context-generated */}
+          <h1
+            key={greetingKey}
+            onClick={() => greetingContext && navigate(greetingContext)}
+            className={`font-display text-[42px] font-light leading-[1.1] tracking-[-0.02em] text-zinc-100 animate-in fade-in duration-500 ${
+              greetingContext ? 'cursor-pointer hover:text-zinc-300 transition-colors' : ''
+            }`}
+            title={greetingContext ? 'Click to jump back in' : ''}
+          >
+            {greetingData.text?.trimEnd()}
+            {' '}
+            <span className="italic" style={{ color: greetingData.highlightColor, fontFamily: "'Syne', sans-serif" }}>
+              {greetingData.highlight}
+            </span>
+            {/* Auto-add space if suffix starts with a letter (not punctuation) */}
+            {greetingData.suffix && /^[a-zA-Z]/.test(greetingData.suffix) ? ' ' + greetingData.suffix : greetingData.suffix}
           </h1>
-          <p className="mt-3 text-[14px] text-zinc-500 max-w-lg">
-            {displayName}, you've mastered {masteredCount} patterns. 
+          <p className="mt-2 text-[13px] text-zinc-500 max-w-lg">
+            {displayName}, you've mastered {masteredCount} pattern{masteredCount !== 1 ? 's' : ''}.
             {masteredCount < 5 ? ' Keep pushing the frontier.' : " You\u2019re building serious depth."}
           </p>
 
-          <div className="mt-7 flex items-center gap-3">
-            <button onClick={handleContinue}
-              className="group flex items-center gap-2.5 rounded-none border border-white/[0.12] bg-white/[0.02] px-6 py-3 text-[12px] font-medium tracking-[0.15em] text-zinc-200 uppercase transition-all duration-300 hover:bg-white hover:text-black hover:border-white">
-              Continue session
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={1.8} />
-            </button>
-            {lastSessionLabel && (
-              <span className="font-mono text-[10px] text-zinc-700 tracking-wider">
-                Last active {lastSessionLabel}
-              </span>
+          {/* Continue row — button left, top recommendation right */}
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button onClick={handleContinue}
+                className="group flex items-center gap-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 text-[12px] font-semibold tracking-wide text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98]">
+                Continue session
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
+              </button>
+              {lastSessionLabel && (
+                <span className="font-mono text-[10px] text-zinc-700 tracking-wider">
+                  Last active {lastSessionLabel}
+                </span>
+              )}
+            </div>
+            {/* Top recommended problem */}
+            {topRec && !recsLoading && (
+              <Link
+                to={`/problems/${topRec.id}`}
+                className="group flex items-center gap-3 border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 hover:bg-white/[0.05] transition-colors"
+              >
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="font-mono text-[8px] tracking-[0.2em] text-zinc-600 uppercase">Next up</span>
+                  <span className="text-[12px] text-zinc-300 font-medium max-w-[200px] truncate text-right group-hover:text-white transition-colors">
+                    {topRec.title}
+                  </span>
+                  {topRec.difficulty && (
+                    <span className={`font-mono text-[8px] ${
+                      topRec.difficulty === 'Easy' ? 'text-green-500' :
+                      topRec.difficulty === 'Medium' ? 'text-yellow-500' : 'text-red-500'
+                    }`}>{topRec.difficulty}</span>
+                  )}
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-zinc-300 transition-colors shrink-0" strokeWidth={1.5} />
+              </Link>
             )}
           </div>
         </section>
 
-        {/* ═══ Bento: 4-card grid ═══ */}
-        <div className="grid grid-cols-4 gap-[1px] bg-white/[0.04] border border-white/[0.04] mb-10">
-          {/* Metric 1: XP */}
-          <div className="flex flex-col gap-3 bg-background p-7">
-            <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[11px] tracking-[0.15em] text-zinc-600 uppercase">Total XP</span>
-            </div>
-            <span className="text-[36px] font-extralight leading-none tabular-nums text-zinc-100">{xp.toLocaleString()}</span>
-            <span className="text-[11px] text-[var(--signal)]">{xpToNext - (xp % xpToNext)} to next level</span>
-          </div>
 
-          {/* Metric 2: Streak */}
-          <div className="flex flex-col gap-3 bg-background p-7">
-            <div className="flex items-center gap-2">
-              <Flame className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[11px] tracking-[0.15em] text-zinc-600 uppercase">Streak</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[36px] font-extralight leading-none tabular-nums text-zinc-100">{streak}</span>
-              <span className="text-[13px] text-zinc-600">days</span>
-            </div>
-            <span className="text-[11px] text-zinc-600">Keep it alive</span>
-          </div>
-
-          {/* Metric 3: Mastered */}
-          <div className="flex flex-col gap-3 bg-background p-7">
-            <div className="flex items-center gap-2">
-              <CircleCheckBig className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[11px] tracking-[0.15em] text-zinc-600 uppercase">Mastered</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[36px] font-extralight leading-none tabular-nums text-zinc-100">{masteredCount}</span>
-              <span className="text-[13px] text-zinc-600">/ {totalProblems || '—'}</span>
-            </div>
-            <span className="text-[11px] text-[var(--signal)]">{totalProblems > 0 ? ((masteredCount / totalProblems * 100).toFixed(0)) : '0'}% coverage</span>
-          </div>
-
-          {/* Metric 4: Level ring */}
-          <div className="flex items-center gap-5 bg-background p-7">
-            <div className="relative h-16 w-16 shrink-0">
-              <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
-                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="2" />
-                <circle cx="32" cy="32" r="28" fill="none" stroke="var(--signal)" strokeWidth="2" 
-                  strokeDasharray={`${(xp % (level * 100)) / (level * 100) * 176} 176`} strokeLinecap="round" opacity={0.7} />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-mono text-[8px] tracking-widest text-zinc-700">LVL</span>
-                <span className="text-[18px] font-light tabular-nums text-zinc-200">{level}</span>
+        {/* ═══ Arena Quick-Launch Card ═══ */}
+        <section className="mb-8 rounded-2xl border border-white/[0.06] bg-[var(--card)] p-5 card-glow relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-rose-500/8 blur-[60px] pointer-events-none" />
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <Swords className="h-5 w-5 text-rose-400" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-medium text-zinc-100">Challenge someone. <span className="text-rose-400">Right now.</span></h3>
+                <p className="text-[12px] text-zinc-600 mt-0.5">Versus, co-op shared, or co-op split — Elo-rated matches.</p>
               </div>
             </div>
-            <div>
-              <div className="text-[14px] font-medium text-zinc-200">{tier}</div>
-              <div className="text-[11px] text-zinc-600 mt-0.5">tier</div>
-            </div>
+            <Link to="/arena"
+              className="shrink-0 flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-[11px] font-semibold tracking-wide text-rose-300 transition-all hover:bg-rose-500/20 hover:text-rose-200"
+            >
+              Enter Arena
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+            </Link>
           </div>
-        </div>
-        {/* ═══ Skill Radar + Activity Sparkline ═══ */}
-        <div className="grid grid-cols-5 gap-[1px] bg-white/[0.04] border border-white/[0.04] mb-10">
-          {/* Skill Radar — 3 cols */}
-          <div className="col-span-3 bg-background p-7">
-            <div className="flex items-center gap-2 mb-5">
-              <Activity className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">Skill Mastery Radar</span>
+        </section>
+
+        {/* ═══ Skill Radar & Heatmap ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 mb-10">
+          {/* Skill Radar */}
+          <div 
+            onMouseEnter={() => setFocusedCard('radar')}
+            onMouseLeave={() => setFocusedCard(null)}
+            className={`card-glow bg-[#080b10]/60 border border-white/[0.08] p-7 rounded-3xl shadow-2xl backdrop-blur-3xl relative overflow-hidden flex flex-col transition-all duration-500 hover:-translate-y-1 hover:bg-[#080b10]/80 hover:border-white/[0.15] hover:shadow-[0_20px_40px_rgba(52,211,153,0.08)] ${focusedCard && focusedCard !== 'radar' ? 'opacity-70' : 'opacity-100 z-10'}`}>
+            {/* Revolving Orb */}
+            <div className={`absolute top-1/2 left-1/2 w-[200%] h-[200%] -translate-x-1/2 -translate-y-1/2 animate-[spin_40s_linear_infinite] pointer-events-none transition-opacity duration-1000 ${focusedCard && focusedCard !== 'radar' ? 'opacity-20' : (focusedCard === 'radar' ? 'opacity-100' : 'opacity-70')}`}
+                 style={{ animationPlayState: focusedCard && focusedCard !== 'radar' ? 'paused' : 'running' }}>
+              <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-[var(--signal)]/10 rounded-full animate-[spectrum-cycle_18s_linear_infinite]" 
+                   style={{ animationDelay: '-5s', animationPlayState: focusedCard && focusedCard !== 'radar' ? 'paused' : 'running' }} />
             </div>
-            <SkillRadar skillStates={skillStates} />
+            
+            <div className="flex items-center gap-2 mb-5 relative z-10">
+              <Activity className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={1.5} />
+              <span className="text-[10px] tracking-[0.25em] text-zinc-400 uppercase font-medium">BKT Mastery Radar</span>
+            </div>
+            <div className="flex-1 flex items-center justify-center relative z-10">
+              <SkillRadar skillStates={skillStates} />
+            </div>
           </div>
 
-          {/* Activity Sparkline — 2 cols */}
-          <div className="col-span-2 bg-background p-7">
-            <div className="flex items-center gap-2 mb-5">
-              <Clock className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">7-Day Activity</span>
+          {/* Activity Heatmap */}
+          <div 
+            onMouseEnter={() => setFocusedCard('heatmap')}
+            onMouseLeave={() => setFocusedCard(null)}
+            className={`card-glow bg-[#080b10]/60 border border-white/[0.08] p-7 rounded-3xl shadow-2xl backdrop-blur-3xl relative overflow-hidden flex flex-col min-w-0 transition-all duration-500 hover:-translate-y-1 hover:bg-[#080b10]/80 hover:border-white/[0.15] hover:shadow-[0_20px_40px_rgba(56,189,248,0.08)] ${focusedCard && focusedCard !== 'heatmap' ? 'opacity-70' : 'opacity-100 z-10'}`}>
+            {/* Revolving Orb */}
+            <div className={`absolute top-1/2 left-1/2 w-[200%] h-[200%] -translate-x-1/2 -translate-y-1/2 animate-[spin_50s_linear_infinite] pointer-events-none transition-opacity duration-1000 ${focusedCard && focusedCard !== 'heatmap' ? 'opacity-20' : (focusedCard === 'heatmap' ? 'opacity-100' : 'opacity-70')}`}
+                 style={{ animationPlayState: focusedCard && focusedCard !== 'heatmap' ? 'paused' : 'running' }}>
+              <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-blue-500/10 rounded-full animate-[spectrum-cycle_25s_linear_infinite]" 
+                   style={{ animationDelay: '-12s', animationPlayState: focusedCard && focusedCard !== 'heatmap' ? 'paused' : 'running' }} />
             </div>
-            <ActivitySparkline recentSubs={recentSubs} />
+            
+            <div className="flex items-center justify-between mb-5 relative z-10">
+              <div className="flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
+                <span className="text-[10px] tracking-[0.25em] text-zinc-500 uppercase">Activity Heatmap</span>
+              </div>
+              <span className="text-[12px] font-semibold text-zinc-100">
+                <span className="text-[var(--signal)]">{totalSolves}</span> solves this year
+              </span>
+            </div>
+            <div className="flex-1 min-w-0 overflow-hidden relative z-10">
+               <ActivityHeatmap dateMap={dateMap} />
+            </div>
             
             {/* Micro stats */}
-            <div className="mt-5 grid grid-cols-2 gap-[1px] bg-white/[0.04]">
-              <div className="bg-background py-2.5 px-3 flex flex-col gap-1">
-                <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-600 uppercase">Pass Rate</span>
-                <span className="text-[18px] font-extralight tabular-nums text-zinc-200">
-                  {recentSubs.length > 0 ? Math.round(recentSubs.filter(s => s.allTestsPassed || s.passed).length / recentSubs.length * 100) : 0}%
+            <div className="mt-7 grid grid-cols-2 gap-4 relative z-10">
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl py-3 px-4 flex flex-col gap-1">
+                <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-500 uppercase">Recent Pass Rate</span>
+                <span className="text-[20px] font-medium tabular-nums text-zinc-200">
+                  {recentSubs.length > 0 ? Math.round(recentSubs.filter(s => s.isCorrect).length / recentSubs.length * 100) : 0}%
                 </span>
               </div>
-              <div className="bg-background py-2.5 px-3 flex flex-col gap-1">
-                <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-600 uppercase">This Week</span>
-                <span className="text-[18px] font-extralight tabular-nums text-zinc-200">
-                  {recentSubs.length}
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl py-3 px-4 flex flex-col gap-1">
+                <span className="font-mono text-[9px] tracking-[0.2em] text-zinc-500 uppercase">Streak</span>
+                <span className="text-[20px] font-medium tabular-nums text-[var(--signal)]">
+                  {streak} <span className="text-sm font-normal text-zinc-600 ml-1">days</span>
                 </span>
               </div>
             </div>
@@ -247,22 +335,58 @@ export function DashboardView() {
         {/* ═══ Two-column: Recommendations + Recent Activity ═══ */}
         <div className="grid grid-cols-5 gap-8 mb-10">
           {/* Recommendations — 3 cols */}
-          <div className="col-span-3">
-            <div className="flex items-center justify-between mb-5">
+          <div 
+            onMouseEnter={() => setFocusedCard('recs')}
+            onMouseLeave={() => setFocusedCard(null)}
+            className={`card-glow col-span-3 bg-[#080b10]/60 border border-white/[0.08] p-7 rounded-3xl shadow-2xl backdrop-blur-3xl flex flex-col relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:bg-[#080b10]/80 hover:border-white/[0.15] hover:shadow-[0_20px_40px_rgba(167,139,250,0.08)] ${focusedCard && focusedCard !== 'recs' ? 'opacity-70' : 'opacity-100 z-10'}`}>
+            {/* Revolving Orb */}
+            <div className={`absolute top-1/2 left-1/2 w-[200%] h-[200%] -translate-x-1/2 -translate-y-1/2 animate-[spin_45s_linear_infinite] pointer-events-none transition-opacity duration-1000 ${focusedCard && focusedCard !== 'recs' ? 'opacity-20' : (focusedCard === 'recs' ? 'opacity-100' : 'opacity-70')}`}
+                 style={{ animationPlayState: focusedCard && focusedCard !== 'recs' ? 'paused' : 'running' }}>
+              <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-purple-500/10 rounded-full animate-[spectrum-cycle_30s_linear_infinite]" 
+                   style={{ animationDelay: '-2s', animationPlayState: focusedCard && focusedCard !== 'recs' ? 'paused' : 'running' }} />
+            </div>
+            
+            <div className="flex items-center justify-between mb-5 relative z-10">
               <div className="flex items-center gap-2">
-                <Target className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-                <span className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">Recommended</span>
+                <Target className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
+                <span className="text-[10px] tracking-[0.25em] text-zinc-400 font-medium uppercase">Recommended</span>
               </div>
-              <Link to="/problems" className="flex items-center gap-1 text-[11px] tracking-[0.15em] text-zinc-700 uppercase hover:text-zinc-400 transition-colors">
+              <Link to="/problems" className="flex items-center gap-1 text-[11px] tracking-[0.15em] text-zinc-500 uppercase hover:text-[var(--signal)] transition-colors">
                 All <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
               </Link>
             </div>
             {recsLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-4 w-4 animate-spin text-zinc-700" /></div>
+              <div className="flex justify-center py-12 relative z-10"><Loader2 className="h-4 w-4 animate-spin text-zinc-700" /></div>
             ) : recommendations.length === 0 ? (
-              <div className="py-12 text-center text-[11px] text-zinc-700 tracking-wider">Solve more problems to unlock recommendations</div>
+              <div className="space-y-2 relative z-10">
+                {[
+                  { title: "Two Sum", skill: "HashMap", difficulty: "Easy", path: "/problems" },
+                  { title: "Valid Parentheses", skill: "Stack", difficulty: "Easy", path: "/problems" },
+                  { title: "Binary Search", skill: "Arrays", difficulty: "Medium", path: "/problems" }
+                ].map((p, i) => (
+                  <Link key={`fallback-${i}`} to={p.path}
+                    className="group flex items-center justify-between bg-white/[0.02] border border-white/[0.03] rounded-2xl px-6 py-4 transition-colors hover:bg-white/[0.05] hover:border-white/[0.1]">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <span className="font-mono text-[10px] tabular-nums text-zinc-600 w-5">{String(i + 1).padStart(2, '0')}</span>
+                      <DiffDot difficulty={p.difficulty} />
+                      <div className="min-w-0 flex items-center gap-3">
+                        <div>
+                          <div className="text-[14px] font-medium text-zinc-300 truncate group-hover:text-white transition-colors">{p.title}</div>
+                          <div className="text-[10px] tracking-[0.12em] text-zinc-500 uppercase mt-0.5">{p.skill}</div>
+                        </div>
+                        {i === 0 && (
+                          <span className="border border-[var(--signal)]/30 bg-[var(--signal)]/10 px-1.5 py-0.5 rounded font-mono text-[8px] tracking-widest text-[var(--signal)] uppercase">
+                            Calibration
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-white transition-colors shrink-0" strokeWidth={1.5} />
+                  </Link>
+                ))}
+              </div>
             ) : (
-              <div className="space-y-[1px] border border-white/[0.04]">
+              <div className="space-y-2 relative z-10">
                 {recommendations.slice(0, 4).map((p, i) => {
                   const problemId = p.problemId?._id || p.problemId || p._id;
                   const title = p.problemId?.title || p.title || 'Untitled';
@@ -270,16 +394,16 @@ export function DashboardView() {
                   const difficulty = p.problemId?.difficulty || p.difficulty || 'Medium';
 
                   return <Link key={problemId || i} to={`/problems/${problemId}`}
-                    className="group flex items-center justify-between bg-background px-6 py-4 transition-colors hover:bg-white/[0.02]">
+                    className="group flex items-center justify-between bg-white/[0.02] border border-white/[0.03] rounded-2xl px-6 py-4 transition-colors hover:bg-white/[0.05] hover:border-white/[0.1]">
                     <div className="flex items-center gap-4 min-w-0">
-                      <span className="font-mono text-[10px] tabular-nums text-zinc-700 w-5">{String(i + 1).padStart(2, '0')}</span>
+                      <span className="font-mono text-[10px] tabular-nums text-zinc-600 w-5">{String(i + 1).padStart(2, '0')}</span>
                       <DiffDot difficulty={difficulty} />
                       <div className="min-w-0">
-                        <div className="text-[13px] font-medium text-zinc-200 truncate group-hover:text-white transition-colors">{title}</div>
-                        <div className="text-[10px] tracking-[0.12em] text-zinc-600 uppercase mt-0.5">{skillName}</div>
+                        <div className="text-[14px] font-medium text-zinc-300 truncate group-hover:text-white transition-colors">{title}</div>
+                        <div className="text-[10px] tracking-[0.12em] text-zinc-500 uppercase mt-0.5">{skillName}</div>
                       </div>
                     </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-zinc-800 group-hover:text-zinc-400 transition-colors shrink-0" strokeWidth={1.5} />
+                    <ChevronRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-white transition-colors shrink-0" strokeWidth={1.5} />
                   </Link>;
                 })}
               </div>
@@ -287,43 +411,56 @@ export function DashboardView() {
           </div>
 
           {/* Recent Activity — 2 cols */}
-          <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-5">
-              <Activity className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">Recent</span>
+          <div 
+            onMouseEnter={() => setFocusedCard('activity')}
+            onMouseLeave={() => setFocusedCard(null)}
+            className={`card-glow col-span-2 bg-[#080b10]/60 border border-white/[0.08] p-7 rounded-3xl shadow-2xl backdrop-blur-3xl flex flex-col relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:bg-[#080b10]/80 hover:border-white/[0.15] hover:shadow-[0_20px_40px_rgba(52,211,153,0.08)] ${focusedCard && focusedCard !== 'activity' ? 'opacity-70' : 'opacity-100 z-10'}`}>
+            {/* Revolving Orb */}
+            <div className={`absolute top-1/2 left-1/2 w-[200%] h-[200%] -translate-x-1/2 -translate-y-1/2 animate-[spin_35s_linear_infinite] pointer-events-none transition-opacity duration-1000 ${focusedCard && focusedCard !== 'activity' ? 'opacity-20' : (focusedCard === 'activity' ? 'opacity-100' : 'opacity-70')}`}
+                 style={{ animationPlayState: focusedCard && focusedCard !== 'activity' ? 'paused' : 'running' }}>
+              <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-teal-500/10 rounded-full animate-[spectrum-cycle_22s_linear_infinite]" 
+                   style={{ animationDelay: '-19s', animationPlayState: focusedCard && focusedCard !== 'activity' ? 'paused' : 'running' }} />
             </div>
-            <div className="space-y-[1px] border border-white/[0.04]">
+            
+            <div className="flex items-center gap-2 mb-5 relative z-10">
+              <Activity className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
+              <span className="text-[10px] tracking-[0.25em] text-zinc-400 font-medium uppercase">Recent Activity</span>
+            </div>
+            <div className="space-y-2 flex-1 relative z-10">
               {recentSubs.length === 0 ? (
-                <div className="bg-background px-6 py-10 text-center text-[11px] text-zinc-700 tracking-wider">
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl px-6 py-10 text-center text-[12px] text-zinc-500 tracking-wider">
                   No submissions yet
                 </div>
-              ) : recentSubs.map((sub, i) => {
-                const passed = sub.allTestsPassed || sub.passed;
+              ) : recentSubs.slice(0, 4).map((sub, i) => {
+                const passed = sub.isCorrect;
                 const title = sub.problemId?.title || 'Problem';
                 const when = sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-                return <div key={sub._id || i} className="flex items-center justify-between bg-background px-5 py-3.5">
+                return <div key={sub._id || i} className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] rounded-2xl px-5 py-3.5">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${passed ? 'bg-[var(--signal)]' : 'bg-rose-500/60'}`} />
-                    <span className="text-[12px] text-zinc-300 truncate">{title}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${passed ? 'bg-[var(--signal)]' : 'bg-rose-500/60 shadow-[0_0_8px_rgba(244,63,94,0.3)]'}`} />
+                    <span className="text-[13px] font-medium text-zinc-300 truncate">{title}</span>
                   </div>
-                  <span className="font-mono text-[10px] text-zinc-700 shrink-0">{when}</span>
+                  <span className="font-mono text-[10px] text-zinc-600 shrink-0">{when}</span>
                 </div>;
               })}
             </div>
 
             {/* Quick links */}
-            <div className="mt-6 grid grid-cols-2 gap-[1px] border border-white/[0.04]">
-              <Link to="/arena" className="group flex items-center gap-2 bg-background px-4 py-3 transition-colors hover:bg-white/[0.02]">
-                <Swords className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 transition-colors" strokeWidth={1.5} />
-                <span className="text-[11px] tracking-[0.12em] text-zinc-500 uppercase group-hover:text-zinc-300 transition-colors">Arena</span>
+            <div className="mt-6 grid grid-cols-2 gap-4 relative z-10">
+              <Link to="/arena" className="group flex items-center justify-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-2xl px-4 py-3 transition-colors hover:bg-white/[0.08] hover:border-white/[0.15]">
+                <Swords className="h-4 w-4 text-zinc-500 group-hover:text-amber-400 transition-colors" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium tracking-[0.12em] text-zinc-400 uppercase group-hover:text-zinc-200 transition-colors">Arena</span>
               </Link>
-              <Link to="/leaderboard" className="group flex items-center gap-2 bg-background px-4 py-3 transition-colors hover:bg-white/[0.02]">
-                <Trophy className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 transition-colors" strokeWidth={1.5} />
-                <span className="text-[11px] tracking-[0.12em] text-zinc-500 uppercase group-hover:text-zinc-300 transition-colors">Ranks</span>
+              <Link to="/leaderboard" className="group flex items-center justify-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-2xl px-4 py-3 transition-colors hover:bg-white/[0.08] hover:border-white/[0.15]">
+                <Trophy className="h-4 w-4 text-zinc-500 group-hover:text-yellow-400 transition-colors" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium tracking-[0.12em] text-zinc-400 uppercase group-hover:text-zinc-200 transition-colors">Ranks</span>
               </Link>
             </div>
           </div>
         </div>
+
+        {/* ═══ Leaderboard ═══ */}
+        <LeaderboardView />
       </div>
 
       {/* ─── Footer ─── */}
@@ -430,7 +567,7 @@ function ActivitySparkline({ recentSubs }) {
       const t = new Date(s.createdAt).getTime();
       return t >= dayStart && t < dayEnd;
     });
-    const passed = daySubs.filter(s => s.allTestsPassed || s.passed).length;
+    const passed = daySubs.filter(s => s.isCorrect).length;
     const dayObj = new Date(dayStart);
     return {
       count: daySubs.length,
@@ -512,7 +649,7 @@ function ActivitySparkline({ recentSubs }) {
               <span style={{ fontSize: '14px', fontWeight: 200, color: '#e4e4e7', fontVariantNumeric: 'tabular-nums' }}>
                 {b.count}
               </span>
-              <span style={{ fontSize: '9px', color: b.rate >= 70 ? '#4a7c59' : b.rate >= 40 ? '#eab308' : '#f43f5e', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: '9px', color: b.rate >= 70 ? '#34d399' : b.rate >= 40 ? '#fbbf24' : '#fb7185', fontVariantNumeric: 'tabular-nums' }}>
                 {b.rate}% pass
               </span>
             </div>

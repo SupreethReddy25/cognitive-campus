@@ -1,15 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTransition } from '../context/TransitionContext';
 import { ArrowUpRight, Brain, Zap, Trophy } from 'lucide-react';
 
 import DisplayCards from '../components/ui/display-cards';
 import { CircularRevealHeading } from '../components/ui/circular-reveal-heading';
 import { HandWrittenTitle } from '../components/ui/hand-written-title';
-import { CustomCursor } from '../components/ui/custom-cursor';
 
-/* ══════════════════════════════════════════════════════════════
-   SUBTLE ATMOSPHERIC WAVE — dramatically toned-down, monochrome
-   ══════════════════════════════════════════════════════════════ */
 const AtmosphericWave = () => {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -90,10 +87,10 @@ const GeminiSvgSection = () => {
           const opacity = 0.18 + i * 0.04;
           return (
             <g key={i}>
-              <path d={d} stroke="#4a7c59" strokeWidth="2.5" fill="none"
+              <path d={d} stroke="#34d399" strokeWidth="2.5" fill="none"
                 opacity={opacity * 0.6} filter="url(#gblur)"
                 strokeDasharray={PATH_LEN} strokeDashoffset={offset} />
-              <path d={d} stroke={i === 2 ? '#e4e4e7' : '#4a7c59'} strokeWidth="1" fill="none"
+              <path d={d} stroke={i === 2 ? '#e4e4e7' : '#34d399'} strokeWidth="1" fill="none"
                 opacity={opacity} strokeDasharray={PATH_LEN} strokeDashoffset={offset} />
             </g>
           );
@@ -169,10 +166,11 @@ const Typewriter = ({ texts, speed = 70, deleteSpeed = 35, delay = 2000 }) => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   LANDING PAGE — editorial surgical luxury
+   LANDING PAGE 
    ══════════════════════════════════════════════════════════════ */
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { transitionTo } = useTransition();
   const [subRef, subVis] = useScrollFade();
   const [btnRef, btnVis] = useScrollFade();
   const [metricRef, metricVis] = useScrollFade();
@@ -188,7 +186,6 @@ const LandingPage = () => {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#0a0a0a] text-zinc-100 selection:bg-white/10">
-      <CustomCursor />
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes fadeSlideUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -212,9 +209,6 @@ const LandingPage = () => {
       {/* atmospheric canvas background */}
       <AtmosphericWave />
 
-      {/* custom cursor (desktop only) */}
-      <CustomCursor />
-
       {/* Grid micro backdrop — very low opacity, fades to edges */}
       <div
         className="pointer-events-none fixed inset-0 z-[1]"
@@ -233,16 +227,10 @@ const LandingPage = () => {
       <nav className="anim d1 fixed z-[100]" style={{ top: 16, left: 24, right: 24 }}>
         <div className="flex h-14 items-center justify-between border border-white/[0.06] bg-[#0a0a0a]/70 px-6 backdrop-blur-xl"
           style={{ borderRadius: 14 }}>
-          {/* Brand */}
           <div className="flex items-center gap-3">
-            <span className="pdot h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
-            <div className="flex items-baseline gap-2">
-              <span className="text-[14px] font-semibold tracking-tight text-zinc-100"
-                style={{ fontFamily: "'Playfair Display', serif" }}>
-                Cognitive
-              </span>
-              <span className="text-[10px] tracking-[0.24em] text-zinc-500 uppercase">/ Campus</span>
-            </div>
+            <span className="font-display font-bold tracking-tight text-zinc-100 text-[18px]">
+              <span className="text-[var(--signal)]">.</span>cogni
+            </span>
           </div>
 
           {/* Center nav */}
@@ -267,11 +255,11 @@ const LandingPage = () => {
 
           {/* Right */}
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/login')}
+            <button onClick={() => transitionTo('/login')}
               className="ease-sig text-[11px] tracking-[0.22em] text-zinc-500 uppercase hover:text-zinc-100">
               Sign in
             </button>
-            <button onClick={() => navigate('/register')}
+            <button onClick={() => transitionTo('/register')}
               className="group ease-sig flex items-center gap-2 border border-white/[0.12] bg-transparent px-5 py-2 text-[11px] font-medium tracking-[0.22em] text-zinc-200 uppercase hover:border-white hover:bg-white hover:text-black">
               Enter
               <ArrowUpRight className="h-3 w-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
@@ -307,11 +295,11 @@ const LandingPage = () => {
           </div>
 
           {/* Headline — extreme negative space, ultralight */}
-          <h1 className="anim d3 text-balance font-sans text-[clamp(3.5rem,8.5vw,8rem)] font-extralight leading-[0.92] tracking-[-0.03em] text-zinc-50">
+          <h1 className="anim d3 text-balance font-display text-[clamp(3.5rem,8.5vw,8rem)] font-extralight leading-[0.92] tracking-[-0.03em] text-zinc-50">
             A platform<br />
             that{' '}
-            <em className="font-normal not-italic text-zinc-500"
-              style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 400 }}>
+            <em className="font-normal italic text-zinc-500"
+              style={{ fontFamily: "'Syne', sans-serif", fontStyle: 'italic', fontWeight: 500 }}>
               learns how
             </em>
             <br />
@@ -327,7 +315,7 @@ const LandingPage = () => {
             <p className="mt-4 font-mono text-[12px] tracking-[0.05em] text-[var(--signal)]/90">
               <Typewriter texts={[
                 'BKT-powered mastery.',
-                'Socratic AI mentor.',
+                'AI mentor.',
                 'Multiplayer coding arena.',
                 'Real-time leaderboards.',
               ]} />
@@ -336,7 +324,7 @@ const LandingPage = () => {
 
           {/* Buttons */}
           <div ref={btnRef} className={`scrollFade mt-12 flex items-center gap-4 ${btnVis ? 'visible' : ''}`}>
-            <button onClick={() => navigate('/register')}
+            <button onClick={() => transitionTo('/register')}
               className="group ease-sig flex items-center gap-3 border border-white/[0.12] bg-transparent px-7 py-3.5 text-[12px] font-medium tracking-[0.22em] text-zinc-100 uppercase hover:border-white hover:bg-white hover:text-black">
               Start for free
               <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
@@ -376,10 +364,8 @@ const LandingPage = () => {
               ]}
               centerText={
                 <div className="flex select-none flex-col items-center">
-                  <span className="text-[clamp(1.3rem,2.8vw,1.8rem)] font-extralight tracking-tight text-zinc-100">COGNITIVE</span>
-                  <span className="text-[clamp(1.3rem,2.8vw,1.8rem)] leading-none italic text-[var(--signal)] -mt-1"
-                    style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500 }}>
-                    Campus
+                  <span className="text-[clamp(2.5rem,5.5vw,3.5rem)] font-display font-bold tracking-tight text-zinc-100">
+                    <span className="text-[var(--signal)]">.</span>cogni
                   </span>
                 </div>
               }
@@ -598,7 +584,7 @@ const LandingPage = () => {
           FOOTER
           ═══════════════════════════════════════════════════ */}
       <footer className="relative z-10 mx-auto flex max-w-[1400px] items-center justify-between border-t border-white/[0.04] px-10 py-6 font-mono text-[9px] tracking-[0.28em] text-zinc-700 uppercase">
-        <span>© 2026 · Cognitive Campus · 22AIE457 · Amrita</span>
+        <span>© 2026 · Cogni · 22AIE457 · Amrita</span>
         <div className="flex items-center gap-6">
           <a href="https://github.com/SupreethReddy25/cognitive-campus" target="_blank" rel="noreferrer"
             className="ease-sig text-zinc-700 hover:text-zinc-300">GitHub</a>

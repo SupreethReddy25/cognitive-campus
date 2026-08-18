@@ -64,7 +64,7 @@ const ProblemsPage = () => {
             <span className="h-px w-8 bg-white/[0.08]" />
             <span className="text-zinc-500">SELECT A PROBLEM</span>
           </div>
-          <h1 className="max-w-3xl font-sans text-[64px] font-medium leading-[0.94] tracking-tight-editorial text-zinc-50 text-balance">
+          <h1 className="max-w-3xl font-serif text-[64px] font-medium leading-[0.94] tracking-tight-editorial text-zinc-50 text-balance italic">
             Choose your <span className="text-[var(--signal)]">challenge</span>.
           </h1>
           <p className="mt-4 max-w-xl font-sans text-[14px] leading-relaxed text-zinc-500 text-pretty">
@@ -74,19 +74,26 @@ const ProblemsPage = () => {
 
         {/* Filters */}
         <section className="flex items-center gap-4 border-b border-white/[0.04] px-12 py-4">
-          <select
-            value={selectedSkill}
-            onChange={(e) => { setSelectedSkill(e.target.value); setPage(1); }}
-            className="bg-transparent border border-white/[0.06] px-3 py-1.5 font-mono text-[10px] tracking-widest text-zinc-300 focus:outline-none focus:border-white/[0.12] appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0a0a]">ALL SKILLS</option>
-            {skills.map((s) => <option key={s._id} value={s._id} className="bg-[#0a0a0a]">{s.name.toUpperCase()}</option>)}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedSkill}
+              onChange={(e) => { setSelectedSkill(e.target.value); setPage(1); }}
+              className="bg-transparent border border-white/[0.06] pl-3 pr-8 py-1.5 font-mono text-[10px] tracking-widest text-zinc-300 focus:outline-none focus:border-[var(--signal)]/30 appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0d1117]">ALL SKILLS</option>
+              {skills.map((s) => <option key={s._id} value={s._id} className="bg-[#0d1117]">{s.name.toUpperCase()}</option>)}
+            </select>
+            <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 rotate-90 h-3 w-3 text-zinc-600 pointer-events-none" strokeWidth={1.5} />
+          </div>
 
           <div className="flex items-center gap-1 border border-white/[0.06] p-[2px]">
             {DIFFS.map((d) => (
               <button key={d} onClick={() => { setSelectedDifficulty(d); setPage(1); }}
-                className={`press ease-signature px-3 py-1 font-mono text-[10px] tracking-[0.2em] transition-colors ${selectedDifficulty === d ? 'bg-white/[0.05] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200'}`}>
+              className={`press ease-signature px-3 py-1 font-mono text-[10px] tracking-[0.2em] transition-all duration-200 ${
+                selectedDifficulty === d
+                  ? 'bg-[var(--signal)]/10 text-[var(--signal)] border border-[var(--signal)]/20'
+                  : 'text-zinc-500 hover:text-zinc-200'
+              }`}>
                 {d.toUpperCase()}
               </button>
             ))}
@@ -113,7 +120,7 @@ const ProblemsPage = () => {
               </div>
               <ul>
                 {problems.map((p, i) => (
-                  <li key={p._id} className="ease-signature group grid grid-cols-[60px_1fr_180px_100px_60px] items-center gap-6 border-b border-white/[0.04] py-4 transition-colors hover:bg-white/[0.015]">
+                  <li key={p._id} className="ease-signature group grid grid-cols-[60px_1fr_180px_100px_60px] items-center gap-6 border-b border-white/[0.04] py-4 row-interactive">
                     <span className="font-mono text-[11px] tabular-nums text-zinc-500">
                       {String((page - 1) * 15 + i + 1).padStart(2, '0')}
                     </span>

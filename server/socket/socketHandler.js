@@ -1,7 +1,7 @@
 /**
  * Socket.io Handler
  *
- * Sets up all real-time communication for the Cognitive Campus platform.
+ * Sets up all real-time communication for the Cogni platform.
  * Provides targeted room-based notifications and broadcast events.
  *
  * @module socketHandler

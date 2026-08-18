@@ -17,7 +17,13 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
 
-const PISTON_URL = process.env.CODE_EXECUTION_API_URL;
+// The local Docker Piston API URL
+const LOCAL_PISTON_URL = process.env.CODE_EXECUTION_API_URL || 'http://127.0.0.1:2000/api/v2';
+// The public free Piston API (used as fallback so Docker isn't strictly required)
+const PUBLIC_PISTON_URL = 'https://emkc.org/api/v2/piston';
+
+// We'll dynamically determine the active URL in the execute() function
+let activePistonUrl = LOCAL_PISTON_URL;
 
 const SUPPORTED_LANGUAGES = {
   javascript: { pistonName: 'javascript', version: '18.15.0', monacoLang: 'javascript', extension: 'solution.js' },
@@ -25,6 +31,22 @@ const SUPPORTED_LANGUAGES = {
   java:       { pistonName: 'java',       version: '15.0.2',  monacoLang: 'java',       extension: 'Main.java' },
   cpp:        { pistonName: 'c++',        version: '10.2.0',  monacoLang: 'cpp',        extension: 'solution.cpp' }
 };
+
+/**
+ * Checks if the local Piston instance is available. If not, sets the active URL to the public API.
+ */
+const ensurePistonConnection = async () => {
+  try {
+    await axios.get(`${LOCAL_PISTON_URL}/runtimes`, { timeout: 2000 });
+    activePistonUrl = LOCAL_PISTON_URL;
+  } catch (error) {
+    logger.warn(`Local Piston instance at ${LOCAL_PISTON_URL} is unreachable. Falling back to public Piston API (${PUBLIC_PISTON_URL}). No Docker required!`);
+    activePistonUrl = PUBLIC_PISTON_URL;
+  }
+};
+
+// Check connection on startup
+ensurePistonConnection();
 
 // ─────────────────────────────────────────────────────────────
 // Signature Parsing — extracts function/method name and params
@@ -569,12 +591,12 @@ const executeCode = async (code, stdin = '', language = 'javascript') => {
     };
 
     try {
-      response = await axios.post(`${PISTON_URL}/execute`, payload);
+      response = await axios.post(`${activePistonUrl}/execute`, payload);
     } catch (apiError) {
       if (apiError.code === 'ECONNREFUSED' || (apiError.message && apiError.message.includes('ECONNREFUSED'))) {
         logger.warn('Piston connection refused. Waiting 500ms and retrying...', { language });
         await new Promise(r => setTimeout(r, 500));
-        response = await axios.post(`${PISTON_URL}/execute`, payload);
+        response = await axios.post(`${activePistonUrl}/execute`, payload);
       } else {
         throw apiError;
       }

@@ -27,7 +27,10 @@ const getProfile = async (req, res, next) => {
     const userId = req.user.userId;
 
     const [user, skillStates, submissionCount, recentSubmissions] = await Promise.all([
-      User.findById(userId).select('-passwordHash'),
+      User.findById(userId)
+        .select('-passwordHash')
+        .populate('collegeId', 'name shortName slug tier location verified')
+        .populate('targetCompanyId', 'name slug tier'),
       SkillState.find({ userId }).populate('skillId', 'name description order'),
       Submission.countDocuments({ userId }),
       Submission.find({ userId })
@@ -35,6 +38,7 @@ const getProfile = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .limit(5)
     ]);
+
 
     if (!user) {
       return sendError(res, 'User not found', 404);
@@ -108,4 +112,84 @@ const configGeminiKey = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, getRecommendations, configGeminiKey };
+const getDashboardQuote = async (req, res) => {
+  try {
+    const { context } = req.body;
+    const aiMentorService = require('../services/aiMentorService');
+    const quote = await aiMentorService.generateDashboardQuote(req.user.userId, context);
+    
+    if (quote && quote.text && quote.highlight) {
+      return res.status(200).json({ success: true, data: quote });
+    }
+    
+    // Final failsafe
+    res.status(200).json({ 
+      success: true, 
+      data: { text: "Keep pushing the ", highlight: "limits", highlightColor: "#3b82f6", suffix: "." }
+    });
+  } catch (error) {
+    logger.error('Error fetching dashboard quote', { error: error.message });
+    res.status(500).json({ success: false, message: 'Failed to fetch quote' });
+  }
+};
+
+/**
+ * @desc    Update user's placement profile (college, target company, target role)
+ * @route   PATCH /api/users/profile
+ * @access  Protected
+ */
+const updateProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { collegeId, targetCompanyId, targetRole } = req.body;
+
+    const updates = {};
+
+    // Validate and set collegeId
+    if (collegeId !== undefined) {
+      if (collegeId === null || collegeId === '') {
+        updates.collegeId = null;
+      } else {
+        const College = require('../models/College');
+        const college = await College.findById(collegeId).lean();
+        if (!college) return sendError(res, 'College not found', 404);
+        updates.collegeId = collegeId;
+      }
+    }
+
+    // Validate and set targetCompanyId
+    if (targetCompanyId !== undefined) {
+      if (targetCompanyId === null || targetCompanyId === '') {
+        updates.targetCompanyId = null;
+      } else {
+        const Company = require('../models/Company');
+        const company = await Company.findById(targetCompanyId).lean();
+        if (!company) return sendError(res, 'Company not found', 404);
+        updates.targetCompanyId = targetCompanyId;
+      }
+    }
+
+    // Set targetRole (free-text, no validation needed)
+    if (targetRole !== undefined) {
+      updates.targetRole = targetRole?.trim() || null;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return sendError(res, 'No valid fields provided to update');
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: updates },
+      { new: true, select: '-passwordHash' }
+    ).populate('collegeId', 'name shortName slug tier').populate('targetCompanyId', 'name slug tier');
+
+    if (!user) return sendError(res, 'User not found', 404);
+
+    return sendSuccess(res, { user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getProfile, getRecommendations, configGeminiKey, getDashboardQuote, updateProfile };

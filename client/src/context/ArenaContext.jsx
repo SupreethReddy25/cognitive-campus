@@ -42,6 +42,10 @@ export function ArenaProvider({ children }) {
   const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
   const [joiningInProgress, setJoiningInProgress] = useState(false);
 
+  // ─── Matchmaking state ───
+  const [isMatchmaking, setIsMatchmaking] = useState(false);
+  const [matchmakingStatus, setMatchmakingStatus] = useState(null);
+
   // ─── Language sync ───
   const [partnerLanguage, setPartnerLanguage] = useState('javascript');
 
@@ -112,6 +116,23 @@ export function ArenaProvider({ children }) {
     socket.on('arena:player_joined', ({ room }) => {
       setRoom(room);
       setPlayers(room.players);
+    });
+
+    socket.on('arena:match_found', ({ code, room }) => {
+      console.log('[ArenaContext] 🎯 MATCH FOUND:', code);
+      setRoomCode(code);
+      setRoom(room);
+      setMode(room.mode);
+      setPlayers(room.players);
+      setMatchStatus('active');
+      setIsHost(room.hostId === user._id);
+      setHasJoinedRoom(true);
+      setIsMatchmaking(false);
+      setMatchmakingStatus(null);
+    });
+
+    socket.on('arena:matchmaking_status', ({ status }) => {
+      setMatchmakingStatus(status);
     });
 
     socket.on('arena:player_left', ({ room }) => {
@@ -249,6 +270,20 @@ export function ArenaProvider({ children }) {
     socketRef.current.emit('arena:start_match', { roomId });
   }, []);
 
+  const findMatch = useCallback(() => {
+    if (!socketRef.current || !user) return;
+    setIsMatchmaking(true);
+    setMatchmakingStatus('waiting');
+    socketRef.current.emit('arena:find_match', { userId: user._id, name: user.name });
+  }, [user]);
+
+  const cancelMatchmaking = useCallback(() => {
+    if (!socketRef.current || !user) return;
+    setIsMatchmaking(false);
+    setMatchmakingStatus(null);
+    socketRef.current.emit('arena:cancel_matchmaking', { userId: user._id });
+  }, [user]);
+
   const emitLanguageChange = useCallback((language) => {
     if (!socketRef.current || !roomCode) return;
     socketRef.current.emit('arena:language_change', { roomId: roomCode, language });
@@ -300,7 +335,9 @@ export function ArenaProvider({ children }) {
     connected, error, room, roomCode, mode, matchStatus, players, winner, startedAt,
     remoteCode, remoteCursor, progressMap, isHost, hasJoinedRoom, joiningInProgress,
     partnerLanguage, partnerOffline,
+    isMatchmaking, matchmakingStatus,
     createRoom, joinRoom, rejoinRoom, emitStartMatch, emitLanguageChange, leaveRoom,
+    findMatch, cancelMatchmaking,
     syncCode, syncCursor, reportTestPassed, reportSubmission,
     initYDoc,
     socketRef, ydocRef

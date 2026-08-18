@@ -19,6 +19,14 @@ const problemSchema = new mongoose.Schema(
         message: 'Difficulty must be easy, medium, or hard'
       }
     },
+    companies: [{
+      type: String,
+      trim: true
+    }],
+    frequency: {
+      type: Number,
+      default: 0
+    },
     skillId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Skill',
@@ -96,7 +104,17 @@ const problemSchema = new mongoose.Schema(
       min: 0,
       max: 100,
       default: null
-    }
+    },
+
+    // ─── Review Board fields ───
+    upvotes: { type: Number, default: 0 },
+    downvotes: { type: Number, default: 0 },
+    votedBy: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      vote: { type: String, enum: ['up', 'down'] }
+    }],
+    editorialText: { type: String, default: null },
+    frequency: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

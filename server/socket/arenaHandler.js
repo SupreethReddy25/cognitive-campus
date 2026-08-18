@@ -12,10 +12,13 @@
 
 const logger = require('../utils/logger');
 const crypto = require('crypto');
+const ArenaRating = require('../models/ArenaRating');
+const Problem = require('../models/Problem');
 
-// ─── In-Memory Room Store ───────────────────────────────────
+// ─── In-Memory Room Store & Queue ───────────────────────────
 // Production: migrate to Redis. For MVP, memory is fine for <100 concurrent rooms.
 const rooms = new Map();
+const matchmakingQueue = []; // Array of { userId, name, socket, joinedAt }
 
 /**
  * Generate a 6-character alphanumeric room code.
@@ -61,6 +64,102 @@ const initArenaSocket = (io) => {
 
   arena.on('connection', (socket) => {
     logger.info(`[Arena] Socket connected: ${socket.id}`);
+
+    // ─── MATCHMAKING ──────────────────────────────────
+    socket.on('arena:find_match', async ({ userId, name }) => {
+      // Check if already in queue
+      if (matchmakingQueue.some(p => p.userId === userId)) {
+        return socket.emit('arena:error', { message: 'Already in matchmaking queue.' });
+      }
+
+      logger.info(`[Arena] ${name} (${userId}) joined matchmaking queue.`);
+      matchmakingQueue.push({ userId, name, socket });
+
+      if (matchmakingQueue.length >= 2) {
+        // Pop two players
+        const p1 = matchmakingQueue.shift();
+        const p2 = matchmakingQueue.shift();
+
+        // Create a room
+        const code = generateRoomCode();
+        
+        // Pick a random medium/hard problem that neither player has solved yet
+        let problemId = null;
+        try {
+          const Submission = require('../models/Submission');
+          const solvedSubmissions = await Submission.find({
+            userId: { $in: [p1.userId, p2.userId] },
+            allPassed: true
+          }).select('problemId');
+          const solvedIds = solvedSubmissions.map(s => s.problemId);
+
+          const problems = await Problem.find({
+            _id: { $nin: solvedIds },
+            difficulty: { $in: ['medium', 'hard'] },
+            isActive: true,
+            status: 'approved'
+          }).select('_id');
+
+          if (problems.length > 0) {
+            problemId = problems[Math.floor(Math.random() * problems.length)]._id;
+          } else {
+            // Fallback if they solved all available medium/hard problems
+            const fallback = await Problem.find({ difficulty: { $in: ['medium', 'hard'] }, isActive: true, status: 'approved' }).select('_id');
+            if (fallback.length > 0) {
+              problemId = fallback[Math.floor(Math.random() * fallback.length)]._id;
+            }
+          }
+        } catch (e) {
+           logger.error('[Arena] Matchmaking problem selection error', e);
+        }
+
+        const room = {
+          code,
+          hostId: p1.userId,
+          mode: 'versus',
+          problemId,
+          status: 'active', // start immediately
+          players: new Map(),
+          yjsState: null,
+          createdAt: new Date(),
+          startedAt: new Date()
+        };
+
+        room.players.set(p1.socket.id, {
+          userId: p1.userId, name: p1.name, socketId: p1.socket.id,
+          progress: 0, totalTests: 0, code: '', finished: false
+        });
+        room.players.set(p2.socket.id, {
+          userId: p2.userId, name: p2.name, socketId: p2.socket.id,
+          progress: 0, totalTests: 0, code: '', finished: false
+        });
+
+        rooms.set(code, room);
+        
+        p1.socket.join(`arena:${code}`);
+        p1.socket.arenaRoom = code;
+        p2.socket.join(`arena:${code}`);
+        p2.socket.arenaRoom = code;
+
+        logger.info(`[Arena] Match found! Room ${code} created for ${p1.name} and ${p2.name}`);
+
+        const snapshot = roomSnapshot(room);
+        p1.socket.emit('arena:match_found', { code, room: snapshot });
+        p2.socket.emit('arena:match_found', { code, room: snapshot });
+        arena.to(`arena:${code}`).emit('arena:match_started', { roomId: code });
+      } else {
+        // Still waiting
+        socket.emit('arena:matchmaking_status', { status: 'waiting' });
+      }
+    });
+
+    socket.on('arena:cancel_matchmaking', ({ userId }) => {
+      const idx = matchmakingQueue.findIndex(p => p.userId === userId);
+      if (idx !== -1) {
+        matchmakingQueue.splice(idx, 1);
+        logger.info(`[Arena] User ${userId} left matchmaking queue.`);
+      }
+    });
 
     // ─── CREATE ROOM ──────────────────────────────────
     socket.on('arena:create', ({ userId, name, mode, problemId }) => {
@@ -300,6 +399,11 @@ const initArenaSocket = (io) => {
 
         logger.info(`[Arena] Room ${roomId} FINISHED. Winner: ${winner?.name}`);
 
+        // Handle Elo updates if it was a versus match
+        if (room.mode === 'versus' && players.length === 2) {
+          handleEloUpdate(players[0], players[1], winner, room.problemId).catch(e => logger.error('[Arena] Elo update failed:', e));
+        }
+
         arena.to(`arena:${roomId}`).emit('arena:match_finished', {
           room: roomSnapshot(room),
           winner: winner ? { userId: winner.userId, name: winner.name, progress: winner.progress, total: winner.totalTests } : null
@@ -378,6 +482,13 @@ const initArenaSocket = (io) => {
       if (socket.arenaRoom) {
         handleDisconnect(socket, arena, socket.arenaRoom);
       }
+      
+      // FIX FOR MATCHMAKING QUEUE: Remove disconnected sockets
+      const idx = matchmakingQueue.findIndex(p => p.socket.id === socket.id);
+      if (idx !== -1) {
+        const removed = matchmakingQueue.splice(idx, 1)[0];
+        logger.info(`[Arena] Removed disconnected user ${removed.userId} from matchmaking queue.`);
+      }
     });
   });
 
@@ -435,6 +546,11 @@ function handleVoluntaryLeave(socket, arena, roomId) {
   if (room.status === 'active') {
     room.status = 'finished';
     const remaining = Array.from(room.players.values())[0];
+    
+    if (room.mode === 'versus') {
+       handleEloUpdate(player, remaining, remaining, room.problemId).catch(e => logger.error('[Arena] Elo forfeit update failed:', e));
+    }
+
     arena.to(`arena:${roomId}`).emit('arena:match_finished', {
       room: roomSnapshot(room),
       winner: remaining ? { userId: remaining.userId, name: remaining.name, progress: remaining.progress, total: remaining.totalTests } : null,
@@ -498,6 +614,11 @@ function handleDisconnect(socket, arena, roomId) {
         if (room.status === 'active') {
           room.status = 'finished';
           const remaining = Array.from(room.players.values())[0];
+          
+          if (room.mode === 'versus') {
+            handleEloUpdate(player, remaining, remaining, room.problemId).catch(e => logger.error('[Arena] Elo disconnect forfeit update failed:', e));
+          }
+
           arena.to(`arena:${roomId}`).emit('arena:match_finished', {
             room: roomSnapshot(room),
             winner: remaining ? { userId: remaining.userId, name: remaining.name, progress: remaining.progress, total: remaining.totalTests } : null,
@@ -520,6 +641,61 @@ function handleDisconnect(socket, arena, roomId) {
       room: roomSnapshot(room),
       leftPlayer: { userId, name: playerName }
     });
+  }
+}
+
+/**
+ * Update Elo ratings after a versus match.
+ */
+async function handleEloUpdate(p1, p2, winner, problemId) {
+  try {
+    let r1 = await ArenaRating.findOne({ userId: p1.userId });
+    if (!r1) r1 = await ArenaRating.create({ userId: p1.userId });
+    
+    let r2 = await ArenaRating.findOne({ userId: p2.userId });
+    if (!r2) r2 = await ArenaRating.create({ userId: p2.userId });
+
+    const elo1 = r1.elo;
+    const elo2 = r2.elo;
+
+    const expected1 = 1 / (1 + Math.pow(10, (elo2 - elo1) / 400));
+    const expected2 = 1 / (1 + Math.pow(10, (elo1 - elo2) / 400));
+
+    let s1 = 0.5, s2 = 0.5; // Draw
+    if (winner) {
+      if (winner.userId === p1.userId) { s1 = 1; s2 = 0; }
+      else { s1 = 0; s2 = 1; }
+    }
+
+    const K = 32;
+    const newElo1 = Math.round(elo1 + K * (s1 - expected1));
+    const newElo2 = Math.round(elo2 + K * (s2 - expected2));
+
+    const delta1 = newElo1 - elo1;
+    const delta2 = newElo2 - elo2;
+
+    r1.elo = Math.max(0, newElo1);
+    r2.elo = Math.max(0, newElo2);
+
+    if (s1 === 1) r1.wins++; else if (s1 === 0) r1.losses++; else r1.draws++;
+    if (s2 === 1) r2.wins++; else if (s2 === 0) r2.losses++; else r2.draws++;
+
+    r1.matchHistory.push({
+      opponentId: p2.userId, opponentName: p2.name,
+      result: s1 === 1 ? 'win' : (s1 === 0 ? 'loss' : 'draw'),
+      eloChange: delta1, problemId
+    });
+
+    r2.matchHistory.push({
+      opponentId: p1.userId, opponentName: p1.name,
+      result: s2 === 1 ? 'win' : (s2 === 0 ? 'loss' : 'draw'),
+      eloChange: delta2, problemId
+    });
+
+    await Promise.all([r1.save(), r2.save()]);
+    logger.info(`[Arena] Elo updated: ${p1.name} (${elo1} -> ${newElo1}), ${p2.name} (${elo2} -> ${newElo2})`);
+  } catch (error) {
+    logger.error(`[Arena] Failed to update Elo ratings:`, error);
   }
 }
 

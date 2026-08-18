@@ -8,10 +8,12 @@ Cognitive Campus is a full-stack MERN application that models student knowledge 
 
 ## Live Demo
 
+> **Note:** Deployment is configured via GitHub Actions (Render + Vercel). To run locally, follow the Local Setup section below.
+
 | Service  | URL |
 |----------|-----|
-| Frontend | `https://cognitive-campus.vercel.app` *(placeholder)* |
-| Backend  | `https://cognitive-campus.onrender.com` *(placeholder)* |
+| Frontend | `http://localhost:5173` (local dev) |
+| Backend  | `http://localhost:5000` (local dev) |
 
 ---
 

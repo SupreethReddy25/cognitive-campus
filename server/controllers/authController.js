@@ -136,7 +136,10 @@ const login = async (req, res, next) => {
  */
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId).select('-passwordHash');
+    const user = await User.findById(req.user.userId)
+      .select('-passwordHash')
+      .populate('collegeId', 'name shortName slug tier location verified')
+      .populate('targetCompanyId', 'name slug tier');
 
     if (!user) {
       return sendError(res, 'User not found', 404);
@@ -147,5 +150,6 @@ const getMe = async (req, res, next) => {
     next(error);
   }
 };
+
 
 module.exports = { register, login, getMe };

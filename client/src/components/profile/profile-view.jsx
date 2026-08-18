@@ -1,328 +1,532 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { usersService, submissionsService, skillsService } from "../../services/api";
-import { 
-  MapPin, Calendar, ExternalLink, Key, ShieldCheck, Eye, EyeOff, Edit3
+import { usersService, submissionsService, skillsService, arenaService, collegesService } from "../../services/api";
+import {
+  MapPin, Calendar, ExternalLink, Key, ShieldCheck, Eye, EyeOff,
+  Edit3, Flame, Zap, CheckCircle2, XCircle, Lock, Unlock,
+  TrendingUp, Target, Award, BarChart3, Activity, GraduationCap, Loader2, ArrowRight
 } from "lucide-react";
+import { CollegeSelector } from '../placement/CollegeSelector';
+import { Link } from 'react-router-dom';
 
+
+/* ─── Helpers ──────────────────────────────────────────────── */
+function tierColor(tier) {
+  const map = { LEGEND: "#f59e0b", ARCHON: "#a855f7", ADEPT: "#38bdf8", APPRENTICE: "#34d399" };
+  return map[tier] || "#34d399";
+}
+function getTier(level) {
+  return level >= 40 ? "LEGEND" : level >= 30 ? "ARCHON" : level >= 15 ? "ADEPT" : "APPRENTICE";
+}
+
+/* ─── Animated count-up hook ─────────────────────────────── */
+function useCountUp(target, duration = 800) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!target) return;
+    let start = null;
+    const step = (ts) => {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      setValue(Math.floor(progress * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target]);
+  return value;
+}
+
+/* ─── Skill mastery row with animated bar ─────────────────── */
+function MasteryBar({ label, score, index }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), index * 80);
+    return () => clearTimeout(t);
+  }, [index]);
+
+  const pct = Math.round(score);
+  const color = pct >= 85 ? "#34d399" : pct >= 60 ? "#38bdf8" : pct >= 35 ? "#fbbf24" : "#a78bfa";
+
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span className="w-24 shrink-0 font-mono text-[11px] tracking-[0.06em] text-zinc-500 truncate uppercase">{label}</span>
+      <div className="relative flex-1 h-[4px] rounded-full bg-white/[0.08] overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
+          style={{ width: visible ? `${pct}%` : "0%", background: color }}
+        />
+      </div>
+      <span className="w-8 text-right font-mono text-[12px] tabular-nums font-semibold text-zinc-300">{pct}</span>
+      {pct >= 85 && (
+        <span className="text-[9px] font-mono text-[var(--signal)] tracking-[0.1em]">✓</span>
+      )}
+    </div>
+  );
+}
+
+/* ─── Submission pill ─────────────────────────────────────── */
+function SubmissionRow({ sub, index }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), index * 40);
+    return () => clearTimeout(t);
+  }, [index]);
+
+  const passed = sub.isCorrect;
+  const date = new Date(sub.createdAt);
+  const rel = (() => {
+    const diff = Date.now() - date.getTime();
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return "just now";
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  })();
+
+  return (
+    <div
+      className={`flex items-center gap-3 px-0 py-2.5 border-b border-white/[0.04] last:border-0 transition-all duration-300 ${visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}`}
+    >
+      {passed
+        ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[var(--signal)]" strokeWidth={1.5} />
+        : <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-500" strokeWidth={1.5} />}
+      <span className={`font-mono text-[10px] w-6 shrink-0 ${passed ? "text-[var(--signal)]" : "text-rose-400"}`}>
+        {passed ? "AC" : "WA"}
+      </span>
+      <span className="flex-1 text-[13px] font-medium text-zinc-200 truncate">
+        {sub.problemId?.title || "Problem"}
+      </span>
+      <span className="font-mono text-[10px] text-zinc-600 uppercase shrink-0">
+        {(sub.language || "JS").replace("javascript", "JS").replace("python", "PY")}
+      </span>
+      <span className="font-mono text-[10px] text-zinc-700 shrink-0">{rel}</span>
+    </div>
+  );
+}
+
+/* ─── Main ProfileView ────────────────────────────────────── */
 export function ProfileView() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [skillStates, setSkillStates] = useState([]);
-  const [allSubmissions, setAllSubmissions] = useState([]);
   const [recentHistory, setRecentHistory] = useState([]);
+  const [arenaRating, setArenaRating] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ── College & Placement Target ────────────────────────────────────
+  const [college, setCollege] = useState(
+    // If already a populated object (has slug), use it directly
+    user?.collegeId && typeof user.collegeId === 'object' && user.collegeId.slug
+      ? user.collegeId
+      : null
+  );
+  const [targetRole, setTargetRole] = useState(user?.targetRole || '');
+  const [savingPlacement, setSavingPlacement] = useState(false);
+  const [placementSaved, setPlacementSaved] = useState(false);
+
+  // If collegeId is an ObjectId (not populated), fetch the college details
+  useEffect(() => {
+    const collegeId = user?.collegeId;
+    if (collegeId && typeof collegeId === 'string' && !college) {
+      collegesService.getColleges({ limit: 1 }).catch(() => null); // warm up
+      // Fetch by _id via search won't work; use usersService.getProfile which populates
+      usersService.getProfile()
+        .then(res => {
+          const u = res.data?.data?.user || res.data?.user;
+          if (u?.collegeId && typeof u.collegeId === 'object' && u.collegeId.slug) {
+            setCollege(u.collegeId);
+          }
+        })
+        .catch(() => null);
+    }
+  }, [user?.collegeId]);
+
+  const handleSavePlacement = async () => {
+    setSavingPlacement(true);
+    try {
+      const updates = {};
+      if (college !== undefined) updates.collegeId = college?._id || null;
+      if (targetRole !== undefined) updates.targetRole = targetRole || null;
+      const res = await usersService.updateProfile(updates);
+      if (res.data.success) {
+        await refreshUser();
+        setPlacementSaved(true);
+        setTimeout(() => setPlacementSaved(false), 2500);
+      }
+    } catch { /* silent */ }
+    setSavingPlacement(false);
+  };
+
 
   useEffect(() => {
-    skillsService.getMySkillStates()
-      .then(r => setSkillStates(r.data?.data?.skillStates || []))
-      .catch(() => {});
-    // Fetch ALL submissions to build heatmap from real data
-    submissionsService.getHistory({ limit: 500 })
-      .then(r => {
-        const subs = r.data?.data?.submissions || r.data?.data || [];
-        setAllSubmissions(Array.isArray(subs) ? subs : []);
-        setRecentHistory(subs.slice(0, 6));
-      })
-      .catch(() => {});
+    Promise.all([
+      skillsService.getMySkillStates().catch(() => ({ data: null })),
+      submissionsService.getHistory({ limit: 10 }).catch(() => ({ data: null })),
+      arenaService.getRating().catch(() => ({ data: null })),
+    ]).then(([skillsRes, histRes, arenaRes]) => {
+      setSkillStates(skillsRes.data?.data?.skillStates || []);
+      const subs = histRes.data?.data?.submissions || histRes.data?.data || [];
+      setRecentHistory(Array.isArray(subs) ? subs : []);
+      if (arenaRes.data?.data) {
+        setArenaRating(arenaRes.data.data);
+      }
+      setLoading(false);
+    });
   }, []);
 
-  const displayName = user?.name || 'User';
-  const handle = user?.name?.toLowerCase().replace(/\s+/g, '.') || 'user';
-  const initials = user?.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'CC';
+  /* Derived user stats */
+  const displayName = user?.name || "User";
+  const handle = `@${user?.name?.toLowerCase().replace(/\s+/g, ".") || "user"}`;
+  const initials = user?.name ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() : "CC";
   const level = user?.level || 1;
   const xp = user?.xp || 0;
   const xpToNext = (level + 1) * 100;
+  const xpInLevel = xp % (level * 100);
+  const xpPct = Math.min(100, (xpInLevel / (level * 100)) * 100);
   const streak = user?.streak || 0;
-  const tier = level >= 40 ? "Legend" : level >= 30 ? "Archon" : level >= 15 ? "Adept" : "Apprentice";
-  const joined = user?.createdAt ? new Date(user.createdAt).toISOString().slice(0, 7).replace('-', '.') : '2024.01';
+  const tier = getTier(level);
+  const joined = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+    : "2024";
 
-  // Skills for mastery bars
-  const skills = useMemo(() => 
-    skillStates.slice(0, 6).map(s => ({
-      key: (s.skillId?.name || s.skillName || 'Skill'),
-      score: Math.round((s.masteryP || 0) * 100)
-    })),
-  [skillStates]);
+  /* Skills */
+  const skills = useMemo(
+    () =>
+      skillStates.map((s) => ({
+        label: s.skillId?.name || s.skillName || "Skill",
+        score: (s.masteryP || 0) * 100,
+        mastered: (s.masteryP || 0) >= 0.85,
+      })),
+    [skillStates]
+  );
+  const masteredCount = skills.filter((s) => s.mastered).length;
 
-  // Heatmap from REAL submission data
-  const { heatmapData, totalSolves } = useMemo(() => {
-    const now = new Date();
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setFullYear(now.getFullYear() - 1);
-    
-    // Build a map of date -> count
-    const dateMap = {};
-    let count = 0;
-    for (const sub of allSubmissions) {
-      const d = new Date(sub.createdAt);
-      if (d >= oneYearAgo) {
-        const key = d.toISOString().slice(0, 10);
-        dateMap[key] = (dateMap[key] || 0) + 1;
-        count++;
-      }
-    }
-    
-    // Build 52 weeks * 7 days grid
-    const cells = [];
-    const startDate = new Date(oneYearAgo);
-    startDate.setDate(startDate.getDate() - startDate.getDay()); // align to Sunday
-    
-    for (let w = 0; w < 52; w++) {
-      for (let d = 0; d < 7; d++) {
-        const cellDate = new Date(startDate);
-        cellDate.setDate(startDate.getDate() + w * 7 + d);
-        const key = cellDate.toISOString().slice(0, 10);
-        const val = dateMap[key] || 0;
-        // Map to intensity 0-4
-        const intensity = val === 0 ? 0 : val <= 1 ? 1 : val <= 3 ? 2 : val <= 5 ? 3 : 4;
-        cells.push({ date: key, count: val, intensity });
-      }
-    }
-    
-    return { heatmapData: cells, totalSolves: count };
-  }, [allSubmissions]);
+  /* Stats */
+  const totalSolved = recentHistory.filter((s) => s.isCorrect || s.allPassed).length;
+  const solvedAnim = useCountUp(totalSolved, 600);
+  const streakAnim = useCountUp(streak, 500);
+  const xpAnim = useCountUp(xp, 700);
 
-  return <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-    <div className="flex min-h-full flex-col">
-      {/* ─── Top bar ─── */}
-      <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-10 backdrop-blur-md">
-        <div className="flex items-center gap-3 text-[13px] text-zinc-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
-          <span className="font-semibold text-zinc-200">Profile</span>
-          <span className="text-zinc-600">/</span>
-          <span>@{handle}</span>
-        </div>
-        <button className="flex items-center gap-2 rounded-lg border border-white/[0.08] px-4 py-1.5 text-[12px] text-zinc-400 transition-colors hover:bg-white/[0.03] hover:text-zinc-200">
-          <Edit3 className="h-3 w-3" strokeWidth={1.5} />
-          Edit profile
-        </button>
-      </header>
+  return (
+    <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
+      <div className="flex min-h-full flex-col">
 
-      {/* ─── Hero: avatar + name ─── */}
-      <section className="border-b border-white/[0.04] px-10 pt-10 pb-8">
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a3441] text-[28px] font-bold text-zinc-200">
-              {initials}
-            </div>
-            <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-background bg-[var(--signal)]" />
+        {/* ─── Sticky top bar ─────────────────────────────── */}
+        <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-[#0d1117]/90 px-8 backdrop-blur-md">
+          <div className="flex items-center gap-2 text-[12px] text-zinc-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
+            <span className="font-semibold text-zinc-300">Profile</span>
+            <span className="text-zinc-700">/</span>
+            <span className="font-mono text-zinc-600">{handle}</span>
           </div>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <span className="text-[13px] text-zinc-500">@{handle}</span>
-              <span className="text-[11px] text-zinc-600">·</span>
-              <span className="text-[12px] text-zinc-500">Lvl {level} · {tier}</span>
-            </div>
-            <h1 className="text-[42px] font-semibold leading-[1.1] tracking-tight text-zinc-50">
-              {displayName}
-            </h1>
-            <div className="mt-2 flex items-center gap-4 text-[12px] text-zinc-500">
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3" strokeWidth={1.5} />
-                Hyderabad · IN
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-3 w-3" strokeWidth={1.5} />
-                Joined {joined}
+          <button className="flex items-center gap-2 rounded-lg border border-white/[0.06] px-3 py-1.5 text-[11px] font-medium tracking-[0.06em] text-zinc-500 transition-all hover:border-white/[0.12] hover:text-zinc-300">
+            <Edit3 className="h-3 w-3" strokeWidth={1.5} />
+            EDIT
+          </button>
+        </header>
+
+        {/* ─── Hero ────────────────────────────────────────── */}
+        <section className="relative overflow-hidden border-b border-white/[0.04] px-8 pt-10 pb-8">
+          {/* Subtle gradient glow behind avatar */}
+          <div
+            className="pointer-events-none absolute -top-20 left-8 h-64 w-64 rounded-full opacity-[0.08] blur-3xl"
+            style={{ background: tierColor(tier) }}
+          />
+          {/* Accent line across top */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--signal)]/25 to-transparent" />
+
+          <div className="flex items-end gap-6">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div
+                className="flex h-[88px] w-[88px] items-center justify-center rounded-full text-[32px] font-bold text-zinc-100 ring-2 ring-offset-2 ring-offset-[#0d1117]"
+                style={{ background: "rgba(255,255,255,0.04)", ringColor: tierColor(tier) + "40" }}
+              >
+                {initials}
+              </div>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#0d1117] text-[8px] font-bold text-[#0d1117]"
+                style={{ background: tierColor(tier) }}
+              >
+                {level}
               </span>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ─── Two-column body ─── */}
-      <div className="grid flex-1 lg:grid-cols-[380px_1fr]">
-        {/* Left column */}
-        <aside className="border-r border-white/[0.04]">
-          {/* XP Progress */}
-          <div className="border-b border-white/[0.04] px-10 py-8">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[12px] text-zinc-500">XP progress</span>
-              <span className="text-[12px] text-zinc-500">Lvl {level} → {level + 1}</span>
+            {/* Identity */}
+            <div className="flex-1 pb-1">
+              <div className="flex items-center gap-3 mb-1">
+                <span
+                  className="font-mono text-[10px] tracking-[0.16em] font-semibold px-2 py-0.5 rounded"
+                  style={{ color: tierColor(tier), background: tierColor(tier) + "18" }}
+                >
+                  {tier}
+                </span>
+                <span className="font-mono text-[11px] text-zinc-600">LVL {level}</span>
+              </div>
+              <h1 className="text-[38px] font-extralight tracking-tight text-zinc-50 leading-none" style={{ fontFamily: "'Playfair Display', serif" }}>
+                {displayName}
+              </h1>
+              <div className="mt-2 flex items-center gap-4 text-[12px] text-zinc-600">
+                <span className="font-mono">{handle}</span>
+                <span>·</span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" strokeWidth={1.5} />
+                  {joined}
+                </span>
+              </div>
             </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-[36px] font-semibold tabular-nums text-zinc-50">{xp.toLocaleString()}</span>
-              <span className="text-[14px] text-zinc-500">/ {xpToNext.toLocaleString()}</span>
-            </div>
-            <div className="h-[4px] w-full rounded-full bg-white/[0.06]">
-              <div className="h-full rounded-full bg-[var(--signal)]" style={{ width: `${Math.min(100, (xp % (level * 100)) / (level * 100) * 100)}%` }} />
-            </div>
-            <div className="mt-2 text-[12px] text-zinc-600">
-              {Math.max(0, xpToNext - xp).toLocaleString()} to next level
-            </div>
-          </div>
 
-          {/* About */}
-          <div className="border-b border-white/[0.04] px-10 py-8">
-            <h3 className="text-[14px] font-semibold text-zinc-200 mb-3">About</h3>
-            <p className="text-[13px] leading-relaxed text-zinc-400">
-              {user?.bio || "Distributed systems engineer focused on graph algorithms, adversarial invariants, and concurrent data structures. Deep work over busywork."}
-            </p>
-          </div>
-
-          {/* Links */}
-          <div className="border-b border-white/[0.04] px-10 py-8">
-            <h3 className="text-[14px] font-semibold text-zinc-200 mb-4">Links</h3>
-            <div className="space-y-3">
-              {[
-                { label: 'github', value: `/${handle}` },
-                { label: handle.replace('.', ''), value: '.dev' },
-              ].map(link => <div key={link.label} className="flex items-center justify-between text-[13px]">
-                <span className="text-zinc-400">{link.label} · {link.value}</span>
-                <ExternalLink className="h-3 w-3 text-zinc-700 hover:text-zinc-400 transition-colors cursor-pointer" strokeWidth={1.5} />
-              </div>)}
-            </div>
-          </div>
-
-          {/* BYOK Settings */}
-          <BYOKSettings />
-        </aside>
-
-        {/* Right column */}
-        <section className="flex min-w-0 flex-col">
-          {/* Heatmap */}
-          <div className="border-b border-white/[0.04] px-10 py-10">
-            <div className="flex items-start justify-between mb-6">
-              <h2 className="text-[18px] font-semibold text-zinc-100">
-                <span className="text-[var(--signal)]">{totalSolves}</span> solves this year
-              </h2>
-              <span className="text-[12px] text-zinc-600">Hover any day for details.</span>
-            </div>
-            <ActivityHeatmap cells={heatmapData} />
-          </div>
-
-          {/* Mastery by pillar */}
-          <div className="border-b border-white/[0.04] px-10 py-10">
-            <h2 className="text-[18px] font-semibold text-zinc-100 mb-6">Mastery by pillar</h2>
-            {skills.length > 0 ? (
-              <div className="grid grid-cols-2 gap-x-10 gap-y-5">
-                {skills.map(s => <div key={s.key} className="flex items-center gap-4">
-                  <span className="w-16 text-[13px] text-zinc-400">{s.key}</span>
-                  <div className="relative h-[6px] flex-1 rounded-full bg-white/[0.06]">
-                    <div className="absolute inset-y-0 left-0 rounded-full bg-[var(--signal)] transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]" style={{ width: `${s.score}%` }} />
+            <div className="shrink-0 flex items-center gap-4 pb-1">
+              {arenaRating && (
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex h-14 min-w-14 px-3 flex-col items-center justify-center rounded-xl border border-[var(--signal)]/20 bg-[var(--signal)]/[0.04]">
+                    <Activity className="h-4 w-4 text-[var(--signal)] mb-0.5" strokeWidth={1.5} />
+                    <span className="font-mono text-[16px] font-bold tabular-nums text-zinc-100 leading-none">
+                      {arenaRating.elo}
+                    </span>
                   </div>
-                  <span className="w-8 text-right font-mono text-[13px] tabular-nums font-semibold text-zinc-200">{s.score}</span>
-                </div>)}
+                  <span className="font-mono text-[9px] tracking-[0.12em] text-[var(--signal)] uppercase">
+                    {arenaRating.rank}
+                  </span>
+                </div>
+              )}
+              
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl border border-[var(--signal)]/20 bg-[var(--signal)]/[0.04]">
+                  <Flame className="h-4 w-4 text-orange-400 mb-0.5" strokeWidth={1.5} />
+                  <span className="font-mono text-[18px] font-bold tabular-nums text-zinc-100 leading-none">{streakAnim}</span>
+                </div>
+                <span className="font-mono text-[9px] tracking-[0.12em] text-zinc-600 uppercase">streak</span>
               </div>
-            ) : (
-              <div className="py-8 text-center text-[12px] text-zinc-600">No skill data yet</div>
-            )}
+            </div>
           </div>
 
-          {/* Recent submissions */}
-          <div className="border-b border-white/[0.04] px-10 py-10">
-            <h2 className="text-[18px] font-semibold text-zinc-100 mb-6">
-              Recent <span className="text-[var(--signal)]">solves</span>
-            </h2>
-            {recentHistory.length > 0 ? (
-              <div className="space-y-0">
-                {recentHistory.map((s, i) => <div key={i} className="flex items-center gap-4 border-b border-white/[0.04] py-3 last:border-b-0">
-                  <span className={`h-2 w-2 rounded-full ${s.isCorrect ? 'bg-[var(--signal)]' : 'bg-rose-500'}`} />
-                  <span className={`font-mono text-[11px] w-8 ${s.isCorrect ? 'text-[var(--signal)]' : 'text-rose-400'}`}>
-                    {s.isCorrect ? 'AC' : 'WA'}
-                  </span>
-                  <span className="flex-1 text-[13.5px] font-medium text-zinc-200 truncate">
-                    {s.problemId?.title || 'Problem'}
-                  </span>
-                  <span className="font-mono text-[11px] text-zinc-500">{(s.language || 'JS').toUpperCase()}</span>
-                  <span className="font-mono text-[11px] text-zinc-600">
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </span>
-                </div>)}
-              </div>
-            ) : (
-              <div className="py-8 text-center text-[12px] text-zinc-600">No submissions yet</div>
-            )}
+          {/* XP bar */}
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-[10px] tracking-[0.1em] text-zinc-600 uppercase">XP Progress</span>
+              <span className="font-mono text-[10px] text-zinc-600">{xpAnim.toLocaleString()} / {xpToNext.toLocaleString()}</span>
+            </div>
+            <div className="relative h-[5px] w-full rounded-full bg-white/[0.06] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                style={{ width: `${xpPct}%`, background: `linear-gradient(90deg, var(--signal), ${tierColor(tier)})` }}
+              />
+            </div>
+            <div className="mt-1 text-right font-mono text-[10px] text-zinc-700">
+              {Math.max(0, xpToNext - xp).toLocaleString()} to Lvl {level + 1}
+            </div>
           </div>
         </section>
-      </div>
 
-      {/* Footer */}
-      <div className="mt-auto flex items-center justify-between border-t border-white/[0.04] px-10 py-4 font-mono text-[9px] tracking-[0.24em] text-zinc-700">
-        <span>COGNITIVE · CAMPUS / 2026</span>
-        <span className="text-[var(--signal)]/70">OK</span>
+        {/* ─── Stat row ───────────────────────────────────── */}
+        <section className="grid grid-cols-3 border-b border-white/[0.04]">
+          {[
+            { label: "SOLVED", value: solvedAnim, icon: <Target className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+            { label: "MASTERED", value: masteredCount, icon: <Award className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+            { label: "LEVEL", value: level, icon: <TrendingUp className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+          ].map((stat, i) => (
+            <div key={stat.label} className={`flex flex-col items-center gap-1 py-6 ${i < 2 ? "border-r border-white/[0.04]" : ""}`}>
+              <div className="text-[var(--signal)] mb-1">{stat.icon}</div>
+              <span className="font-mono text-[30px] font-bold tabular-nums text-zinc-100 leading-none">{stat.value}</span>
+              <span className="font-mono text-[9px] tracking-[0.14em] text-zinc-600">{stat.label}</span>
+            </div>
+          ))}
+        </section>
+
+        {/* ─── Main body: 2-column ─────────────────────────── */}
+        <div className="grid flex-1 lg:grid-cols-[360px_1fr]">
+
+          {/* Left column */}
+          <aside className="border-r border-white/[0.04]">
+
+            {/* About */}
+            <div className="border-b border-white/[0.04] px-8 py-7">
+              <h3 className="mb-3 font-mono text-[10px] tracking-[0.14em] text-zinc-600 uppercase">About</h3>
+              <p className="text-[13px] leading-relaxed text-zinc-400">
+                {user?.bio || "Pre-final year CSE (AI) undergraduate building full-stack applications, integrating LLMs, and practicing DSA. Currently building CognitiveCampus."}
+              </p>
+            </div>
+
+            {/* Links */}
+            <div className="border-b border-white/[0.04] px-8 py-7">
+              <h3 className="mb-4 font-mono text-[10px] tracking-[0.14em] text-zinc-600 uppercase">Links</h3>
+              <div className="space-y-3">
+                {[
+                  { platform: "GitHub", value: "github.com/SupreethReddy25" },
+                  { platform: "LinkedIn", value: "linkedin.com/in/supreethreddy25" },
+                ].map((link) => (
+                  <div key={link.platform} className="group flex items-center justify-between">
+                    <div>
+                      <div className="text-[11px] font-mono tracking-[0.08em] text-zinc-600 uppercase mb-0.5">{link.platform}</div>
+                      <div className="text-[12px] text-zinc-400">{link.value}</div>
+                    </div>
+                    <ExternalLink className="h-3 w-3 text-zinc-700 transition-colors group-hover:text-zinc-400 cursor-pointer" strokeWidth={1.5} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* BYOK */}
+            <BYOKSettings />
+          </aside>
+
+          {/* Right column */}
+          <section className="flex min-w-0 flex-col">
+
+            {/* Mastery section */}
+            <div className="border-b border-white/[0.04] px-8 py-7">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-[15px] font-semibold text-zinc-100">Skill Mastery</h2>
+                  <p className="text-[11px] text-zinc-600 mt-0.5">Tracked via Bayesian Knowledge Tracing</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono text-[22px] font-bold text-zinc-100 leading-none">{masteredCount}</div>
+                  <div className="font-mono text-[9px] tracking-[0.12em] text-zinc-700 uppercase">mastered</div>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="h-2 w-20 rounded bg-white/[0.04] animate-pulse" />
+                      <div className="h-[3px] flex-1 rounded-full bg-white/[0.04] animate-pulse" />
+                      <div className="h-2 w-6 rounded bg-white/[0.04] animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              ) : skills.length > 0 ? (
+                <div className="space-y-1">
+                  {skills.sort((a, b) => b.score - a.score).map((s, i) => (
+                    <MasteryBar key={s.label} label={s.label} score={s.score} index={i} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <BarChart3 className="h-8 w-8 text-zinc-700 mb-3" strokeWidth={1} />
+                  <p className="text-[12px] text-zinc-600">No skill data yet</p>
+                  <p className="text-[11px] text-zinc-700 mt-1">Solve problems to track mastery</p>
+                </div>
+              )}
+            </div>
+
+            {/* Recent submissions */}
+            <div className="px-8 py-7">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-[15px] font-semibold text-zinc-100">
+                  Recent <span className="text-[var(--signal)]">Activity</span>
+                </h2>
+                <span className="font-mono text-[10px] tracking-[0.1em] text-zinc-700">LAST {recentHistory.length}</span>
+              </div>
+
+              {loading ? (
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 py-2">
+                      <div className="h-3.5 w-3.5 rounded-full bg-white/[0.04] animate-pulse shrink-0" />
+                      <div className="h-3 flex-1 rounded bg-white/[0.04] animate-pulse" />
+                      <div className="h-2 w-8 rounded bg-white/[0.04] animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              ) : recentHistory.length > 0 ? (
+                <div>
+                  {recentHistory.map((s, i) => (
+                    <SubmissionRow key={i} sub={s} index={i} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <CheckCircle2 className="h-8 w-8 text-zinc-700 mb-3" strokeWidth={1} />
+                  <p className="text-[12px] text-zinc-600">No submissions yet</p>
+                  <p className="text-[11px] text-zinc-700 mt-1">Head to Workspace to get started</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* ─── College & Placement Target ──────────────── */}
+        <section className="border-t border-white/[0.04] px-8 py-7">
+          <div className="flex items-center gap-2 mb-5">
+            <GraduationCap className="h-4 w-4 text-zinc-500" strokeWidth={1.6} />
+            <h2 className="text-[15px] font-semibold text-zinc-100">
+              College &amp; <span className="text-[var(--signal)]">Placement Target</span>
+            </h2>
+          </div>
+
+          <div className="space-y-4 max-w-md">
+            {/* College selector */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono tracking-[0.15em] text-zinc-600 uppercase block">
+                Your College
+              </label>
+              <CollegeSelector
+                value={college}
+                onChange={setCollege}
+                placeholder="Search your college…"
+              />
+            </div>
+
+            {/* Target role */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono tracking-[0.15em] text-zinc-600 uppercase block">
+                Target Role
+              </label>
+              <input
+                type="text"
+                value={targetRole}
+                onChange={e => setTargetRole(e.target.value)}
+                placeholder="e.g., SDE-1, Data Analyst, Imagineer"
+                className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.14] px-4 py-2.5 text-sm text-zinc-200 outline-none focus:border-[var(--signal)]/40 focus:bg-[var(--signal)]/5 transition-all duration-200 placeholder:text-zinc-700"
+              />
+            </div>
+
+            {/* Save button */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSavePlacement}
+                disabled={savingPlacement}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--signal)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {savingPlacement
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                  : <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                }
+                {placementSaved ? 'Saved!' : 'Save'}
+              </button>
+
+              {college?.slug && (
+                <Link
+                  to="/placement"
+                  className="flex items-center gap-1.5 text-xs text-[var(--signal)] hover:opacity-80 transition-opacity"
+                >
+                  View Placement Intel
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                </Link>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <footer className="flex items-center justify-between border-t border-white/[0.04] px-8 py-3 font-mono text-[9px] tracking-[0.2em] text-zinc-700">
+          <span>COGNITIVE · CAMPUS / 2026</span>
+          <span className="text-[var(--signal)]/50">CC</span>
+        </footer>
       </div>
     </div>
-  </div>;
+  );
 }
 
-/* ───────────────────────────────────────────── */
-/* Activity Heatmap — built from REAL data       */
-/* ───────────────────────────────────────────── */
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const DAYS = ["Mon", "", "Wed", "", "Fri", "", ""];
-
-function intensityBg(n) {
-  if (n === 0) return "transparent";
-  const pct = 15 + n * 18;
-  return `color-mix(in oklab, var(--signal) ${pct}%, transparent)`;
-}
-
-function ActivityHeatmap({ cells }) {
-  const [hover, setHover] = useState(null);
-  const weeks = 52;
-
-  return <div className="relative">
-    {/* Month labels */}
-    <div className="mb-2 grid grid-cols-12 gap-0 pl-8">
-      {MONTHS.map(m => <span key={m} className="text-[11px] text-zinc-600">{m}</span>)}
-    </div>
-
-    <div className="flex gap-2">
-      {/* Day labels */}
-      <div className="flex w-6 flex-col justify-between py-[4px] text-[10px] text-zinc-700">
-        {DAYS.map((d, i) => <span key={i}>{d}</span>)}
-      </div>
-
-      {/* Grid */}
-      <div className="flex flex-1 gap-[3px]">
-        {Array.from({ length: weeks }).map((_, w) => <div key={w} className="flex flex-1 flex-col gap-[3px]">
-          {Array.from({ length: 7 }).map((_, d) => {
-            const idx = w * 7 + d;
-            const cell = cells[idx] || { intensity: 0, count: 0, date: '' };
-            const active = hover?.week === w && hover?.day === d;
-            return <button
-              key={d}
-              type="button"
-              onMouseEnter={() => setHover({ week: w, day: d, count: cell.count, date: cell.date })}
-              onMouseLeave={() => setHover(null)}
-              className={`aspect-square w-full rounded-[2px] border ${active ? "border-white/40" : "border-white/[0.04]"} transition-colors duration-150`}
-              style={{ backgroundColor: intensityBg(cell.intensity) }}
-            />;
-          })}
-        </div>)}
-      </div>
-    </div>
-
-    {/* Legend + tooltip */}
-    <div className="mt-3 flex items-center justify-between">
-      {hover ? (
-        <span className="text-[11px] text-zinc-400">
-          <span className="text-zinc-200 font-medium">{hover.count} solve{hover.count !== 1 ? 's' : ''}</span>
-          {hover.date && ` on ${hover.date}`}
-        </span>
-      ) : (
-        <span className="text-[11px] text-zinc-600">Hover any cell to see details</span>
-      )}
-      <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
-        <span>Less</span>
-        {[0, 1, 2, 3, 4].map(n => <span key={n} className="h-2.5 w-2.5 rounded-[2px] border border-white/[0.04]" style={{ backgroundColor: intensityBg(n) }} />)}
-        <span>More</span>
-      </div>
-    </div>
-  </div>;
-}
-
-/* ───────────────────────────────────────────── */
-/* BYOK Settings                                 */
-/* ───────────────────────────────────────────── */
-
+/* ─── BYOK Settings ──────────────────────────────────────── */
 function BYOKSettings() {
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState(null);
-  const hasStoredKey = !!localStorage.getItem('cognitive_campus_llm_key');
+  const [status, setStatus] = useState(null); // null | 'saved' | 'cleared' | 'error'
+  const hasStoredKey = !!localStorage.getItem("cognitive_campus_llm_key");
 
   const handleSave = async () => {
     if (!apiKey.trim()) return;
@@ -330,11 +534,11 @@ function BYOKSettings() {
     setStatus(null);
     try {
       await usersService.configGeminiKey(apiKey.trim());
-      localStorage.setItem('cognitive_campus_llm_key', 'configured');
-      setStatus('saved');
-      setApiKey('');
+      localStorage.setItem("cognitive_campus_llm_key", "configured");
+      setStatus("saved");
+      setApiKey("");
     } catch {
-      setStatus('error');
+      setStatus("error");
     } finally {
       setSaving(false);
     }
@@ -343,59 +547,89 @@ function BYOKSettings() {
   const handleClear = async () => {
     setSaving(true);
     try {
-      await usersService.configGeminiKey('');
-      localStorage.removeItem('cognitive_campus_llm_key');
-      setStatus('cleared');
+      await usersService.configGeminiKey("");
+      localStorage.removeItem("cognitive_campus_llm_key");
+      setStatus("cleared");
     } catch {
-      setStatus('error');
+      setStatus("error");
     } finally {
       setSaving(false);
     }
   };
 
-  return <div className="px-10 py-8">
-    <div className="flex items-center gap-2 mb-3">
-      <Key className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={1.5} />
-      <h3 className="text-[14px] font-semibold text-zinc-200">BYOK</h3>
+  return (
+    <div className="px-8 py-7">
+      <div className="flex items-center gap-2 mb-1">
+        <Key className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={1.5} />
+        <h3 className="font-mono text-[10px] tracking-[0.14em] text-zinc-600 uppercase">BYOK — AI Key</h3>
+      </div>
+      <p className="text-[11px] text-zinc-600 mb-4 leading-relaxed">
+        Your own Gemini API key for unlimited nudges. Encrypted AES-256-GCM server-side.
+      </p>
+
+      {/* Status banners */}
+      {hasStoredKey && !status && (
+        <div className="flex items-center gap-2 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/[0.04] px-3 py-2 mb-3">
+          <ShieldCheck className="h-3 w-3 text-[var(--signal)]" strokeWidth={1.5} />
+          <span className="font-mono text-[10px] tracking-[0.1em] text-[var(--signal)]">KEY ACTIVE</span>
+        </div>
+      )}
+      {status === "saved" && (
+        <div className="flex items-center gap-2 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/[0.04] px-3 py-2 mb-3">
+          <ShieldCheck className="h-3 w-3 text-[var(--signal)]" strokeWidth={1.5} />
+          <span className="font-mono text-[10px] tracking-[0.1em] text-[var(--signal)]">SAVED</span>
+        </div>
+      )}
+      {status === "cleared" && (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 mb-3">
+          <span className="font-mono text-[10px] tracking-[0.1em] text-zinc-500">CLEARED — USING SYSTEM KEY</span>
+        </div>
+      )}
+      {status === "error" && (
+        <div className="rounded-lg border border-rose-500/20 bg-rose-500/[0.04] px-3 py-2 mb-3">
+          <span className="font-mono text-[10px] tracking-[0.1em] text-rose-400">ERROR — TRY AGAIN</span>
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.01] px-3 py-2 mb-3 transition-colors focus-within:border-[var(--signal)]/30">
+        <Key className="h-3 w-3 shrink-0 text-zinc-700" strokeWidth={1.5} />
+        <input
+          type={showKey ? "text" : "password"}
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          placeholder="AIza...your-key"
+          className="flex-1 bg-transparent font-mono text-[11px] text-zinc-200 placeholder:text-zinc-700 focus:outline-none"
+        />
+        <button onClick={() => setShowKey(!showKey)} className="text-zinc-700 hover:text-zinc-400 transition-colors">
+          {showKey ? <EyeOff className="h-3 w-3" strokeWidth={1.5} /> : <Eye className="h-3 w-3" strokeWidth={1.5} />}
+        </button>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleSave}
+          disabled={saving || !apiKey.trim()}
+          className={`rounded-lg px-4 py-1.5 font-mono text-[10px] tracking-[0.1em] font-medium transition-all ${
+            !apiKey.trim()
+              ? "bg-zinc-900 text-zinc-700 cursor-not-allowed"
+              : "bg-[var(--signal)] text-[#0a1410] hover:brightness-110"
+          }`}
+        >
+          {saving ? "SAVING..." : "SAVE KEY"}
+        </button>
+        {hasStoredKey && (
+          <button
+            onClick={handleClear}
+            disabled={saving}
+            className="rounded-lg border border-white/[0.06] px-4 py-1.5 font-mono text-[10px] tracking-[0.1em] text-zinc-600 hover:border-rose-500/30 hover:text-rose-400 transition-all"
+          >
+            CLEAR
+          </button>
+        )}
+      </div>
     </div>
-    <p className="text-[12px] text-zinc-500 mb-4">
-      Your own Gemini API key for unlimited nudges. Encrypted server-side.
-    </p>
-
-    {hasStoredKey && !status && <div className="flex items-center gap-2 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-3 py-2 mb-3 text-[11px] text-[var(--signal)]">
-      <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
-      BYOK ACTIVE
-    </div>}
-
-    {status === 'saved' && <div className="flex items-center gap-2 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-3 py-2 mb-3 text-[11px] text-[var(--signal)]">
-      <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} /> KEY SAVED
-    </div>}
-
-    {status === 'cleared' && <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2 mb-3 text-[11px] text-zinc-400">
-      KEY CLEARED — USING DEFAULT
-    </div>}
-
-    <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.01] px-3 py-2 mb-3 focus-within:border-[var(--signal)]/40">
-      <Key className="h-3 w-3 text-zinc-600" strokeWidth={1.5} />
-      <input
-        type={showKey ? "text" : "password"}
-        value={apiKey}
-        onChange={e => setApiKey(e.target.value)}
-        placeholder="AIza...your-key"
-        className="flex-1 bg-transparent text-[12px] text-zinc-200 placeholder:text-zinc-700 focus:outline-none"
-      />
-      <button onClick={() => setShowKey(!showKey)} className="text-zinc-600 hover:text-zinc-300">
-        {showKey ? <EyeOff className="h-3 w-3" strokeWidth={1.5} /> : <Eye className="h-3 w-3" strokeWidth={1.5} />}
-      </button>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <button onClick={handleSave} disabled={saving || !apiKey.trim()} className={`rounded-lg px-4 py-1.5 text-[11px] font-medium transition-colors ${!apiKey.trim() ? 'bg-zinc-800 text-zinc-600' : 'bg-[var(--signal)] text-[#0a1410] hover:brightness-110'}`}>
-        {saving ? 'Saving...' : 'Save Key'}
-      </button>
-      {hasStoredKey && <button onClick={handleClear} disabled={saving} className="rounded-lg border border-white/[0.06] px-4 py-1.5 text-[11px] text-zinc-400 hover:text-rose-400 transition-colors">
-        Clear
-      </button>}
-    </div>
-  </div>;
+  );
 }

@@ -34,11 +34,11 @@ const submissionLimiter = rateLimit({
 
 /**
  * General rate limiter — applied globally to all /api routes.
- * 100 requests per 1 minute per IP.
+ * 500 requests per 1 minute per IP (raised to prevent dashboard load from hitting limits).
  */
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 500,
   message: { success: false, message: 'Too many requests. Please slow down.' },
   standardHeaders: true,
   legacyHeaders: false
