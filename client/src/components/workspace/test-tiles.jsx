@@ -1,237 +1,171 @@
-import { useState } from "react";
-import { useWorkspace } from "./WorkspaceContext";
-import { Play, Plus, Loader2, X } from "lucide-react";
+import { useState, useMemo } from 'react';
+import { useWorkspace } from './WorkspaceContext';
+import { Play, Plus, Loader2, X, EyeOff, CheckCircle2, XCircle, Terminal, AlertOctagon } from 'lucide-react';
+import { cn } from '@/components/ui/kit';
 
-export function TestTiles({
-  running,
-  results,
-  onRun,
-  selected,
-  onSelect,
-  stats,
-  testCasesArray
-}) {
-  const { customInput, setCustomInput, customMode, setCustomMode, handleCustomRun } = useWorkspace();
-  const [customResult, setCustomResult] = useState(null);
-
-  // Real tests from API if available, else fallback to problem examples
-  const hasResultList = results?.testResults?.results?.length > 0;
-
-  const displayTiles = hasResultList
-    ? results.testResults.results.map((tc, i) => ({
-      id: tc.id || `test-${i}`,
-      name: tc.name || `Case ${i + 1}`,
-      input: tc.input || "(none)",
-      expected: tc.expectedOutput || "(none)",
-      got: tc.actualOutput || "(runtime error)",
-      status: tc.passed ? "pass" : "fail",
-      runtimeMs: tc.executionTime || 0,
-      memoryKb: Math.floor(Math.random() * 100) + 40000
-    }))
-    : testCasesArray.map((tc, i) => ({
-      id: `test-${i}`,
-      name: tc.name || `Case ${i + 1}`,
-      input: tc.input || "(none)",
-      expected: tc.output || "(none)",
-      got: "—",
-      status: running ? "running" : "idle",
-      runtimeMs: null,
-      memoryKb: null
-    }));
-
-  const selectedData = displayTiles.find((t) => t.id === selected) ?? displayTiles[0] ?? {
-    id: '0', name: 'Wait', input: '-', expected: '-', got: '-', status: 'idle'
-  };
-
-  const toggleCustom = () => {
-    setCustomMode(!customMode);
-  };
-
-  const runCustom = async () => {
-    if (!customInput.trim()) return;
-    await handleCustomRun(customInput);
-  };
-
-  return <section className="relative flex shrink-0 flex-col border-t border-white/[0.04]" style={{ height: '248px' }}>
-    {/* ─── Header strip: "TEST CASES" + count + summary + CUSTOM + RUN ALL ─── */}
-    <div className="flex h-9 items-center justify-between border-b border-white/[0.04] px-4">
-      <div className="flex items-center gap-3 font-mono text-[10px] tracking-[0.2em] text-zinc-500">
-        <span>TEST CASES</span>
-        <span className="h-3 w-px bg-white/[0.06]" />
-        <span className="text-zinc-600">{displayTiles.length} TESTS</span>
-        <span className="text-zinc-800">·</span>
-        <SummaryDot stats={stats} running={running} />
-      </div>
-
-      <div className="flex items-center gap-1">
-        <button
-          onClick={toggleCustom}
-          className={`press ease-signature flex items-center gap-1.5 px-2 py-1 font-mono text-[10px] tracking-[0.2em] transition-colors ${customMode ? "text-[var(--signal)] bg-[var(--signal)]/10 border border-[var(--signal)]/20" : "text-zinc-500 hover:text-zinc-200"}`}
-        >
-          {customMode ? <X className="h-3 w-3" strokeWidth={1.5} /> : <Plus className="h-3 w-3" strokeWidth={1.5} />}
-          CUSTOM
-        </button>
-        <button onClick={customMode ? runCustom : onRun} disabled={running} className={`press ease-signature flex items-center gap-1.5 border-l border-white/[0.06] px-3 py-1 font-mono text-[10px] tracking-[0.2em] transition-colors ${running ? "text-zinc-600 cursor-not-allowed" : "text-zinc-200 hover:bg-white/[0.03]"}`}>
-          {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" strokeWidth={1.5} />}
-          {running ? "RUNNING" : customMode ? "RUN CUSTOM" : "RUN ALL"}
-        </button>
-      </div>
-    </div>
-
-    {/* ─── CUSTOM INPUT MODE ─── */}
-    {customMode ? (
-      <div className="flex flex-1 overflow-hidden">
-        {/* Custom input textarea */}
-        <div className="flex flex-1 flex-col border-r border-white/[0.04]">
-          <div className="flex items-center gap-2 border-b border-white/[0.04] px-4 py-2 font-mono text-[9px] tracking-[0.2em] text-zinc-600">
-            <span>CUSTOM INPUT</span>
-            <span className="h-px flex-1 bg-white/[0.04]" />
-            <span className="text-zinc-700">STDIN</span>
-          </div>
-          <textarea
-            value={customInput}
-            onChange={e => setCustomInput(e.target.value)}
-            placeholder="Enter your custom input here, e.g.&#10;[1,2,3]&#10;5"
-            className="flex-1 resize-none bg-transparent p-4 font-mono text-[12px] leading-relaxed text-zinc-200 placeholder:text-zinc-700 focus:outline-none scrollbar-surgical"
-            spellCheck="false"
-          />
-        </div>
-        {/* Custom output */}
-        <div className="flex flex-1 flex-col">
-          <div className="flex items-center gap-2 border-b border-white/[0.04] px-4 py-2 font-mono text-[9px] tracking-[0.2em] text-zinc-600">
-            <span>OUTPUT</span>
-            <span className="h-px flex-1 bg-white/[0.04]" />
-            {results?.customInputRun && <span className="text-[var(--signal)]">CUSTOM RUN</span>}
-          </div>
-          <div className="flex-1 overflow-y-auto scrollbar-surgical p-4">
-            {running ? (
-              <div className="flex items-center gap-2 font-mono text-[10px] text-zinc-500">
-                <Loader2 className="h-3 w-3 animate-spin text-[var(--signal)]" />
-                <span>Executing...</span>
-              </div>
-            ) : results?.testResults?.results?.length > 0 ? (
-              <pre className="whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed text-[var(--signal)]">
-                {results.testResults.results[0]?.actualOutput || '(no output)'}
-              </pre>
-            ) : results?.error ? (
-              <pre className="whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed text-rose-400">
-                {results.error}
-              </pre>
-            ) : (
-              <span className="font-mono text-[10px] tracking-widest text-zinc-600">
-                Click "RUN CUSTOM" to execute with your input.
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    ) : (
-      /* ─── STANDARD TEST CASE MODE ─── */
-      <>
-        {/* Test case tabs (horizontal scrolling tiles) */}
-        <div className="flex overflow-x-auto scrollbar-surgical divide-x divide-white/[0.04] border-b border-white/[0.04]" style={{ height: '100px' }}>
-          {displayTiles.map((tc, i) => {
-            const isSelected = selected === tc.id || (!selected && i === 0);
-            return <button key={tc.id} onClick={() => onSelect(tc.id)} className={`min-w-[140px] flex-shrink-0 stagger-in press ease-signature group relative flex flex-col items-start gap-2 p-3 text-left transition-colors duration-300 ${isSelected ? "bg-white/[0.02]" : "hover:bg-white/[0.015]"}`} style={{
-              animationDelay: `${i * 60}ms`
-            }}>
-              {/* index + dot + name */}
-              <div className="flex w-full items-center gap-2">
-                <span className="font-mono text-[9px] tabular-nums text-zinc-700">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <StatusDot status={tc.status} />
-                <span className="font-mono text-[11px] tracking-widest text-zinc-300">
-                  {(tc.name || `CASE ${i + 1}`).toUpperCase()}
-                </span>
-                {tc.hidden && <span className="ml-auto border border-white/[0.06] px-1 font-mono text-[8px] tracking-widest text-zinc-600">
-                  HIDDEN
-                </span>}
-              </div>
-
-              {/* metrics row */}
-              <div className="flex items-center gap-4 pl-5 font-mono text-[10px] tracking-widest text-zinc-500">
-                {tc.status === "pass" || tc.status === "fail" ? <>
-                  <span className="tabular-nums">{tc.runtimeMs}ms</span>
-                  <span className="text-zinc-800">·</span>
-                  <span className="tabular-nums">
-                    {((tc.memoryKb ?? 0) / 1024).toFixed(1)}mb
-                  </span>
-                </> : tc.status === "running" ? <span className="text-[var(--signal)]">EXECUTING</span> : <span className="text-zinc-700">—</span>}
-              </div>
-
-              {/* input preview */}
-              <div className="w-full truncate pl-5 font-mono text-[10.5px] text-zinc-600">
-                {tc.input}
-              </div>
-
-              {/* running marching ants */}
-              {tc.status === "running" && <span className="march absolute inset-x-0 bottom-0 h-[1px]" />}
-
-              {isSelected && <span className="absolute inset-x-0 bottom-0 h-px bg-[var(--signal)]" />}
-            </button>;
-          })}
-        </div>
-
-        {/* ─── Expanded detail: Input / Expected / Got ─── */}
-        {(results?.error || results?.testResults?.results?.some(t => t.actualOutput?.includes('[ERROR]'))) ? (
-          <div className="flex flex-1 flex-col overflow-hidden bg-rose-500/5 p-4">
-            <p className="text-xs font-mono text-rose-400 font-bold mb-2">COMPILATION / RUNTIME ERROR</p>
-            <pre className="text-[11px] font-mono text-rose-300 whitespace-pre-wrap overflow-y-auto scrollbar-surgical">
-              {results?.error || results?.testResults?.results?.find(t => t.actualOutput?.includes('[ERROR]'))?.actualOutput}
-            </pre>
-          </div>
-        ) : (
-          <div className="grid flex-1 grid-cols-3 divide-x divide-white/[0.04] overflow-hidden">
-            <DetailBlock label="INPUT" value={selectedData.input} tone="zinc" />
-            <DetailBlock label="EXPECTED" value={selectedData.expected} tone="zinc" />
-            <DetailBlock label="GOT" value={selectedData.status === "pass" || selectedData.status === "fail" ? selectedData.got ?? "—" : selectedData.status === "running" ? "…" : "not run"} tone={selectedData.status === "pass" ? "signal" : selectedData.status === "fail" ? "rose" : "muted"} />
-          </div>
-        )}
-      </>
-    )}
-  </section>;
+/** Token-level diff so `[1,2,3]` vs `[1,3,3]` highlights exactly the wrong element. */
+function tokenize(s) {
+  return String(s ?? '').match(/\s+|[[\],{}:]|"[^"]*"|[^\s[\],{}:]+/g) || [];
+}
+function diffTokens(expected, got) {
+  const e = tokenize(expected);
+  const g = tokenize(got);
+  const n = Math.max(e.length, g.length);
+  const exp = [];
+  const act = [];
+  for (let i = 0; i < n; i++) {
+    const same = e[i] === g[i];
+    if (e[i] !== undefined) exp.push({ t: e[i], bad: !same });
+    if (g[i] !== undefined) act.push({ t: g[i], bad: !same });
+  }
+  return { exp, act };
 }
 
-/* ──────────────────────────────────────────── */
+function DiffText({ parts, tone }) {
+  return (
+    <pre className="whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed text-zinc-200">
+      {parts.map((p, i) => (
+        <span key={i} className={p.bad && p.t.trim() ? (tone === 'good' ? 'rounded-sm bg-emerald-400/20 text-emerald-200' : 'rounded-sm bg-rose-400/25 text-rose-200') : ''}>{p.t}</span>
+      ))}
+    </pre>
+  );
+}
+
+export function TestTiles({ running, results, onRun, selected, onSelect, stats, testCasesArray }) {
+  const { customInput, setCustomInput, customMode, setCustomMode, handleCustomRun } = useWorkspace();
+
+  const hasResultList = results?.testResults?.results?.length > 0 && !results?.customInputRun;
+
+  const tiles = useMemo(() => {
+    if (hasResultList) {
+      return results.testResults.results.map((tc, i) => ({
+        id: tc.id ?? String(i),
+        name: tc.hidden ? `Hidden ${i + 1}` : `Case ${i + 1}`,
+        hidden: !!tc.hidden,
+        input: tc.input ?? '',
+        expected: tc.expectedOutput ?? '',
+        got: tc.actualOutput ?? '',
+        status: tc.passed ? 'pass' : 'fail',
+        runtimeMs: tc.executionTime || 0
+      }));
+    }
+    return testCasesArray.map((tc, i) => ({
+      id: String(i), name: `Case ${i + 1}`, hidden: false, input: tc.input || '', expected: tc.output || '', got: '', status: running ? 'running' : 'idle', runtimeMs: null
+    }));
+  }, [hasResultList, results, testCasesArray, running]);
+
+  const sel = tiles.find((t) => t.id === selected) || tiles[0] || { id: '0', name: '—', input: '', expected: '', got: '', status: 'idle' };
+  const runtimeError = results?.error || results?.testResults?.results?.find((t) => typeof t.actualOutput === 'string' && t.actualOutput.startsWith('[ERROR]'))?.actualOutput;
+  const diff = sel.status === 'fail' && !sel.hidden && !runtimeError ? diffTokens(sel.expected, sel.got) : null;
+
+  return (
+    <section className="relative flex shrink-0 flex-col border-t border-white/[0.06]" style={{ height: 268 }}>
+      {/* Header */}
+      <div className="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.05] px-4">
+        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+          <span>Test cases</span>
+          <span className="h-3 w-px bg-white/[0.06]" />
+          <Summary stats={stats} running={running} total={tiles.length} />
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setCustomMode(!customMode)} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors', customMode ? 'border border-[var(--signal)]/25 bg-[var(--signal)]/10 text-[var(--signal)]' : 'text-zinc-500 hover:text-zinc-200')}>
+            {customMode ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />} Custom
+          </button>
+          <button onClick={customMode ? () => customInput.trim() && handleCustomRun(customInput) : onRun} disabled={running} className={cn('flex items-center gap-1.5 rounded-md border border-white/[0.08] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors', running ? 'cursor-not-allowed text-zinc-600' : 'text-zinc-200 hover:bg-white/[0.05]')}>
+            {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+            {running ? 'Running' : customMode ? 'Run custom' : 'Run all'}
+          </button>
+        </div>
+      </div>
+
+      {customMode ? (
+        <div className="flex min-h-0 flex-1">
+          <div className="flex flex-1 flex-col border-r border-white/[0.05]">
+            <div className="border-b border-white/[0.05] px-4 py-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">stdin · one argument per line</div>
+            <textarea value={customInput} onChange={(e) => setCustomInput(e.target.value)} placeholder={'[1,2,3]\n5'} spellCheck="false" className="flex-1 resize-none bg-transparent p-4 font-mono text-[12px] leading-relaxed text-zinc-200 placeholder:text-zinc-700 focus:outline-none scrollbar-surgical" />
+          </div>
+          <div className="flex flex-1 flex-col">
+            <div className="flex items-center border-b border-white/[0.05] px-4 py-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600"><Terminal className="mr-1.5 h-3 w-3" /> output {results?.customInputRun && <span className="ml-auto text-[var(--signal)]">custom run</span>}</div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 scrollbar-surgical">
+              {running ? <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-500"><Loader2 className="h-3 w-3 animate-spin text-[var(--signal)]" /> Executing…</div>
+                : results?.customInputRun && results?.testResults?.results?.[0] ? <pre className={cn('whitespace-pre-wrap break-all font-mono text-[12px] leading-relaxed', String(results.testResults.results[0].actualOutput).startsWith('[ERROR]') ? 'text-rose-300' : 'text-emerald-300')}>{results.testResults.results[0].actualOutput || '(no output)'}</pre>
+                : results?.error ? <pre className="whitespace-pre-wrap font-mono text-[12px] text-rose-300">{results.error}</pre>
+                : <span className="font-mono text-[11px] text-zinc-600">Enter input and click “Run custom”.</span>}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* tiles */}
+          <div className="flex h-[74px] shrink-0 divide-x divide-white/[0.05] overflow-x-auto border-b border-white/[0.05] scrollbar-surgical">
+            {tiles.map((t, i) => {
+              const isSel = sel.id === t.id;
+              return (
+                <button key={t.id} onClick={() => onSelect(t.id)} className={cn('relative flex min-w-[132px] flex-shrink-0 flex-col items-start justify-center gap-1 px-3.5 text-left transition-colors', isSel ? 'bg-white/[0.035]' : 'hover:bg-white/[0.02]')}>
+                  <div className="flex w-full items-center gap-2">
+                    <StatusDot status={t.status} />
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-zinc-300">{t.name}</span>
+                    {t.hidden && <EyeOff className="ml-auto h-3 w-3 text-zinc-600" />}
+                  </div>
+                  <div className="w-full truncate pl-4 font-mono text-[10px] text-zinc-600">
+                    {t.status === 'pass' || t.status === 'fail' ? `${t.runtimeMs}ms` : t.status === 'running' ? 'executing…' : t.input.split('\n')[0] || '—'}
+                  </div>
+                  {isSel && <span className="absolute inset-x-0 bottom-0 h-px bg-[var(--signal)]" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* detail */}
+          {runtimeError ? (
+            <div className="min-h-0 flex-1 overflow-y-auto bg-rose-500/[0.05] p-4 scrollbar-surgical">
+              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-widest text-rose-300"><AlertOctagon className="h-3.5 w-3.5" /> Runtime / compilation error</div>
+              <pre className="whitespace-pre-wrap font-mono text-[11.5px] leading-relaxed text-rose-200">{String(runtimeError).replace(/^\[ERROR\]\s*/, '')}</pre>
+            </div>
+          ) : sel.hidden ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center">
+              <EyeOff className="h-5 w-5 text-zinc-600" />
+              <div className="text-[12.5px] font-medium text-zinc-300">Hidden test case</div>
+              <div className={cn('flex items-center gap-1.5 font-mono text-[11px]', sel.status === 'pass' ? 'text-emerald-400' : 'text-rose-400')}>{sel.status === 'pass' ? <><CheckCircle2 className="h-3.5 w-3.5" /> passed in {sel.runtimeMs}ms</> : <><XCircle className="h-3.5 w-3.5" /> failed — inputs are hidden to keep the judge fair</>}</div>
+            </div>
+          ) : (
+            <div className="grid min-h-0 flex-1 grid-cols-3 divide-x divide-white/[0.05]">
+              <Block label="Input"><pre className="whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed text-zinc-200">{sel.input || '—'}</pre></Block>
+              <Block label="Expected">{diff ? <DiffText parts={diff.exp} tone="good" /> : <pre className="whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed text-zinc-200">{sel.expected || '—'}</pre>}</Block>
+              <Block label="Your output" tone={sel.status === 'pass' ? 'good' : sel.status === 'fail' ? 'bad' : 'muted'}>
+                {sel.status === 'idle' ? <span className="font-mono text-[11px] text-zinc-600">not run yet</span>
+                  : sel.status === 'running' ? <span className="font-mono text-[11px] text-zinc-500">…</span>
+                  : diff ? <DiffText parts={diff.act} tone="bad" />
+                  : <pre className="whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed text-emerald-300">{sel.got || '(no output)'}</pre>}
+              </Block>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
 
 function StatusDot({ status }) {
-  const cls = status === "pass" ? "bg-[var(--signal)] shadow-[0_0_8px_var(--signal)]" : status === "fail" ? "bg-rose-400 shadow-[0_0_8px_rgb(251,113,133)]" : status === "running" ? "bg-amber-400 animate-pulse" : "bg-zinc-700";
-  return <span className={`inline-block h-1.5 w-1.5 rounded-full ${cls}`} />;
+  const cls = status === 'pass' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : status === 'fail' ? 'bg-rose-400 shadow-[0_0_8px_#fb7185]' : status === 'running' ? 'animate-pulse bg-amber-400' : 'bg-zinc-700';
+  return <span className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', cls)} />;
 }
 
-function SummaryDot({ stats, running }) {
-  if (running) {
-    return <span className="flex items-center gap-1.5 text-[var(--signal)] font-bold">
-      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--signal)]" />
-      <span>EXECUTING BATCH</span>
-    </span>;
-  }
-  if (stats.done === 0) {
-    return <span className="text-zinc-700">READY</span>;
-  }
-  const allPass = stats.pass === stats.total;
-  return <span className={`flex items-center gap-1.5 font-bold ${allPass ? "text-[var(--signal)]" : "text-rose-400"}`}>
-    <span className={`h-1.5 w-1.5 rounded-full ${allPass ? "bg-[var(--signal)]" : "bg-rose-400"}`} />
-    <span className="tabular-nums">
-      {stats.pass}/{stats.total} PASS
-    </span>
-    <span className="text-zinc-700">·</span>
-    <span className="tabular-nums text-zinc-500">AVG {stats.avgRt}MS</span>
-  </span>;
+function Summary({ stats, running, total }) {
+  if (running) return <span className="flex items-center gap-1.5 font-bold text-[var(--signal)]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--signal)]" />Executing</span>;
+  if (!stats.done) return <span className="text-zinc-600">{total} ready</span>;
+  const all = stats.pass === stats.total;
+  return <span className={cn('flex items-center gap-1.5 font-bold', all ? 'text-emerald-400' : 'text-rose-400')}><span className={cn('h-1.5 w-1.5 rounded-full', all ? 'bg-emerald-400' : 'bg-rose-400')} /><span className="tabular-nums">{stats.pass}/{stats.total} passed</span><span className="font-normal text-zinc-600">· avg {stats.avgRt}ms</span></span>;
 }
 
-function DetailBlock({ label, value, tone }) {
-  const color = tone === "signal" ? "text-[var(--signal)]" : tone === "rose" ? "text-rose-400" : tone === "muted" ? "text-zinc-600" : "text-zinc-200";
-  return <div className="flex min-h-0 flex-col px-4 py-3">
-    <div className="mb-2 flex items-center gap-2 font-mono text-[9px] tracking-[0.2em] text-zinc-600">
-      <span>{label}</span>
-      <span className="h-px flex-1 bg-white/[0.04]" />
+function Block({ label, children, tone }) {
+  return (
+    <div className="flex min-h-0 flex-col px-4 py-3">
+      <div className="mb-2 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">
+        <span className={tone === 'good' ? 'text-emerald-500/80' : tone === 'bad' ? 'text-rose-400/80' : ''}>{label}</span>
+        <span className="h-px flex-1 bg-white/[0.05]" />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-surgical">{children}</div>
     </div>
-    <div className="overflow-y-auto scrollbar-surgical flex-1">
-      <pre className={`whitespace-pre-wrap break-all font-mono text-[11.5px] leading-relaxed ${color}`}>
-        {value}
-      </pre>
-    </div>
-  </div>;
+  );
 }

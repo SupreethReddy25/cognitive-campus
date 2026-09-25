@@ -292,13 +292,13 @@ function LangSelector({ lang, displayLang, langs, onSelect, open, setOpen }) {
         <span>{displayLang.toUpperCase()}</span>
         <ChevronDown className="h-2.5 w-2.5" strokeWidth={1.5} />
       </button>
-      {open && <div className="fade-in-up absolute right-0 top-full z-10 mt-1 w-32 border border-white/[0.08] bg-[#0c0c0c] p-1 shadow-2xl">
-          {langs.map(l => <button key={l.key} onClick={() => {
+      {open && <div className="fade-in-up absolute right-0 top-full z-10 mt-1 w-36 border border-white/[0.08] bg-[#0c0c0c] p-1 shadow-2xl">
+          {langs.map(l => <button key={l.key} disabled={l.unavailable} title={l.unavailable ? `No ${l.label} runtime on this server — start the Piston container or install a ${l.label} toolchain` : l.engine ? `Runs on: ${l.engine}` : ''} onClick={() => {
         onSelect(l.key);
         setOpen(false);
-      }} className="ease-signature flex w-full items-center justify-between px-2 py-1.5 font-mono text-[11px] tracking-widest text-zinc-400 transition-colors hover:bg-white/[0.03] hover:text-[var(--signal)]">
+      }} className={`ease-signature flex w-full items-center justify-between px-2 py-1.5 font-mono text-[11px] tracking-widest transition-colors ${l.unavailable ? 'cursor-not-allowed text-zinc-700' : 'text-zinc-400 hover:bg-white/[0.03] hover:text-[var(--signal)]'}`}>
               <span>{l.label.toUpperCase()}</span>
-              {l.key === lang && <Check className="h-3 w-3 text-[var(--signal)]" strokeWidth={2} />}
+              {l.unavailable ? <span className="text-[8px] text-zinc-700">OFFLINE</span> : l.key === lang && <Check className="h-3 w-3 text-[var(--signal)]" strokeWidth={2} />}
             </button>)}
         </div>}
     </div>;
