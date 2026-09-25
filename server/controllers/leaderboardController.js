@@ -9,6 +9,7 @@
 
 const User = require('../models/User');
 const SkillState = require('../models/SkillState');
+const Submission = require('../models/Submission');
 const knowledge = require('../services/knowledgeService');
 const { sendSuccess } = require('../utils/responseHelper');
 
@@ -24,6 +25,12 @@ const loadBoard = (scopeKey, collegeId) =>
       { $group: { _id: '$userId', n: { $sum: 1 } } }
     ]);
     const masteredMap = new Map(mastered.map((m) => [String(m._id), m.n]));
+    const solvedRows = await Submission.aggregate([
+      { $match: { userId: { $in: users.map((u) => u._id) }, isCorrect: true } },
+      { $group: { _id: { u: '$userId', p: '$problemId' } } },
+      { $group: { _id: '$_id.u', n: { $sum: 1 } } }
+    ]);
+    const solvedMap = new Map(solvedRows.map((r) => [String(r._id), r.n]));
     return users.map((u, i) => ({
       rank: i + 1,
       userId: String(u._id),
@@ -32,7 +39,8 @@ const loadBoard = (scopeKey, collegeId) =>
       xp: u.xp,
       streak: u.streak || 0,
       college: u.collegeId?.shortName || null,
-      skillsMastered: masteredMap.get(String(u._id)) || 0
+      skillsMastered: masteredMap.get(String(u._id)) || 0,
+      solved: solvedMap.get(String(u._id)) || 0
     }));
   });
 
@@ -56,8 +64,11 @@ const getLeaderboard = async (req, res, next) => {
       const filter = { xp: { $gt: me.xp } };
       if (collegeId) filter.collegeId = collegeId;
       const above = await User.countDocuments(filter);
-      const mastered = await SkillState.countDocuments({ userId, isMastered: true });
-      top50.push({ rank: above + 1, userId: String(userId), name: me.name, level: me.level, xp: me.xp, streak: me.streak || 0, college: me.collegeId?.shortName || null, skillsMastered: mastered, isCurrentUser: true });
+      const [mastered, solvedAgg] = await Promise.all([
+        SkillState.countDocuments({ userId, isMastered: true }),
+        Submission.distinct('problemId', { userId, isCorrect: true })
+      ]);
+      top50.push({ rank: above + 1, userId: String(userId), name: me.name, level: me.level, xp: me.xp, streak: me.streak || 0, college: me.collegeId?.shortName || null, skillsMastered: mastered, solved: solvedAgg.length, isCurrentUser: true });
     }
 
     return sendSuccess(res, { leaderboard: top50, scope, collegeAvailable: !!me?.collegeId, cached: true });

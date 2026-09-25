@@ -367,6 +367,8 @@ const seedExperiences = async ({ companyBySlug, collegeBySlug, sim, userIds }) =
   sim.forEach((s) => { if (!byCollege.has(s.college)) byCollege.set(s.college, []); byCollege.get(s.college).push(userIds.get(s.key)); });
   const allUsers = [...userIds.values()];
 
+  const sortedTs = experiences.map((x) => Date.UTC(x.year, ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(x.month), 12)).sort((a, b) => a - b);
+  const RECENT_CUTOFF = sortedTs[Math.floor(sortedTs.length * 0.67)];
   let created = 0;
   for (const e of experiences) {
     const company = companyBySlug.get(e.company);
@@ -401,7 +403,14 @@ const seedExperiences = async ({ companyBySlug, collegeBySlug, sim, userIds }) =
     const { scoreQuality } = require('../services/experienceParser');
     doc.qualityScore = scoreQuality(doc).score;
 
-    const res = await InterviewExperience.updateOne({ seedKey }, { $set: doc, $setOnInsert: { createdAt: new Date(Date.UTC(e.year, ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(e.month) + 1, 12)) } }, { upsert: true });
+    // posted-at: the newest third of reports land inside the last ~45 days so "this month"/trending views are alive
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const interviewed = Date.UTC(e.year, MONTHS.indexOf(e.month), 12);
+    const isRecent = interviewed >= RECENT_CUTOFF;
+    const postedAt = new Date(Math.min(Date.now(), isRecent ? Date.now() - Math.floor(rand() * 45) * 86400000 : interviewed + (5 + Math.floor(rand() * 40)) * 86400000));
+    const res = await InterviewExperience.updateOne({ seedKey }, { $set: doc, $setOnInsert: { createdAt: postedAt } }, { upsert: true });
+    // createdAt is immutable in mongoose update paths — set it on the raw collection so re-seeds also repair old rows
+    await InterviewExperience.collection.updateOne({ seedKey }, { $set: { createdAt: postedAt } });
     if (res.upsertedCount) created++;
   }
   // a handful of pending / low-quality submissions so the moderation queue has real content
@@ -459,6 +468,14 @@ const main = async () => {
     const { sim, userIds } = await seedCohort({ skills: skillsWithPrereq, problems: problemsPop, collegeBySlug, companyBySlug, catalog });
     await seedExperiences({ companyBySlug, collegeBySlug, sim, userIds });
     await seedCommunityProblems({ skills: skillsWithPrereq, userIds, sim });
+  }
+
+  if (!QUICK) {
+    // arena + experiences are seeded after the cohort, so badges tied to them are evaluated last
+    const cohortUsers = await User.find({ email: /@(demo\.)?cognitivecampus\.dev$/ }).select('_id').lean();
+    let more = 0;
+    for (const u of cohortUsers) more += (await achievementService.evaluate(u._id)).length;
+    say(`achievements unlocked in final pass: ${more}`);
   }
 
   // summary

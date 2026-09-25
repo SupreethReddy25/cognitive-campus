@@ -147,7 +147,7 @@ const callGroq = async ({ system, prompt, json, temperature, maxTokens, timeoutM
  * @throws {AiError}
  */
 const complete = async (opts) => {
-  const { userId, system, prompt, json = false, temperature = 0.4, maxTokens = 2048, timeoutMs = 25000 } = opts;
+  const { userId, system, prompt, json = false, temperature = 0.4, maxTokens = 2048, timeoutMs = 25000, maxAttempts = Infinity } = opts;
   const byokKey = await getUserKey(userId);
 
   const attempts = [];
@@ -156,6 +156,12 @@ const complete = async (opts) => {
   if (process.env.GROQ_API_KEY) attempts.push({ provider: 'groq', model: GROQ_MODEL, byok: false });
 
   if (attempts.length === 0) throw new AiError('NO_KEY', friendly('NO_KEY'));
+  // Latency-sensitive callers (dashboard greeting) cap how many provider/model attempts they will wait for.
+  if (Number.isFinite(maxAttempts)) {
+    const gemini = attempts.find((a) => a.provider === 'gemini');
+    const groq = attempts.find((a) => a.provider === 'groq');
+    attempts.splice(0, attempts.length, ...[gemini, groq].filter(Boolean).slice(0, maxAttempts));
+  }
 
   let sawRateLimit = false;
   let lastErr = null;

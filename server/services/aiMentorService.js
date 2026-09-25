@@ -221,7 +221,7 @@ Local time of day: ${new Date().getHours()}:00.
 Return ONLY JSON:
 {"text": "prefix text ending with a space", "highlight": "exactly one word", "highlightColor": "#hex", "suffix": "punctuation or short tail", "tip": "one concrete, actionable study tip for THIS student in <= 28 words"}
 The greeting (text + highlight + suffix) must be 3-7 words. highlightColor by mood: #ef4444 intense, #34d399 growth, #fbbf24 victory, #a78bfa power, #38bdf8 clarity, #f97316 urgency. Be varied and never cheesy.`;
-    const out = await ai.complete({ userId, prompt, json: true, temperature: 1, maxTokens: 300, timeoutMs: 9000 });
+    const out = await ai.complete({ userId, prompt, json: true, temperature: 1, maxTokens: 300, timeoutMs: 6000, maxAttempts: 2 });
     const d = out.data;
     if (d && d.text && d.highlight && /^#[0-9a-f]{6}$/i.test(d.highlightColor || '')) {
       const quote = {

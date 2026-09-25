@@ -10,6 +10,7 @@
 const Problem = require('../models/Problem');
 const Skill = require('../models/Skill');
 const Submission = require('../models/Submission');
+const SkillState = require('../models/SkillState');
 const User = require('../models/User');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
@@ -109,6 +110,21 @@ const getProblemById = async (req, res, next) => {
     delete problemResponse.editorialText;
     problemResponse.testCases = maskedTestCases;
     problemResponse.userSolved = !!(await Submission.exists({ userId, problemId, isCorrect: true }));
+
+    // live community stats + the student's current mastery of this problem's skill
+    const [agg, skillState] = await Promise.all([
+      Submission.aggregate([
+        { $match: { problemId: problem._id } },
+        { $group: { _id: null, attempts: { $sum: 1 }, correct: { $sum: { $cond: ['$isCorrect', 1, 0] } }, solvers: { $addToSet: { $cond: ['$isCorrect', '$userId', null] } } } }
+      ]),
+      problem.skillId ? SkillState.findOne({ userId, skillId: problem.skillId._id || problem.skillId }).select('masteryP attempts isMastered').lean() : null
+    ]);
+    const a = agg[0];
+    problemResponse.stats = a
+      ? { attempts: a.attempts, acceptance: Math.round((a.correct / a.attempts) * 100), solvers: a.solvers.filter(Boolean).length }
+      : { attempts: 0, acceptance: null, solvers: 0 };
+    problemResponse.skillMastery = skillState ? skillState.masteryP : null;
+    problemResponse.skillAttempts = skillState ? skillState.attempts : 0;
     problemResponse.bookmarked = !!(await User.exists({ _id: userId, bookmarks: problemId }));
     problemResponse.userAttempts = userAttempts;
     problemResponse.userBestScore = userBestScore;

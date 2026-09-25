@@ -121,7 +121,7 @@ const refitAllSkillParams = async () => {
  */
 const getUserTrajectories = async (userId) => {
   const [subs, paramsMap, problemIdx] = await Promise.all([
-    Submission.find({ userId }).select('skillId problemId isCorrect createdAt hintsUsed language timeTaken').sort({ createdAt: 1 }).lean(),
+    Submission.find({ userId }).select('skillId problemId isCorrect createdAt hintsUsed language timeTaken xpAwarded isDailyChallenge').sort({ createdAt: 1 }).lean(),
     getParamsMap(),
     getProblemIndex()
   ]);
