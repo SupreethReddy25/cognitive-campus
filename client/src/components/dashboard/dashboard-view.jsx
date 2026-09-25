@@ -113,7 +113,7 @@ export function DashboardView() {
   const { skills, totals, today, rank, resume, recommendations = [] } = data;
   const next = resume ? { id: resume._id, title: resume.title, verb: 'Resume', note: `${resume.attempts} attempt${resume.attempts === 1 ? '' : 's'} so far` }
     : recommendations[0] ? { id: recommendations[0].problem._id, title: recommendations[0].problem.title, verb: 'Start', note: recommendations[0].skill.name } : null;
-  const mastered = skills.filter((s) => s.isMastered).length;
+  const mastered = skills.filter((s) => (s.currentP ?? s.masteryP) >= 0.85 && s.attempts > 0).length;
   const due = skills.filter((s) => s.reviewDue).length;
   const rawQ = quote || { text: 'Ready when you are, ', highlight: "let's go", highlightColor: '#34d399', suffix: '.' };
   // the hero already greets by name — drop a leading "Good morning, Aarav." from the AI line
@@ -167,12 +167,13 @@ export function DashboardView() {
         </header>
 
         {/* ═══ Your sky ═══ */}
-        <section className="mt-20 md:mt-28">
+        <section className="mt-20 md:mt-28 pb-6">
           <Reveal>
             <div className="mb-2 flex flex-wrap items-end justify-between gap-4">
               <h2 className="display text-[32px] text-zinc-100 md:text-[41.6px]">Your <em>sky</em></h2>
-              <div className="max-w-md text-right text-[13px] leading-relaxed text-zinc-500">
-                <span className="text-zinc-300">{mastered}</span> of {skills.length} skills burn white-hot{due > 0 && <>, <span className="text-[var(--ember)]">{due} pulsing</span> — fading, worth a refresh</>}. Hover a star. Brighter means stronger.
+              <div className="tag text-right !leading-[1.9]">
+                <span className="text-zinc-200">{mastered}</span> of {skills.length} mastered{due > 0 && <> · <span className="text-[var(--signal)]">{due} fading</span></>}
+                <br />hover a star to explore
               </div>
             </div>
           </Reveal>

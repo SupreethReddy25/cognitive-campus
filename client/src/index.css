@@ -584,3 +584,18 @@
 .marquee { animation: marquee 38s linear infinite; }
 .marquee:hover { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .twinkle, .marquee { animation: none; } }
+
+/* gentle vertical drift for stars — each one on its own phase */
+@keyframes star-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.star-float { animation: star-float 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .star-float { animation: none; } }
+
+/* cursor spotlight: a soft emerald light that follows the pointer inside a surface */
+.spot { position: relative; isolation: isolate; }
+.spot::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0;
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(52, 211, 153, 0.075), transparent 65%);
+  transition: opacity .5s cubic-bezier(.22, 1, .36, 1);
+}
+.spot:hover::before { opacity: 1; }
+.spot-strong::before { background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), rgba(52, 211, 153, 0.12), transparent 62%); }
