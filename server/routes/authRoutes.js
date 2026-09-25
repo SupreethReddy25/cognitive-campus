@@ -6,6 +6,8 @@ const { authLimiter } = require('../middleware/rateLimiter');
 const { register, login, getMe } = require('../controllers/authController');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
 
 // Strict limiter for login/register (brute-force protection)
 // nameLimiter for public read-only name endpoints
@@ -149,21 +151,31 @@ router.get('/peek', nameLimiter, async (req, res) => {
 
 /**
  * POST /api/auth/bootstrap-admin
- * Promotes the requesting authenticated user to admin role.
- * Only works if ZERO admins currently exist in the system (first-time setup).
- * Safe to leave in — becomes a no-op once the first admin is set.
+ * Promotes the requesting user to admin.
+ *
+ * Allowed when (a) the app is not running in production (dev convenience — this powers the
+ * "Become admin" button in Profile), or (b) no admin exists yet (first-time setup).
+ * Returns a fresh JWT because the role is embedded in the token.
  */
 router.post('/bootstrap-admin', authenticateToken, async (req, res) => {
   try {
-    const updated = await User.findByIdAndUpdate(
-      req.user.userId,
-      { role: 'admin' },
-      { new: true, select: 'name email role' }
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    if (process.env.NODE_ENV === 'production' && adminCount > 0) {
+      return res.status(403).json({ success: false, message: 'An admin already exists. Ask them to promote you from the admin panel.' });
+    }
+    const updated = await User.findByIdAndUpdate(req.user.userId, { role: 'admin' }, { new: true, select: 'name email role xp level streak' });
+    if (!updated) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const token = jwt.sign(
+      { userId: updated._id, email: updated.email, role: updated.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
-    return res.json({ success: true, data: updated, message: 'You are now an admin.' });
+    logger.info(`User ${updated.email} promoted to admin via bootstrap`);
+    return res.json({ success: true, data: { user: updated, token }, message: 'You are now an admin.' });
   } catch (err) {
-    console.error('[Bootstrap Admin] Error:', err);
-    return res.status(500).json({ success: false, error: err.message || 'Server error' });
+    logger.error('Bootstrap admin failed', { error: err.message });
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 

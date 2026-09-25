@@ -6,7 +6,7 @@ const optionalAuth = require('../middleware/optionalAuth');
 const router = express.Router();
 
 router.route('/').get(optionalAuth, getSheets);
-router.route('/:slug').get(getSheet);
+router.route('/:slug').get(optionalAuth, getSheet);
 router.route('/:slug/progress').post(authenticateToken, updateProgress);
 
 module.exports = router;

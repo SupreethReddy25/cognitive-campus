@@ -15,6 +15,7 @@ router.get('/:slug', getCollege);
 
 // Protected — requires auth so BKT data can be merged into prep priorities
 router.get('/:slug/dashboard', authenticateToken, getCollegeDashboard);
+router.get('/:slug/insights', authenticateToken, require('../controllers/collegeController').getCollegeInsightsHandler);
 router.get('/:slug/companies/:companySlug', authenticateToken, getCollegeCompanyIntel);
 
 module.exports = router;

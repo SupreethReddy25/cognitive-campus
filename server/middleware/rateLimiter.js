@@ -14,7 +14,7 @@ const rateLimit = require('express-rate-limit');
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
   message: { success: false, message: 'Too many auth attempts. Try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -26,7 +26,7 @@ const authLimiter = rateLimit({
  */
 const submissionLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 30,
+  max: 120,
   message: { success: false, message: 'Submission rate limit reached. Slow down.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -44,4 +44,15 @@ const generalLimiter = rateLimit({
   legacyHeaders: false
 });
 
-module.exports = { authLimiter, submissionLimiter, generalLimiter };
+/**
+ * AI limiter — protects the (metered) LLM endpoints: 12 requests per minute per IP.
+ */
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 12,
+  message: { success: false, message: 'Too many AI requests. Give it a minute.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+module.exports = { authLimiter, submissionLimiter, generalLimiter, aiLimiter };

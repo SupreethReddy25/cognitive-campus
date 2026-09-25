@@ -166,4 +166,8 @@ const seedSkills = async () => {
   }
 };
 
-seedSkills();
+if (require.main === module) {
+  seedSkills();
+}
+
+module.exports = { SKILLS };

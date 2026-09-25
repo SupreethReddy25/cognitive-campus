@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const authenticateToken = require('../middleware/auth');
 const { submissionLimiter } = require('../middleware/rateLimiter');
-const { createSubmission, getHistory } = require('../controllers/submissionController');
+const { createSubmission, getHistory, getRuntimes } = require('../controllers/submissionController');
 
 const router = express.Router();
 
@@ -23,10 +23,17 @@ router.post(
       .withMessage('Code is required')
       .isString()
       .withMessage('Code must be a string'),
+    body('language')
+      .optional()
+      .isIn(['javascript', 'python', 'java', 'cpp'])
+      .withMessage('Unsupported language'),
     validate
   ],
   createSubmission
 );
+
+// GET /api/submissions/runtimes — which languages can execute (piston / local runner)
+router.get('/runtimes', authenticateToken, getRuntimes);
 
 // GET /api/submissions/history — Get paginated submission history (all problems)
 router.get('/history', authenticateToken, getHistory);

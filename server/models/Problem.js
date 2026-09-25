@@ -37,6 +37,8 @@ const problemSchema = new mongoose.Schema(
         {
           input: { type: String },
           expectedOutput: { type: String },
+          /** other accepted outputs (problems with several valid answers) */
+          alternatives: [{ type: String }],
           isHidden: { type: Boolean, default: false }
         }
       ],
@@ -48,6 +50,17 @@ const problemSchema = new mongoose.Schema(
     starterCode: {
       type: String,
       default: null
+    },
+    /**
+     * How outputs are compared:
+     *   exact      trimmed string equality (default)
+     *   unordered  JSON compared as multisets at every array level (order of results irrelevant)
+     *   numeric    numbers compared with 1e-5 tolerance
+     */
+    checker: {
+      type: String,
+      enum: ['exact', 'unordered', 'numeric'],
+      default: 'exact'
     },
     starterCodeMap: {
       javascript: { type: String },
@@ -114,6 +127,20 @@ const problemSchema = new mongoose.Schema(
       vote: { type: String, enum: ['up', 'down'] }
     }],
     editorialText: { type: String, default: null },
+    /** Structured editorial revealed after a solve (or 3 failed attempts). */
+    editorial: {
+      approach: { type: String, default: null },
+      intuition: { type: String, default: null },
+      steps: [String],
+      timeComplexity: { type: String, default: null },
+      spaceComplexity: { type: String, default: null },
+      pitfalls: [String],
+      code: {
+        javascript: { type: String },
+        python: { type: String }
+      }
+    },
+    tags: [{ type: String, trim: true }],
     frequency: { type: Number, default: 0 }
   },
   { timestamps: true }

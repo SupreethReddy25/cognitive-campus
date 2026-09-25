@@ -101,6 +101,24 @@ const interviewExperienceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }],
+    downvotes: {
+      type: Number,
+      default: 0
+    },
+    downvotedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    qualityScore: {
+      type: Number,
+      default: null
+    },
+    /** stable natural key for curated/seeded records so re-seeding upserts instead of duplicating */
+    seedKey: {
+      type: String,
+      index: true,
+      sparse: true
+    },
     source: {
       type: String,
       enum: ['self-reported', 'community', 'curated', 'gfg-archive'],

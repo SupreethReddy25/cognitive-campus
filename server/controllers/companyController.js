@@ -1,355 +1,189 @@
+/**
+ * Company Controller — the Intel Hub's data layer.
+ *
+ * @module companyController
+ */
+
 const Company = require('../models/Company');
 const InterviewExperience = require('../models/InterviewExperience');
 const Problem = require('../models/Problem');
-const axios = require('axios');
+const Skill = require('../models/Skill');
+const Submission = require('../models/Submission');
+const companyIntel = require('../services/companyIntelService');
+const prepPlan = require('../services/prepPlanService');
+const logger = require('../utils/logger');
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// @desc    Get all companies
-// @route   GET /api/companies
-// @access  Public
+/** Parse "30–40 LPA" style strings into [min, max]. */
+const parseCtc = (str) => {
+  const nums = String(str || '').match(/\d+(?:\.\d+)?/g);
+  if (!nums) return [null, null];
+  const v = nums.map(Number);
+  return [Math.min(...v), Math.max(...v)];
+};
+
+// @desc    List companies with community stats, filters and trending
+// @route   GET /api/companies?q=&tier=&minCtc=&maxCtc=&minExperiences=&sort=
 exports.getCompanies = async (req, res) => {
   try {
-    const companies = await Company.find().sort('name');
-    res.status(200).json({ success: true, count: companies.length, data: companies });
+    const { q, tier, minCtc, maxCtc, minExperiences, sort = 'name' } = req.query;
+    const filter = {};
+    if (q) filter.$or = [{ name: { $regex: escapeRegex(q), $options: 'i' } }, { roles: { $regex: escapeRegex(q), $options: 'i' } }];
+    if (tier) filter.tier = { $in: String(tier).split(',') };
+
+    const [companies, statRows] = await Promise.all([
+      Company.find(filter).lean(),
+      InterviewExperience.aggregate([
+        { $match: { status: 'Published' } },
+        {
+          $group: {
+            _id: '$companyId',
+            experienceCount: { $sum: 1 },
+            offers: { $sum: { $cond: [{ $eq: ['$offerReceived', 'Yes'] }, 1, 0] } },
+            known: { $sum: { $cond: [{ $ne: ['$offerReceived', 'Pending'] }, 1, 0] } },
+            lastAt: { $max: '$createdAt' },
+            recent: { $sum: { $cond: [{ $gte: ['$createdAt', new Date(Date.now() - 45 * 86400000)] }, 1, 0] } }
+          }
+        }
+      ])
+    ]);
+    const stats = new Map(statRows.map((r) => [String(r._id), r]));
+
+    let data = companies.map((c) => {
+      const s = stats.get(String(c._id));
+      const [min, max] = c.ctcMin != null ? [c.ctcMin, c.ctcMax] : parseCtc(c.avgCTC);
+      return {
+        ...c,
+        ctcMin: min,
+        ctcMax: max,
+        experienceCount: s?.experienceCount || 0,
+        recentExperiences: s?.recent || 0,
+        offerRate: s && s.known >= 3 ? Math.round((s.offers / s.known) * 100) : null,
+        lastReportAt: s?.lastAt || null
+      };
+    });
+
+    if (minCtc) data = data.filter((c) => (c.ctcMax ?? 0) >= Number(minCtc));
+    if (maxCtc) data = data.filter((c) => (c.ctcMin ?? Infinity) <= Number(maxCtc));
+    if (minExperiences) data = data.filter((c) => c.experienceCount >= Number(minExperiences));
+
+    const trending = {
+      mostViewed: [...data].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 5).map((c) => c._id),
+      mostSubmitted: [...data].sort((a, b) => b.recentExperiences - a.recentExperiences || b.experienceCount - a.experienceCount).slice(0, 5).map((c) => c._id)
+    };
+
+    const sorters = {
+      name: (a, b) => a.name.localeCompare(b.name),
+      experiences: (a, b) => b.experienceCount - a.experienceCount,
+      ctc: (a, b) => (b.ctcMax ?? 0) - (a.ctcMax ?? 0),
+      trending: (a, b) => b.recentExperiences - a.recentExperiences || (b.viewCount || 0) - (a.viewCount || 0)
+    };
+    data.sort(sorters[sort] || sorters.name);
+
+    res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+      meta: { trending, tiers: ['FAANG', 'Product', 'Finance', 'Service', 'Startup', 'Other'], totalExperiences: statRows.reduce((n, r) => n + r.experienceCount, 0) }
+    });
   } catch (error) {
+    logger.error('getCompanies failed', { error: error.message });
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
-// @desc    Get single company by slug
+// @desc    Get single company by slug (counts a view)
 // @route   GET /api/companies/:slug
-// @access  Public
 exports.getCompany = async (req, res) => {
   try {
-    const company = await Company.findOne({ slug: req.params.slug });
-    if (!company) {
-      return res.status(404).json({ success: false, error: 'Company not found' });
-    }
-    res.status(200).json({ success: true, data: company });
+    const company = await Company.findOneAndUpdate({ slug: req.params.slug }, { $inc: { viewCount: 1 } }, { new: true }).lean();
+    if (!company) return res.status(404).json({ success: false, error: 'Company not found' });
+    const [min, max] = company.ctcMin != null ? [company.ctcMin, company.ctcMax] : parseCtc(company.avgCTC);
+    res.status(200).json({ success: true, data: { ...company, ctcMin: min, ctcMax: max } });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
-// @desc    Get pre-aggregated stats for a company (offer rate, top topics, etc.)
+// @desc    Statistical dossier for a company
 // @route   GET /api/companies/:slug/stats
-// @access  Public
 exports.getCompanyStats = async (req, res) => {
   try {
-    const company = await Company.findOne({ slug: req.params.slug });
-    if (!company) {
-      return res.status(404).json({ success: false, error: 'Company not found' });
-    }
+    const company = await Company.findOne({ slug: req.params.slug }).select('_id name').lean();
+    if (!company) return res.status(404).json({ success: false, error: 'Company not found' });
 
-    const experiences = await InterviewExperience.find({
-      companyId: company._id,
-      status: 'Published'
-    });
+    const s = await companyIntel.getCompanyIntel(company._id);
 
-    const total = experiences.length;
-    const offerYes = experiences.filter(e => e.offerReceived === 'Yes').length;
-    const offerRate = total ? Math.round((offerYes / total) * 100) : null;
-
-    // Topic frequency across all rounds
-    const topicMap = {};
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        round.topics?.forEach(t => { topicMap[t] = (topicMap[t] || 0) + 1; });
-        round.questions?.forEach(q => {
-          q.topicTags?.forEach(t => { topicMap[t] = (topicMap[t] || 0) + 0.5; });
-        });
-      });
-    });
-    const topTopics = Object.entries(topicMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([topic, count]) => ({ topic, count: Math.round(count) }));
-
-    // Question type distribution
-    const qTypeMap = {};
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        round.questions?.forEach(q => {
-          if (q.questionType) qTypeMap[q.questionType] = (qTypeMap[q.questionType] || 0) + 1;
-        });
-      });
-    });
-
-    // Round type frequency
-    const roundTypeMap = {};
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        if (round.type) roundTypeMap[round.type] = (roundTypeMap[round.type] || 0) + 1;
-      });
-    });
-
-    // Difficulty distribution
-    const diffMap = {};
-    experiences.forEach(exp => {
-      if (exp.difficulty) diffMap[exp.difficulty] = (diffMap[exp.difficulty] || 0) + 1;
-    });
-
-    // Resource frequency
-    const resourceMap = {};
-    experiences.forEach(exp => {
-      const raw = typeof exp.resourcesUsed === 'string' ? exp.resourcesUsed : '';
-      raw.split(',').map(r => r.trim()).filter(Boolean).forEach(r => {
-        resourceMap[r] = (resourceMap[r] || 0) + 1;
-      });
-    });
-    const topResources = Object.entries(resourceMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([resource, count]) => ({ resource, count }));
-
+    const asMap = (arr) => Object.fromEntries(arr.map((x) => [x.label, x.count]));
     res.status(200).json({
       success: true,
       data: {
-        totalReports: total,
-        offerRate,
-        offerYes,
-        topTopics,
-        questionTypeDistribution: qTypeMap,
-        roundTypeDistribution: roundTypeMap,
-        difficultyDistribution: diffMap,
-        topResources,
+        ...s,
+        // legacy map-shaped fields
+        questionTypeDistribution: asMap(s.questionTypeDistribution),
+        roundTypeDistribution: asMap(s.roundTypeDistribution),
+        difficultyDistribution: asMap(s.difficultyDistribution)
       }
     });
   } catch (error) {
-    console.error('getCompanyStats error:', error.message);
+    logger.error('getCompanyStats failed', { error: error.message });
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
-// @desc    Get problems related to a company based on community-reported topics
+// @desc    Platform problems that match the company's reported topics
 // @route   GET /api/companies/:slug/related-problems
-// @access  Public
 exports.getRelatedProblems = async (req, res) => {
   try {
-    const company = await Company.findOne({ slug: req.params.slug });
-    if (!company) {
-      return res.status(404).json({ success: false, error: 'Company not found' });
+    const company = await Company.findOne({ slug: req.params.slug }).lean();
+    if (!company) return res.status(404).json({ success: false, error: 'Company not found' });
+
+    const stats = await companyIntel.getCompanyIntel(company._id);
+    const skillNames = [...new Set(stats.topTopics.filter((t) => t.skill).map((t) => t.skill))];
+    const skills = skillNames.length ? await Skill.find({ name: { $in: skillNames } }).select('_id name').lean() : [];
+    const skillFreq = new Map(stats.topTopics.filter((t) => t.skill).map((t) => [t.skill, t.pct]));
+
+    const problems = await Problem.find({
+      isActive: true,
+      status: 'approved',
+      $or: [{ skillId: { $in: skills.map((s) => s._id) } }, { companies: { $regex: `^${escapeRegex(company.name)}$`, $options: 'i' } }]
+    })
+      .select('_id title difficulty skillId companies')
+      .populate('skillId', 'name')
+      .lean();
+
+    let solved = new Set();
+    if (req.user?.userId) {
+      solved = new Set((await Submission.find({ userId: req.user.userId, isCorrect: true }).select('problemId').lean()).map((s) => String(s.problemId)));
     }
+    const diffRank = { easy: 0, medium: 1, hard: 2 };
+    const ranked = problems
+      .map((p) => ({
+        ...p,
+        askedHere: (p.companies || []).some((c) => c.toLowerCase() === company.name.toLowerCase()),
+        relevance: (skillFreq.get(p.skillId?.name) || 0) + ((p.companies || []).some((c) => c.toLowerCase() === company.name.toLowerCase()) ? 50 : 0),
+        solved: solved.has(String(p._id))
+      }))
+      .sort((a, b) => Number(a.solved) - Number(b.solved) || b.relevance - a.relevance || diffRank[a.difficulty] - diffRank[b.difficulty])
+      .slice(0, 12);
 
-    // Gather all topic tags from community experiences
-    const experiences = await InterviewExperience.find({
-      companyId: company._id,
-      status: 'Published'
-    });
-
-    const topicFreq = {};
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        round.topics?.forEach(t => { topicFreq[t] = (topicFreq[t] || 0) + 2; });
-        round.questions?.forEach(q => {
-          q.topicTags?.forEach(t => { topicFreq[t] = (topicFreq[t] || 0) + 1; });
-        });
-      });
-    });
-
-    const topTopics = Object.entries(topicFreq)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([t]) => t);
-
-    // Also include topics from the company's known process
-    const companyTopics = [];
-    company.interviewProcess?.rounds?.forEach(r => {
-      if (r.description) {
-        // Basic keyword extraction from descriptions
-        ['DP', 'Graph', 'Tree', 'Array', 'String', 'Stack', 'Queue', 'Heap',
-         'Binary Search', 'Recursion', 'Backtracking', 'Greedy', 'LinkedList'].forEach(kw => {
-          if (r.description.toLowerCase().includes(kw.toLowerCase())) companyTopics.push(kw);
-        });
-      }
-    });
-
-    const allTopics = [...new Set([...topTopics, ...companyTopics])].slice(0, 10);
-
-    let problems = [];
-    if (allTopics.length > 0) {
-      // Find skills whose names match the community-reported topics
-      const Skill = require('../models/Skill');
-      const matchedSkills = await Skill.find({
-        name: { $in: allTopics.map(t => new RegExp(t, 'i')) }
-      }).select('_id').lean();
-      const skillIds = matchedSkills.map(s => s._id);
-
-      problems = await Problem.find({
-        $or: [
-          { skillId: { $in: skillIds } },
-          { title: { $in: allTopics.map(t => new RegExp(t, 'i')) } },
-          { company: { $in: allTopics.map(t => new RegExp(t, 'i')) } },
-        ],
-        status: 'approved',
-        isActive: true
-      })
-        .select('_id title difficulty skillId company')
-        .populate('skillId', 'name')
-        .limit(12)
-        .lean();
-    }
-
-    // If we found fewer than 5, supplement with general problems of matching difficulty
-    if (problems.length < 5) {
-      const diff = company.interviewProcess?.difficulty;
-      const diffMap = { Hard: ['hard'], Medium: ['medium', 'hard'], Easy: ['easy', 'medium'] };
-      const diffs = diffMap[diff] || ['medium', 'hard'];
-      const extra = await Problem.find({
-        _id: { $nin: problems.map(p => p._id) },
-        difficulty: { $in: diffs },
-        status: 'approved',
-        isActive: true
-      })
-        .select('_id title difficulty skillId')
-        .populate('skillId', 'name')
-        .limit(12 - problems.length)
-        .lean();
-      problems = [...problems, ...extra];
-    }
-
-    res.status(200).json({
-      success: true,
-      count: problems.length,
-      matchedTopics: allTopics,
-      data: problems
-    });
+    res.status(200).json({ success: true, count: ranked.length, matchedTopics: stats.topTopics.slice(0, 8).map((t) => t.topic), data: ranked });
   } catch (error) {
-    console.error('getRelatedProblems error:', error.message);
+    logger.error('getRelatedProblems failed', { error: error.message });
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
-// @desc    Generate a prep plan using AI — enhanced with real community data
-// @route   POST /api/companies/:slug/prep-plan
-// @access  Public
+// @desc    Generate a personalised prep plan (AI narrative over a deterministic, data-driven skeleton)
+// @route   POST /api/companies/:slug/prep-plan   body: { days }
 exports.generatePrepPlan = async (req, res) => {
   try {
-    const { days } = req.body;
-    const company = await Company.findOne({ slug: req.params.slug });
-    if (!company) {
-      return res.status(404).json({ success: false, error: 'Company not found' });
-    }
-
-    // Pull real community data to enrich the prompt
-    const experiences = await InterviewExperience.find({
-      companyId: company._id,
-      status: 'Published'
-    });
-
-    const numDays = days || 30;
-    const rounds = company.interviewProcess?.rounds?.map(r => r.name).join(', ') || 'Unknown';
-    const difficulty = company.interviewProcess?.difficulty || 'Unknown';
-    const tips = company.interviewProcess?.tipsSummary || '';
-
-    // Aggregate community intelligence
-    const topicFreq = {};
-    const allQuestions = [];
-    const allResources = {};
-
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        round.topics?.forEach(t => { topicFreq[t] = (topicFreq[t] || 0) + 1; });
-        round.questions?.forEach(q => {
-          if (q.text?.trim() && q.questionType === 'DSA') allQuestions.push(q.text);
-        });
-      });
-      const raw = typeof exp.resourcesUsed === 'string' ? exp.resourcesUsed : '';
-      raw.split(',').map(r => r.trim()).filter(Boolean).forEach(r => {
-        allResources[r] = (allResources[r] || 0) + 1;
-      });
-    });
-
-    const topTopics = Object.entries(topicFreq)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([t, c]) => `${t} (mentioned ${c}x)`);
-
-    const topQuestions = allQuestions.slice(0, 10);
-
-    const topResources = Object.entries(allResources)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([r, c]) => `${r} (used by ${c} candidates)`);
-
-    const communitySection = experiences.length > 0 ? `
-
-Community Intelligence (${experiences.length} real reports):
-- Top topics asked: ${topTopics.join(', ') || 'N/A'}
-- Real questions from interviews: ${topQuestions.slice(0, 5).map(q => `"${q}"`).join('; ') || 'N/A'}
-- Resources candidates actually used: ${topResources.join(', ') || 'N/A'}
-- Offer rate from community: ${Math.round((experiences.filter(e => e.offerReceived === 'Yes').length / experiences.length) * 100)}%
-` : '';
-
-    // Fetch user's BKT data to personalize the plan
-    const userId = req.user.userId;
-    const SkillState = require('../models/SkillState');
-    const userSkills = await SkillState.find({ userId }).populate('skillId', 'name').lean();
-    
-    let bktSection = '';
-    if (userSkills.length > 0) {
-      const weaknesses = userSkills
-        .filter(s => s.masteryP < 0.5)
-        .sort((a, b) => a.masteryP - b.masteryP)
-        .map(s => `${s.skillId?.name || 'Unknown'} (${Math.round(s.masteryP * 100)}% mastery)`);
-        
-      const strengths = userSkills
-        .filter(s => s.masteryP >= 0.8)
-        .sort((a, b) => b.masteryP - a.masteryP)
-        .map(s => `${s.skillId?.name || 'Unknown'} (${Math.round(s.masteryP * 100)}% mastery)`);
-        
-      bktSection = `
-User's Skill Profile (Bayesian Knowledge Tracing):
-- Weaknesses (Needs Practice): ${weaknesses.slice(0, 5).join(', ') || 'None identified yet'}
-- Strengths (Mastered): ${strengths.slice(0, 5).join(', ') || 'None identified yet'}
-`;
-    }
-
-    const prompt = `Act as an expert technical interviewer and career coach.
-Create a highly structured, day-by-day ${numDays}-day preparation plan for a software engineering interview at ${company.name}.
-
-Company Context:
-- Tier: ${company.tier}
-- Difficulty: ${difficulty}
-- Interview rounds: ${rounds}
-- Official tips: ${tips}
-${communitySection}
-${bktSection}
-
-Format your response in clean Markdown with day ranges (e.g. "Days 1-5: ..."). 
-Make the plan hyper-specific to ${company.name}'s patterns AND the user's specific skill weaknesses.
-${experiences.length > 0 ? `Prioritize the community-reported topics: ${topTopics.slice(0, 5).join(', ')}.` : ''}
-${bktSection ? `Crucially, allocate extra time in the early days to cover the user's documented Weaknesses, while spending less time on their Strengths.` : ''}
-Include: what to study each week, specific problem types to practice, behavioral prep (if relevant), and a final week mock interview schedule.`;
-
-    const response = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3
-      },
-      {
-        headers: {
-          'Authorization': 'Bearer ' + GROQ_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const plan = response.data.choices[0].message.content;
-    let returnedWeaknesses = [];
-    if (userSkills.length > 0) {
-      returnedWeaknesses = userSkills
-        .filter(s => s.masteryP < 0.5)
-        .sort((a, b) => a.masteryP - b.masteryP)
-        .map(s => ({ name: s.skillId?.name, masteryP: s.masteryP }));
-    }
-
-    res.status(200).json({ success: true, data: { plan, weaknesses: returnedWeaknesses } });
+    const plan = await prepPlan.generatePrepPlan({ userId: req.user.userId, slug: req.params.slug, days: req.body?.days });
+    if (!plan) return res.status(404).json({ success: false, error: 'Company not found' });
+    res.status(200).json({ success: true, data: plan });
   } catch (error) {
-    console.error('Prep plan generation failed:', error.response?.data || error.message);
-    res.status(500).json({ success: false, error: 'Failed to generate prep plan' });
+    logger.error('generatePrepPlan failed', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, error: 'Could not build a prep plan right now.' });
   }
 };

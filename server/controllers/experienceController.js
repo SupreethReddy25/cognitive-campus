@@ -1,25 +1,55 @@
+/**
+ * Experience Controller — community interview experiences.
+ *
+ * @module experienceController
+ */
+
 const InterviewExperience = require('../models/InterviewExperience');
 const Company = require('../models/Company');
+const College = require('../models/College');
 const User = require('../models/User');
-const axios = require('axios');
-const mongoose = require('mongoose');
+const experienceParser = require('../services/experienceParser');
+const companyIntel = require('../services/companyIntelService');
+const achievementService = require('../services/achievementService');
+const logger = require('../utils/logger');
 
-// @desc    Get all experiences for a company
-// @route   GET /api/companies/:slug/experiences
-// @access  Public
+const DIFFICULTIES = ['Easy', 'Medium', 'Hard', 'Very Hard', 'Smooth', 'Challenging', 'Grueling', 'Brain-melting'];
+
+/** Public shape of an experience — never leaks userId/upvotedBy. */
+const present = (exp, viewerId) => {
+  const uid = viewerId ? String(viewerId) : null;
+  const up = (exp.upvotedBy || []).some((id) => String(id) === uid);
+  const down = (exp.downvotedBy || []).some((id) => String(id) === uid);
+  const { upvotedBy, downvotedBy, userId, ...rest } = exp;
+  return {
+    ...rest,
+    author: exp.isAnonymous ? null : userId?.name || null,
+    upvotes: exp.upvotes || 0,
+    downvotes: exp.downvotes || 0,
+    userVote: up ? 'up' : down ? 'down' : null,
+    isMine: !!(uid && userId && String(userId._id || userId) === uid)
+  };
+};
+
+// @desc    Get all published experiences for a company (with filters)
+// @route   GET /api/companies/:slug/experiences?role=&year=&offer=&sort=
 exports.getCompanyExperiences = async (req, res) => {
   try {
     const company = await Company.findOne({ slug: req.params.slug });
-    if (!company) {
-      return res.status(404).json({ success: false, error: 'Company not found' });
-    }
+    if (!company) return res.status(404).json({ success: false, error: 'Company not found' });
 
-    const experiences = await InterviewExperience.find({ companyId: company._id, status: 'Published' })
-      .populate('userId', 'name')
-      .sort('-createdAt');
+    const { role, year, offer, sort = 'recent' } = req.query;
+    const filter = { companyId: company._id, status: 'Published' };
+    if (role) filter.role = role;
+    if (year) filter.year = Number(year);
+    if (offer) filter.offerReceived = offer;
 
-    res.status(200).json({ success: true, count: experiences.length, data: experiences });
+    const sortSpec = sort === 'top' ? { upvotes: -1, createdAt: -1 } : sort === 'quality' ? { qualityScore: -1, createdAt: -1 } : { year: -1, createdAt: -1 };
+    const experiences = await InterviewExperience.find(filter).populate('userId', 'name').populate('collegeId', 'name shortName').sort(sortSpec).lean();
+
+    res.status(200).json({ success: true, count: experiences.length, data: experiences.map((e) => present(e, req.user?.userId)) });
   } catch (error) {
+    logger.error('getCompanyExperiences failed', { error: error.message });
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
@@ -29,160 +59,169 @@ exports.getCompanyExperiences = async (req, res) => {
 // @access  Private
 exports.createExperience = async (req, res) => {
   try {
-    const experienceData = { ...req.body };
-    
-    // Attach userId if the token is present and user didn't choose anonymous
-    if (req.user && !experienceData.isAnonymous) {
-      experienceData.userId = req.user.userId;
-    }
+    const b = req.body || {};
+    const userId = req.user.userId;
 
-    // Attach collegeId: prefer explicit form value, then fall back to user profile
-    if (!experienceData.collegeId && req.user) {
-      const userDoc = await User.findById(req.user.userId).select('collegeId').lean();
-      if (userDoc?.collegeId) {
-        experienceData.collegeId = userDoc.collegeId;
+    if (!b.companyId || !b.role || !b.offerReceived) {
+      return res.status(400).json({ success: false, error: 'companyId, role and offerReceived are required' });
+    }
+    const company = await Company.findById(b.companyId).select('_id name slug');
+    if (!company) return res.status(404).json({ success: false, error: 'Company not found' });
+
+    const now = new Date();
+    const doc = {
+      companyId: company._id,
+      userId, // always stored for moderation; hidden from the public via isAnonymous
+      isAnonymous: !!b.isAnonymous,
+      role: String(b.role).trim().slice(0, 60),
+      year: Number(b.year) || now.getFullYear(),
+      month: String(b.month || now.toLocaleString('en-US', { month: 'long' })),
+      offerReceived: ['Yes', 'No', 'Pending'].includes(b.offerReceived) ? b.offerReceived : 'Pending',
+      compensation: b.compensation && typeof b.compensation === 'object' ? { base: String(b.compensation.base || ''), bonus: String(b.compensation.bonus || ''), stock: String(b.compensation.stock || '') } : undefined,
+      timeline: b.timeline ? String(b.timeline).slice(0, 200) : undefined,
+      difficulty: DIFFICULTIES.includes(b.difficulty) ? b.difficulty : undefined,
+      experienceRating: ['Positive', 'Neutral', 'Negative'].includes(b.experienceRating) ? b.experienceRating : undefined,
+      applicationSource: b.applicationSource ? String(b.applicationSource).slice(0, 80) : undefined,
+      college: b.college ? String(b.college).slice(0, 120) : undefined,
+      cgpa: b.cgpa ? String(b.cgpa).slice(0, 10) : undefined,
+      rounds: (Array.isArray(b.rounds) ? b.rounds : []).slice(0, 10).map((r) => ({
+        type: String(r.type || 'Technical'),
+        duration: r.duration ? String(r.duration) : undefined,
+        vibe: r.vibe ? String(r.vibe) : undefined,
+        tips: r.tips || r.notes ? String(r.tips || r.notes).slice(0, 1500) : undefined,
+        topics: (Array.isArray(r.topics) ? r.topics : []).map(String).slice(0, 12),
+        questions: (Array.isArray(r.questions) ? r.questions : []).slice(0, 12).map((q) => ({
+          text: String(q.text || '').slice(0, 1200),
+          questionType: q.questionType ? String(q.questionType) : undefined,
+          topicTags: (Array.isArray(q.topicTags) ? q.topicTags : []).map(String).slice(0, 6)
+        }))
+      })),
+      overallTips: b.overallTips ? String(b.overallTips).slice(0, 4000) : undefined,
+      resourcesUsed: b.resourcesUsed ? String(b.resourcesUsed).slice(0, 600) : undefined,
+      source: 'self-reported'
+    };
+
+    // college: explicit choice → profile fallback
+    let collegeId = b.collegeId || null;
+    if (!collegeId) {
+      const u = await User.findById(userId).select('collegeId').lean();
+      collegeId = u?.collegeId || null;
+    }
+    if (collegeId && (await College.exists({ _id: collegeId }))) doc.collegeId = collegeId;
+
+    const quality = experienceParser.scoreQuality(doc);
+    doc.qualityScore = quality.score;
+    // very thin submissions wait for a moderator instead of polluting the stats
+    doc.status = quality.score < 25 ? 'Draft' : 'Published';
+
+    const before = await companyIntel.getCompanyIntel(company._id);
+    const experience = await InterviewExperience.create(doc);
+
+    // XP scales with quality: 60 base + up to 140
+    const xpEarned = doc.status === 'Published' ? 60 + Math.round(quality.score * 1.4) : 20;
+    const user = await User.findById(userId);
+    user.xp += xpEarned;
+    user.level = Math.floor(user.xp / 100) + 1;
+    await user.save();
+    const achievements = await achievementService.evaluate(userId);
+
+    // how does this submission move the community knowledge base?
+    const after = doc.status === 'Published' ? await companyIntel.getCompanyIntel(company._id) : before;
+    const beforeTopics = new Set(before.topTopics.map((t) => t.topic));
+    const newTopics = after.topTopics.filter((t) => !beforeTopics.has(t.topic)).map((t) => t.topic);
+    const questionCount = doc.rounds.reduce((n, r) => n + (r.questions?.length || 0), 0);
+
+    res.status(201).json({
+      success: true,
+      data: experience,
+      impact: {
+        xpEarned,
+        status: doc.status,
+        quality,
+        company: { name: company.name, slug: company.slug },
+        companyReportsBefore: before.totalReports,
+        companyReportsAfter: after.totalReports,
+        dataConfidenceBefore: before.dataConfidence,
+        dataConfidenceAfter: after.dataConfidence,
+        questionsContributed: questionCount,
+        roundsContributed: doc.rounds.length,
+        newTopics,
+        offerRate: after.offerRate,
+        newLevel: user.level,
+        achievements
       }
-    }
-
-    // Validate collegeId if provided
-    if (experienceData.collegeId) {
-      const College = require('../models/College');
-      const college = await College.findById(experienceData.collegeId).lean();
-      if (!college) {
-        delete experienceData.collegeId; // Don't reject — just drop invalid value silently
-      }
-    }
-
-    experienceData.status = 'Published';
-    experienceData.source = experienceData.source || 'self-reported';
-
-    const experience = await InterviewExperience.create(experienceData);
-
-    // Award 200 XP for contributing intel
-    if (req.user) {
-      await User.findByIdAndUpdate(req.user.userId, {
-        $inc: { xp: 200 }
-      });
-    }
-
-    res.status(201).json({ success: true, data: experience });
+    });
   } catch (error) {
-    console.error('createExperience error:', error.message);
-    res.status(500).json({ success: false, error: 'Server Error' });
+    logger.error('createExperience failed', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, error: error.name === 'ValidationError' ? error.message : 'Server Error' });
   }
 };
 
-
-// @desc    Toggle upvote on experience (per-user, idempotent)
+// @desc    Toggle upvote (legacy route — kept for older clients)
 // @route   POST /api/experiences/:id/upvote
-// @access  Private
 exports.upvoteExperience = async (req, res) => {
+  req.body = { ...(req.body || {}), vote: 'up' };
+  return exports.voteExperience(req, res);
+};
+
+// @desc    Up/down vote an experience (toggle; switching flips the vote)
+// @route   POST /api/experiences/:id/vote   body: { vote: 'up' | 'down' }
+exports.voteExperience = async (req, res) => {
   try {
-    const userId = req.user?.userId;
-    const experience = await InterviewExperience.findById(req.params.id);
-    if (!experience) {
-      return res.status(404).json({ success: false, error: 'Experience not found' });
-    }
+    const userId = String(req.user.userId);
+    const vote = req.body?.vote === 'down' ? 'down' : 'up';
+    const exp = await InterviewExperience.findById(req.params.id);
+    if (!exp) return res.status(404).json({ success: false, error: 'Experience not found' });
 
-    if (userId) {
-      const alreadyUpvoted = experience.upvotedBy.some(id => id.toString() === userId.toString());
-      if (alreadyUpvoted) {
-        // Toggle off
-        experience.upvotedBy = experience.upvotedBy.filter(id => id.toString() !== userId.toString());
-        experience.upvotes = Math.max(0, experience.upvotes - 1);
-      } else {
-        // Toggle on
-        experience.upvotedBy.push(userId);
-        experience.upvotes += 1;
+    const hasUp = exp.upvotedBy.some((id) => String(id) === userId);
+    const hasDown = exp.downvotedBy.some((id) => String(id) === userId);
+
+    if (vote === 'up') {
+      if (hasUp) { exp.upvotedBy = exp.upvotedBy.filter((id) => String(id) !== userId); }
+      else {
+        exp.upvotedBy.push(userId);
+        if (hasDown) exp.downvotedBy = exp.downvotedBy.filter((id) => String(id) !== userId);
       }
+    } else if (hasDown) {
+      exp.downvotedBy = exp.downvotedBy.filter((id) => String(id) !== userId);
     } else {
-      // Anonymous upvote (no dedup)
-      experience.upvotes += 1;
+      exp.downvotedBy.push(userId);
+      if (hasUp) exp.upvotedBy = exp.upvotedBy.filter((id) => String(id) !== userId);
     }
+    exp.upvotes = exp.upvotedBy.length;
+    exp.downvotes = exp.downvotedBy.length;
+    await exp.save();
 
-    await experience.save();
-    const userUpvoted = userId ? experience.upvotedBy.some(id => id.toString() === userId.toString()) : false;
-    res.status(200).json({ success: true, data: { upvotes: experience.upvotes, userUpvoted } });
+    const userVote = exp.upvotedBy.some((id) => String(id) === userId) ? 'up' : exp.downvotedBy.some((id) => String(id) === userId) ? 'down' : null;
+    res.status(200).json({ success: true, data: { upvotes: exp.upvotes, downvotes: exp.downvotes, userVote, userUpvoted: userVote === 'up' } });
   } catch (error) {
+    logger.error('voteExperience failed', { error: error.message });
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
-// @desc    Parse raw interview dump using Groq AI
+// @desc    Parse a raw interview dump into a structured draft (AI with heuristic fallback)
 // @route   POST /api/experiences/ai-parse
-// @access  Private/Public
 exports.parseRawDump = async (req, res) => {
   try {
-    const { rawText } = req.body;
-    if (!rawText) {
-      return res.status(400).json({ success: false, error: 'Please provide raw text' });
+    const { rawText, companyHint } = req.body || {};
+    if (!rawText || String(rawText).trim().length < 40) {
+      return res.status(400).json({ success: false, error: 'Please paste at least a couple of sentences about your interview.' });
     }
-
-    const groqApiKey = process.env.GROQ_API_KEY;
-
-    const prompt = `
-      You are an expert technical recruiter, fraud analyst, and AI data extraction assistant.
-      Extract structured data from the following raw interview experience text.
-      CRITICAL RULE: You must detect if the text is excessively generic, hallucinated, or lacks substantive detail.
-      Calculate a "qualityScore" from 0 to 100 based on the specificity of the questions, the depth of the tips, and realistic round durations.
-      If the text appears made up or lacks any real questions, score it below 50.
-      
-      Respond with ONLY valid JSON and no markdown formatting (no \`\`\`json).
-      
-      Required schema:
-      {
-        "role": "string (e.g. SDE-1, Data Engineer. Infer if missing)",
-        "year": "number (e.g. 2024)",
-        "month": "string (e.g. July)",
-        "offerReceived": "Yes|No|Pending",
-        "college": "string",
-        "cgpa": "string",
-        "qualityScore": "number (0-100)",
-        "validationMessage": "string (brief feedback on what is missing or if it looks fake)",
-        "rounds": [
-          {
-            "type": "OA|Technical|Managerial|HR|GD",
-            "duration": "string",
-            "questions": [
-              {
-                "text": "string (exact question asked if possible)",
-                "questionType": "DSA|System Design|CS Fundamentals|Behavioral|Role-specific",
-                "topicTags": ["string"]
-              }
-            ],
-            "tips": "string",
-            "vibe": "Conversational|Grilling|Friendly"
-          }
-        ],
-        "overallTips": "string",
-        "resourcesUsed": "string"
-      }
-      
-      Raw Text:
-      "${rawText}"
-    `;
-
-    const response = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.1,
-        response_format: { type: "json_object" }
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${groqApiKey}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const parsedData = JSON.parse(response.data.choices[0].message.content);
-    res.status(200).json({ success: true, data: parsedData });
-
+    const result = await experienceParser.parseExperience(rawText, { userId: req.user?.userId, companyHint });
+    res.status(200).json({ success: true, data: result.parsed, company: result.company, quality: result.quality, source: result.source, ai: result.ai, skillCoverage: result.skillCoverage });
   } catch (error) {
-    console.error('Groq AI Error:', error.response?.data || error.message);
-    res.status(500).json({ success: false, error: 'Failed to parse raw text' });
+    logger.error('parseRawDump failed', { error: error.message, stack: error.stack });
+    res.status(500).json({ success: false, error: 'Failed to parse the text. Try the guided builder instead.' });
+  }
+};
+
+// @desc    Live quality score for a draft (used by the meter while typing)
+// @route   POST /api/experiences/score
+exports.scoreDraft = async (req, res) => {
+  try {
+    res.status(200).json({ success: true, data: experienceParser.scoreQuality(req.body || {}) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server Error' });
   }
 };

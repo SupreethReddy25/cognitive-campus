@@ -415,4 +415,8 @@ const seedExtendedProblems = async () => {
   }
 };
 
-seedExtendedProblems();
+if (require.main === module) {
+  seedExtendedProblems();
+}
+
+module.exports = { EXTRA_PROBLEMS };

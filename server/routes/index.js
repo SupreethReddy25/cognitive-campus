@@ -11,6 +11,7 @@ const experienceRoutes = require('./experiences');
 const sheetRoutes = require('./sheets');
 const arenaRoutes = require('./arenaRoutes');
 const collegeRoutes = require('./collegeRoutes');
+const analyticsRoutes = require('./analyticsRoutes');
 
 const router = express.Router();
 
@@ -26,5 +27,6 @@ router.use('/experiences', experienceRoutes);
 router.use('/sheets', sheetRoutes);
 router.use('/arena', arenaRoutes);
 router.use('/colleges', collegeRoutes);
+router.use('/', analyticsRoutes);
 
 module.exports = router;

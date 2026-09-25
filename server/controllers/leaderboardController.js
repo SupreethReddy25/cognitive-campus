@@ -1,197 +1,68 @@
 /**
  * Leaderboard Controller
  *
- * Provides global leaderboard with Redis caching and per-user rank insertion.
- * If Redis is unavailable or throws, silently falls back to MongoDB.
+ * Global (or college-scoped) XP ranking. Mastered-skill counts come from a single aggregation
+ * (no N+1) and results are cached in-process for 30 s — plenty for a leaderboard, no Redis needed.
  *
  * @module leaderboardController
  */
 
-const Redis = require('ioredis');
 const User = require('../models/User');
 const SkillState = require('../models/SkillState');
+const knowledge = require('../services/knowledgeService');
 const { sendSuccess } = require('../utils/responseHelper');
-const logger = require('../utils/logger');
 
-let redis = null;
-let redisReady = false;
+const TTL = 30 * 1000;
 
-/**
- * Gets the Redis client, creating it lazily to handle environments without Redis.
- * Tracks connection readiness so callers don't attempt operations on a broken client.
- *
- * @returns {object|null} Redis client instance or null if unavailable
- */
-const getRedisClient = () => {
-  if (redis && redisReady) return redis;
-  if (redis) return null; // connection pending or failed
-
-  try {
-    if (process.env.REDIS_URL) {
-      redis = new Redis(process.env.REDIS_URL, {
-        maxRetriesPerRequest: 1,
-        connectTimeout: 5000,
-        lazyConnect: true,
-        retryStrategy: () => null // Disables infinite reconnect spam
-      });
-
-      redis.on('ready', () => {
-        redisReady = true;
-        logger.info('Redis connected for leaderboard cache');
-      });
-
-      let errorLogged = false;
-      redis.on('error', (err) => {
-        if (!errorLogged) {
-          logger.warn('Redis error — leaderboard will use MongoDB fallback', { error: err.message });
-          errorLogged = true;
-        }
-        redisReady = false;
-      });
-
-      redis.on('close', () => {
-        redisReady = false;
-      });
-
-      redis.connect().catch((err) => {
-        if (!errorLogged) {
-          logger.warn('Redis connect failed — using MongoDB fallback', { error: err.message });
-          errorLogged = true;
-        }
-        redisReady = false;
-      });
-    }
-  } catch (error) {
-    logger.warn('Redis initialization failed — using MongoDB fallback', { error: error.message });
-    redis = null;
-    redisReady = false;
-  }
-
-  return null; // not ready on first call — will be ready on subsequent calls
-};
+const loadBoard = (scopeKey, collegeId) =>
+  knowledge.remember(`leaderboard:${scopeKey}`, TTL, async () => {
+    const match = {};
+    if (collegeId) match.collegeId = collegeId;
+    const users = await User.find(match).select('name xp level streak collegeId').populate('collegeId', 'shortName').sort({ xp: -1, _id: 1 }).limit(100).lean();
+    const mastered = await SkillState.aggregate([
+      { $match: { userId: { $in: users.map((u) => u._id) }, isMastered: true } },
+      { $group: { _id: '$userId', n: { $sum: 1 } } }
+    ]);
+    const masteredMap = new Map(mastered.map((m) => [String(m._id), m.n]));
+    return users.map((u, i) => ({
+      rank: i + 1,
+      userId: String(u._id),
+      name: u.name,
+      level: u.level,
+      xp: u.xp,
+      streak: u.streak || 0,
+      college: u.collegeId?.shortName || null,
+      skillsMastered: masteredMap.get(String(u._id)) || 0
+    }));
+  });
 
 /**
- * @desc    Get the global leaderboard (top 50 users by XP).
- *          Checks Redis cache first (60s TTL). If cache miss or Redis unavailable,
- *          queries MongoDB, counts mastered skills, and caches the result.
- *          Always appends the requesting user's own rank if not already in top 50.
- * @route   GET /api/leaderboard
- * @access  Protected
- * @param   {import('express').Request} req - Express request with req.user set by auth middleware
- * @param   {import('express').Response} res - Express response
- * @param   {import('express').NextFunction} next - Express next function
+ * @route GET /api/leaderboard?scope=global|college
  */
 const getLeaderboard = async (req, res, next) => {
   try {
     const userId = req.user.userId;
-    const cacheKey = 'leaderboard:top50';
-    const redisClient = getRedisClient();
+    const scope = req.query.scope === 'college' ? 'college' : 'global';
 
-    // ─── Try Redis cache ───
-    if (redisClient) {
-      try {
-        const cachedData = await redisClient.get(cacheKey);
-        if (cachedData) {
-          const leaderboard = JSON.parse(cachedData);
-          const userInTop = leaderboard.find((entry) => entry.userId === userId);
+    let collegeId = null;
+    const me = await User.findById(userId).select('name xp level streak collegeId role').populate('collegeId', 'shortName').lean();
+    if (scope === 'college') collegeId = me?.collegeId?._id || null;
 
-          if (!userInTop) {
-            const userRank = await getUserRank(userId);
-            if (userRank) {
-              leaderboard.push(userRank);
-            }
-          } else {
-            userInTop.isCurrentUser = true;
-          }
+    const board = await loadBoard(scope === 'college' ? `c:${collegeId}` : 'global', collegeId);
+    const top50 = board.slice(0, 50).map((e) => ({ ...e, isCurrentUser: e.userId === String(userId) }));
 
-          return sendSuccess(res, { leaderboard, cached: true });
-        }
-      } catch (cacheError) {
-        logger.warn('Redis cache read failed — falling back to MongoDB', {
-          error: cacheError.message
-        });
-        // Fall through to MongoDB query below
-      }
+    // append the requester if they're outside the visible list
+    if (me && !top50.some((e) => e.isCurrentUser)) {
+      const filter = { xp: { $gt: me.xp } };
+      if (collegeId) filter.collegeId = collegeId;
+      const above = await User.countDocuments(filter);
+      const mastered = await SkillState.countDocuments({ userId, isMastered: true });
+      top50.push({ rank: above + 1, userId: String(userId), name: me.name, level: me.level, xp: me.xp, streak: me.streak || 0, college: me.collegeId?.shortName || null, skillsMastered: mastered, isCurrentUser: true });
     }
 
-    // ─── MongoDB fallback ───
-    const topUsers = await User.find({})
-      .select('-passwordHash')
-      .sort({ xp: -1 })
-      .limit(50);
-
-    // Build leaderboard even if only 1 user exists
-    const leaderboard = await Promise.all(
-      topUsers.map(async (user, index) => {
-        const masteredCount = await SkillState.countDocuments({
-          userId: user._id,
-          isMastered: true
-        });
-
-        return {
-          rank: index + 1,
-          userId: user._id.toString(),
-          name: user.name,
-          level: user.level,
-          xp: user.xp,
-          skillsMastered: masteredCount,
-          isCurrentUser: user._id.toString() === userId
-        };
-      })
-    );
-
-    // ─── Try to cache the result ───
-    if (redisClient) {
-      try {
-        await redisClient.set(cacheKey, JSON.stringify(leaderboard), 'EX', 60);
-      } catch (cacheError) {
-        logger.warn('Redis cache write failed — result not cached', {
-          error: cacheError.message
-        });
-      }
-    }
-
-    // Add requesting user's rank if not in top 50
-    const userInTop = leaderboard.find((entry) => entry.userId === userId);
-    if (!userInTop) {
-      const userRank = await getUserRank(userId);
-      if (userRank) {
-        leaderboard.push(userRank);
-      }
-    }
-
-    return sendSuccess(res, { leaderboard, cached: false });
+    return sendSuccess(res, { leaderboard: top50, scope, collegeAvailable: !!me?.collegeId, cached: true });
   } catch (error) {
     next(error);
-  }
-};
-
-/**
- * Computes the rank for a specific user by counting how many users have higher XP.
- *
- * @param {string} userId - The MongoDB ObjectId of the user
- * @returns {Promise<object|null>} The user's leaderboard entry, or null if not found
- */
-const getUserRank = async (userId) => {
-  try {
-    const user = await User.findById(userId).select('-passwordHash');
-    if (!user) return null;
-
-    const usersAbove = await User.countDocuments({ xp: { $gt: user.xp } });
-    const masteredCount = await SkillState.countDocuments({ userId, isMastered: true });
-
-    return {
-      rank: usersAbove + 1,
-      userId: user._id.toString(),
-      name: user.name,
-      level: user.level,
-      xp: user.xp,
-      skillsMastered: masteredCount,
-      isCurrentUser: true
-    };
-  } catch (error) {
-    logger.error('getUserRank error', { error: error.message, userId });
-    return null;
   }
 };
 

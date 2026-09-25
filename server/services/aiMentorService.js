@@ -1,264 +1,247 @@
 /**
  * AI Mentor Service
- * 
- * Invokes Gemini 1.5 Flash to act as a DSA coach providing strict, context-aware nudges.
- * Enforces daily usage quotas and utilizes MongoDB caching to prevent redundant LLM queries.
+ *
+ * 1. `getMentorNudge` — progressive, Socratic help in three depths:
+ *      depth 1  HINT         a conceptual nudge, no algorithm named
+ *      depth 2  APPROACH     the technique + where the student's logic goes wrong
+ *      depth 3  PSEUDOCODE   step-by-step plan in plain language (never final code)
+ *    Results are cached per (problem, language, code, depth). Free users get a daily AI budget;
+ *    BYOK users are unmetered. When the AI is unavailable the mentor degrades to the problem's own
+ *    curated hints / editorial so a hint is *always* delivered.
+ *
+ * 2. `generateDashboardQuote` — personalised greeting + study tip for the dashboard.
+ *
+ * @module aiMentorService
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
 const User = require('../models/User');
+const Problem = require('../models/Problem');
 const AiNudgeCache = require('../models/AiNudgeCache');
+const ai = require('./aiService');
 
-const getFallbackHint = (problem) => {
-  if (problem.hints && problem.hints.length > 0) {
-    const randomIndex = Math.floor(Math.random() * problem.hints.length);
-    return { nudgeText: problem.hints[randomIndex], targetLine: null };
+const FREE_DAILY_NUDGES = parseInt(process.env.AI_DAILY_NUDGES || '15', 10);
+
+const DEPTH_LABEL = { 1: 'hint', 2: 'approach', 3: 'pseudocode' };
+
+// ─── Deterministic fallback ladder ────────────────────────────
+
+const fallbackNudge = (problem, depth, lastError) => {
+  const hints = problem.hints || [];
+  const ed = problem.editorial || {};
+  let text;
+
+  if (lastError) {
+    text = `Your last run crashed: "${String(lastError).split('\n')[0].slice(0, 160)}". Fix that first — read the line number in the message and check for undefined variables, off-by-one indexes and missing returns.`;
+  } else if (depth === 1) {
+    text = hints[0] || ed.intuition || 'Re-read the constraints, then trace the first example by hand. What do you do at each step that a program could repeat?';
+  } else if (depth === 2) {
+    text = hints[1] || ed.approach || hints[0] || 'Think about which data structure makes the repeated operation cheap, then check your loop against the smallest and largest inputs.';
+  } else {
+    const steps = ed.steps && ed.steps.length ? ed.steps : hints.slice(2);
+    text = steps.length
+      ? `Plan:\n${steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
+      : hints[hints.length - 1] || 'Write the brute force first, then find what work repeats and cache or reorder it.';
   }
-  return { nudgeText: 'The Mentor is currently resting. Review your loop constraints and edge cases.', targetLine: null };
+  return { nudgeText: text, targetLine: null };
+};
+
+// ─── Nudge ────────────────────────────────────────────────────
+
+const PROMPT_RULES = {
+  1: 'Give ONE high-level conceptual hint (max 2 sentences). Do NOT name the algorithm or data structure outright; guide them to notice the key observation.',
+  2: 'Name the approach/technique to use and point at the specific flaw or missing step in THEIR code (max 3 sentences). No code.',
+  3: 'Give a numbered pseudocode plan of 4-8 short steps in plain English describing exactly what to implement. NO real code, no code blocks. Keep it under 90 words.'
 };
 
 /**
- * Sends code to Gemini and retrieves a tiny, non-solution nudge.
- * 
- * @param {string} userId - User making the request
- * @param {object} problem - Mongoose Problem doc
- * @param {string} userCode - Code submitted by the user
- * @param {string} language - Language key
+ * @returns {Promise<{nudgeText:string, targetLine:number|null, depth:number, label:string, source:'ai'|'curated'|'cache', ai:object, remaining:number|null}>}
  */
 const getMentorNudge = async (userId, problem, userCode, language, nudgeDepth = 1, lastError = null) => {
+  const depth = Math.min(3, Math.max(1, parseInt(nudgeDepth, 10) || 1));
+  const base = { depth, label: DEPTH_LABEL[depth] };
+
   try {
-    // 1. Quota Enforcement
     const user = await User.findById(userId);
     if (!user) throw new Error('User not found');
 
-    // 1. Check for Bring Your Own Key (BYOK)
-    let finalApiKey = process.env.GEMINI_API_KEY;
-    let usingBYOK = false;
+    const status = await ai.getStatus(userId);
 
-    if (user.encryptedGeminiKey && user.keyIv && user.keyAuthTag) {
-      const encryptionService = require('./encryptionService');
-      try {
-        finalApiKey = encryptionService.decryptKey(user.encryptedGeminiKey, user.keyIv, user.keyAuthTag);
-        usingBYOK = true;
-        logger.info(`User ${userId} using BYOK for AI Mentor.`);
-      } catch (err) {
-        logger.error('Failed to decrypt BYOK API key', { error: err.message });
-      }
-    }
-
-    // 2. Quota Enforcement (Bypassed if using BYOK)
-    if (!usingBYOK) {
+    // ── quota (free users only) ──
+    let remaining = null;
+    if (!status.byok) {
       const today = new Date().setHours(0, 0, 0, 0);
-      const lastNudgeDay = user.lastNudgeDate ? new Date(user.lastNudgeDate).setHours(0, 0, 0, 0) : null;
-
-      if (today !== lastNudgeDay) {
+      const lastDay = user.lastNudgeDate ? new Date(user.lastNudgeDate).setHours(0, 0, 0, 0) : null;
+      if (today !== lastDay) {
         user.dailyNudgesUsed = 0;
         user.lastNudgeDate = new Date();
         await user.save();
       }
-
-      if (user.level < 1 || user.dailyNudgesUsed >= 5) {
-        logger.info(`User ${userId} hit nudge limit or level restriction.`);
-        return getFallbackHint(problem);
-      }
+      remaining = Math.max(0, FREE_DAILY_NUDGES - user.dailyNudgesUsed);
     }
 
-    // 2. Cache Check (Hash the code string alongside the progressive depth to break cache locks)
-    const codeHashStr = userCode.trim() + '_' + nudgeDepth + '_' + (lastError || 'None');
-    const codeHash = crypto.createHash('sha256').update(codeHashStr).digest('hex');
-    const cachedNudge = await AiNudgeCache.findOne({ 
-      problemId: problem._id, 
-      language, 
-      codeHash 
-    });
-
-    if (cachedNudge) {
-      logger.info('Returning AI Nudge from Cache');
-      if (!usingBYOK) {
-        user.dailyNudgesUsed += 1;
-        await user.save();
-      }
-      return { nudgeText: cachedNudge.nudgeText, targetLine: cachedNudge.targetLine };
+    // ── cache ──
+    const hashInput = `${userCode.trim()}_${depth}_${lastError || 'none'}`;
+    const codeHash = crypto.createHash('sha256').update(hashInput).digest('hex');
+    const cached = await AiNudgeCache.findOne({ problemId: problem._id, language, codeHash }).lean();
+    if (cached) {
+      return { ...base, nudgeText: cached.nudgeText, targetLine: cached.targetLine, source: 'cache', ai: { used: true, cached: true }, remaining };
     }
 
-    // 4. Gemini Execution
-    if (!finalApiKey) {
-      logger.warn('Skipping AI mentor: No API key available (BYOK or System)');
-      return getFallbackHint(problem);
+    // ── AI unavailable / over quota → curated ladder ──
+    if (!status.available) {
+      const f = fallbackNudge(problem, depth, lastError);
+      return { ...base, ...f, source: 'curated', ai: { used: false, reason: 'NO_KEY', message: ai.friendly('NO_KEY'), needsKey: true }, remaining };
+    }
+    if (remaining !== null && remaining <= 0) {
+      const f = fallbackNudge(problem, depth, lastError);
+      return {
+        ...base,
+        ...f,
+        source: 'curated',
+        ai: { used: false, reason: 'QUOTA', message: `You've used today's ${FREE_DAILY_NUDGES} free AI hints. Add your own free Gemini key in Profile for unlimited hints — showing the curated hint instead.`, needsKey: true },
+        remaining: 0
+      };
     }
 
-    const genAI = new GoogleGenerativeAI(finalApiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
-      generationConfig: { responseMimeType: "application/json" }
-    });
+    const numbered = userCode.split('\n').map((l, i) => `${i + 1}: ${l}`).join('\n');
+    const errorBlock = lastError
+      ? `The student's last run failed with:\n"${String(lastError).slice(0, 400)}"\nPoint targetLine at the line causing the crash and explain the error in plain English. Do not discuss complexity.`
+      : 'If their code is already correct, do not hint — ask one follow-up question about time/space complexity instead and set targetLine to null.';
 
-    const prompt = `You are the Socratic Mentor for Cogni. You have access to the user's current code and the problem description.
-
-YOUR LOGIC FLOW:
-1. **Check for Correctness:** User's current code is: ${userCode}. If this is correct, do NOT give a hint. Ask a follow-up question about complexity.
-2. **Check for Specific Errors:** If there is a bug, ask a Socratic question about the error.
-3. **Check for Redundancy:** If the user has already implemented a logic (like tracking minPrice), do NOT suggest they do it. Move to the NEXT logical step they are missing.
-
-PROGRESSIVE NUDGING:
-Nudge Depth: ${nudgeDepth}/3.
-If depth is 1, give a high-level conceptual hint.
-If depth is 2, point to the specific logic flaw.
-If depth is 3, practically tell them what to type without writing the raw code.
-
-[CRITICAL EVALUATION]:
-${lastError ? `An execution error occurred: "${lastError.substring(0, 250)}". DO NOT analyze Big O complexity. Point the Lighthouse (targetLine) directly to the line causing the syntax/runtime crash and explain the compiler error in plain English.` : `If no error is provided, analyze the logic for bugs. If perfect, ask a complexity question.`}
-
-STRICT RULE: Max 2 sentences. No code blocks. 
-TONE: Speak like a senior CS student helping a friend. Use highly conversational, simple English. Avoid overly academic phrasing. Example: Instead of saying 'Is your array adequately sized for all lowercase characters?', say 'Are there only 20 letters in the alphabet? Look closely at your array size.' Be direct, punchy, and student-friendly.
-
-IMPORTANT OUTPUT FORMAT: Return your response strictly as a JSON object: { "nudgeText": "...", "targetLine": number | null }. 
-targetLine represents the line number (1-indexed) of the user's code where the logical error occurs. If the code is correct, return null.
-
-Problem Description:
-${problem.description}
+    const prompt = `Problem: ${problem.title}
+${String(problem.description).slice(0, 1800)}
 
 Language: ${language}
+Student's current code (line-numbered):
+${numbered.slice(0, 4000)}
 
-Your Analysis:`;
+${errorBlock}
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    
-    let parsedResult;
+Nudge level ${depth}/3 (${DEPTH_LABEL[depth]}): ${PROMPT_RULES[depth]}
+Tone: a senior CS student helping a friend — direct, warm, no jargon dumps. Never reveal a full solution.
+Respond ONLY as JSON: {"nudgeText": string, "targetLine": number|null}  (targetLine is the 1-indexed line of the student's code where the main issue is, or null).`;
+
+    let out;
     try {
-      parsedResult = JSON.parse(response.text().trim());
-    } catch (parseErr) {
-      logger.warn('Failed to parse Gemini JSON output', { raw: response.text() });
-      parsedResult = { nudgeText: response.text().trim() || 'Syntax error encountered.', targetLine: null };
+      out = await ai.complete({
+        userId,
+        system: 'You are Cogni, a Socratic coding mentor. You give progressively more specific help but never write the final solution.',
+        prompt,
+        json: true,
+        temperature: 0.4,
+        maxTokens: 500,
+        timeoutMs: 20000
+      });
+    } catch (err) {
+      const code = err instanceof ai.AiError ? err.code : 'UNAVAILABLE';
+      const f = fallbackNudge(problem, depth, lastError);
+      return { ...base, ...f, source: 'curated', ai: { used: false, reason: code, message: ai.friendly(code), needsKey: code === 'NO_KEY' }, remaining };
     }
-    
-    // Ensure the key maps closely
-    const finalNudgeText = parsedResult.nudgeText || parsedResult.nudge || parsedResult.hint || 'Mentor generated an empty response.';
-    const finalTargetLine = typeof parsedResult.targetLine === 'number' ? parsedResult.targetLine : null;
 
-    // 5. Save Cache & Quota
-    await AiNudgeCache.create({
-      problemId: problem._id,
-      codeHash,
-      language,
-      nudgeText: finalNudgeText,
-      targetLine: finalTargetLine
-    });
+    const d = out.data || {};
+    const nudgeText = String(d.nudgeText || d.nudge || d.hint || '').trim();
+    if (!nudgeText) {
+      const f = fallbackNudge(problem, depth, lastError);
+      return { ...base, ...f, source: 'curated', ai: { used: false, reason: 'BAD_RESPONSE', message: ai.friendly('BAD_RESPONSE') }, remaining };
+    }
+    const lineCount = userCode.split('\n').length;
+    const targetLine = Number.isInteger(d.targetLine) && d.targetLine >= 1 && d.targetLine <= lineCount ? d.targetLine : null;
 
-    if (!usingBYOK) {
+    await AiNudgeCache.create({ problemId: problem._id, codeHash, language, nudgeText, targetLine }).catch(() => {});
+
+    if (!out.byok) {
       user.dailyNudgesUsed += 1;
       await user.save();
+      if (remaining !== null) remaining = Math.max(0, remaining - 1);
     }
 
-    return { nudgeText: finalNudgeText, targetLine: finalTargetLine };
+    return { ...base, nudgeText, targetLine, source: 'ai', ai: { used: true, provider: out.provider, model: out.model, byok: out.byok }, remaining };
   } catch (error) {
-    logger.error('Gemini API Error in AI Mentor', { error: error.message });
-    return getFallbackHint(problem);
+    logger.error('Mentor nudge failed', { error: error.message, stack: error.stack });
+    const f = fallbackNudge(problem, depth, lastError);
+    return { ...base, ...f, source: 'curated', ai: { used: false, reason: 'UNAVAILABLE', message: ai.friendly('UNAVAILABLE') }, remaining: null };
   }
 };
 
-const FALLBACK_QUOTES = [
-  { text: "System optimal. Let's ", highlight: "build", highlightColor: "#4a7c59", suffix: "." },
-  { text: "Back for ", highlight: "blood", highlightColor: "#ef4444", suffix: "?" },
-  { text: "Ready to ", highlight: "conquer", highlightColor: "#eab308", suffix: "?" },
-  { text: "Logic is ", highlight: "power", highlightColor: "#a855f7", suffix: "." },
-  { text: "Think. Code. ", highlight: "Dominate", highlightColor: "#ef4444", suffix: "." },
-  { text: "Your compiler ", highlight: "awaits", highlightColor: "#64748b", suffix: "." }
-];
+// ─── Dashboard quote ──────────────────────────────────────────
+
+const COLORS = { intense: '#ef4444', growth: '#34d399', victory: '#fbbf24', power: '#a78bfa', clarity: '#38bdf8', urgency: '#f97316' };
 
 /**
- * /**
- * Generates a contextual, 3-6 word dashboard quote with a highlighted word.
- * Uses Groq API (fast, free) for reliable low-latency generation.
+ * Deterministic, context-aware greeting so the dashboard is always personal — with or without AI.
  */
-const generateDashboardQuote = async (userId, context = {}) => {
+const contextualFallback = (ctx) => {
+  const hour = new Date().getHours();
+  const part = hour < 5 ? 'night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 22 ? 'evening' : 'night';
+  const name = ctx.firstName || 'there';
+  const pool = [];
+
+  if (ctx.streak >= 7) pool.push({ text: `${ctx.streak} days deep. Stay `, highlight: 'relentless', highlightColor: COLORS.intense, suffix: '.' });
+  else if (ctx.streak >= 3) pool.push({ text: `${ctx.streak}-day streak — keep the `, highlight: 'fire', highlightColor: COLORS.urgency, suffix: ' alive.' });
+  if (ctx.streakAtRisk) pool.push({ text: 'Your streak needs you ', highlight: 'today', highlightColor: COLORS.urgency, suffix: '.' });
+  if (ctx.weakest && ctx.weakest.masteryP < 0.5) pool.push({ text: `Time to tame `, highlight: ctx.weakest.name, highlightColor: COLORS.power, suffix: '.' });
+  if (ctx.lastProblemTitle) pool.push({ text: 'Unfinished business with ', highlight: ctx.lastProblemTitle, highlightColor: COLORS.clarity, suffix: '?' });
+  pool.push(
+    { text: `Good ${part}, ${name}. Let's `, highlight: 'build', highlightColor: COLORS.growth, suffix: '.' },
+    { text: 'Ready to ', highlight: 'conquer', highlightColor: COLORS.victory, suffix: '?' },
+    { text: 'Logic is ', highlight: 'power', highlightColor: COLORS.power, suffix: '.' }
+  );
+  const pick = pool[Math.floor(Date.now() / 3600000) % pool.length];
+
+  let tip;
+  if (ctx.reviewDue) tip = `${ctx.reviewDue} is due for review — a 10-minute refresh now saves an hour later (spaced repetition).`;
+  else if (ctx.weakest && ctx.weakest.masteryP < 0.6) tip = `Your ${ctx.weakest.name} mastery is ${Math.round(ctx.weakest.masteryP * 100)}%. Two focused problems today would move it noticeably.`;
+  else if (ctx.streakAtRisk) tip = 'One solved problem keeps your streak alive — even an Easy counts.';
+  else tip = 'Trace the first example by hand before coding. It exposes the pattern in under two minutes.';
+
+  return { ...pick, tip, source: 'contextual' };
+};
+
+const quoteCache = new Map();
+
+/**
+ * @param {string} userId
+ * @param {object} ctx  from analytics: {firstName, streak, streakAtRisk, weakest{name,masteryP}, reviewDue, lastProblemTitle, lastPath, level}
+ */
+const generateDashboardQuote = async (userId, ctx = {}) => {
+  const fallback = () => contextualFallback(ctx);
+  const cacheKey = `${userId}:${new Date().toISOString().slice(0, 13)}`;
+  if (quoteCache.has(cacheKey)) return quoteCache.get(cacheKey);
+
   try {
-    const user = await User.findById(userId);
-    if (!user) return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+    const prompt = `Write a short dashboard greeting for a student on a DSA / placement-prep platform.
+Student: ${ctx.firstName || 'the student'}, level ${ctx.level || 1}, streak ${ctx.streak || 0} days${ctx.streakAtRisk ? ' (at risk today)' : ''}.
+${ctx.weakest ? `Weakest skill: ${ctx.weakest.name} (${Math.round(ctx.weakest.masteryP * 100)}% mastery).` : ''}
+${ctx.reviewDue ? `Due for spaced-repetition review: ${ctx.reviewDue}.` : ''}
+${ctx.lastProblemTitle ? `Was last working on: "${ctx.lastProblemTitle}".` : ''}
+Local time of day: ${new Date().getHours()}:00.
 
-    // Build contextual nudge based on last visited problem — only 30% of the time to keep variety
-    let contextualNudge = "";
-    let usedContextPath = null;
-    const useContext = Math.random() < 0.3;
-    if (useContext && context.lastPath && context.lastPath.startsWith('/problems/')) {
-      try {
-        const problemId = context.lastPath.split('/problems/')[1];
-        if (problemId) {
-          const Problem = require('../models/Problem');
-          const problem = await Problem.findById(problemId);
-          if (problem) {
-            contextualNudge = `The user was recently working on a problem called "${problem.title}". Make the quote a subtle, poetic nudge to jump back in and finish it.`;
-            usedContextPath = context.lastPath;
-          }
-        }
-      } catch(e) {}
+Return ONLY JSON:
+{"text": "prefix text ending with a space", "highlight": "exactly one word", "highlightColor": "#hex", "suffix": "punctuation or short tail", "tip": "one concrete, actionable study tip for THIS student in <= 28 words"}
+The greeting (text + highlight + suffix) must be 3-7 words. highlightColor by mood: #ef4444 intense, #34d399 growth, #fbbf24 victory, #a78bfa power, #38bdf8 clarity, #f97316 urgency. Be varied and never cheesy.`;
+    const out = await ai.complete({ userId, prompt, json: true, temperature: 1, maxTokens: 300, timeoutMs: 9000 });
+    const d = out.data;
+    if (d && d.text && d.highlight && /^#[0-9a-f]{6}$/i.test(d.highlightColor || '')) {
+      const quote = {
+        text: String(d.text),
+        highlight: String(d.highlight).split(/\s+/)[0],
+        highlightColor: d.highlightColor,
+        suffix: String(d.suffix || '.'),
+        tip: String(d.tip || fallback().tip),
+        source: 'ai'
+      };
+      quoteCache.set(cacheKey, quote);
+      return quote;
     }
-
-    const groqKey = process.env.GROQ_API_KEY;
-    if (!groqKey) {
-      return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
-    }
-
-    const systemPrompt = `You are an elite DSA coach. Generate a short, punchy 3-6 word motivational dashboard greeting.
-${contextualNudge}
-Return ONLY a single-line valid JSON object with no markdown, no code blocks, no explanation:
-{"text": "prefix text ", "highlight": "oneword", "highlightColor": "#hexcolor", "suffix": "?or."}
-Rules:
-- highlight must be exactly ONE word with strong emotional or thematic resonance
-- highlightColor must match the mood: #ef4444 for intense/blood/fire, #4a7c59 for growth/build, #eab308 for victory/conquer, #a855f7 for power/logic, #3b82f6 for clarity/code, #f97316 for urgency/return
-- text is everything BEFORE the highlight word, suffix is everything AFTER
-- Vary the quotes. Never repeat examples.
-Examples (do not copy these):
-{"text": "Back for ", "highlight": "blood", "highlightColor": "#ef4444", "suffix": "?"}
-{"text": "Logic never ", "highlight": "sleeps", "highlightColor": "#3b82f6", "suffix": "."}
-{"text": "Your next ", "highlight": "breakthrough", "highlightColor": "#a855f7", "suffix": " awaits."}`;
-
-    const axios = require('axios');
-    const response = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a fresh quote for ${user.name || 'the user'} (Level ${user.level || 1}).` }
-        ],
-        temperature: 1.1,
-        max_tokens: 80,
-        response_format: { type: 'json_object' }
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${groqKey}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 8000
-      }
-    );
-
-    const content = response.data?.choices?.[0]?.message?.content?.trim();
-    if (!content) throw new Error('Empty response from Groq');
-
-    // Safely extract JSON
-    const start = content.indexOf('{');
-    const end = content.lastIndexOf('}') + 1;
-    const json = JSON.parse(content.substring(start, end));
-
-    if (json.text && json.highlight && json.highlightColor) {
-      // Attach contextPath so frontend knows to make quote clickable
-      if (usedContextPath) json.contextPath = usedContextPath;
-      return json;
-    }
-    throw new Error('Invalid JSON shape from Groq');
-  } catch (error) {
-    logger.error('Failed to generate dashboard quote, using fallback', { error: error.message });
-    return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+    throw new ai.AiError('BAD_RESPONSE', 'quote shape');
+  } catch (err) {
+    if (!(err instanceof ai.AiError)) logger.error('Dashboard quote failed', { error: err.message });
+    const q = fallback();
+    quoteCache.set(cacheKey, q);
+    return q;
   }
 };
 
-module.exports = {
-  getMentorNudge,
-  generateDashboardQuote
-};
+module.exports = { getMentorNudge, generateDashboardQuote, contextualFallback, fallbackNudge };

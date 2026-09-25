@@ -17,6 +17,8 @@ const aiMentorService = require('../services/aiMentorService');
 const intelService = require('../services/intelService');
 const { runTestCases, SUPPORTED_LANGUAGES } = require('../services/codeExecutionService');
 
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /**
  * @desc    Get paginated list of active, APPROVED problems with optional filters
  * @route   GET /api/problems
@@ -24,25 +26,29 @@ const { runTestCases, SUPPORTED_LANGUAGES } = require('../services/codeExecution
  */
 const getProblems = async (req, res, next) => {
   try {
-    const { skillId, difficulty } = req.query;
+    const { skillId, difficulty, q, company } = req.query;
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 200);
     const skip = (page - 1) * limit;
 
     // Only active AND approved problems (Intel Engine backward compat)
     const filter = { isActive: true, status: 'approved' };
     if (skillId) filter.skillId = skillId;
     if (difficulty) filter.difficulty = difficulty;
+    if (q) filter.title = { $regex: escapeRegex(q), $options: 'i' };
+    if (company) filter.companies = { $regex: `^${escapeRegex(company)}$`, $options: 'i' };
 
     const [problems, totalCount] = await Promise.all([
       Problem.find(filter)
-        .select('-testCases')
+        .select('-testCases -editorial -votedBy -starterCode -starterCodeMap -description')
         .populate('skillId', 'name difficultyWeight')
-        .sort({ createdAt: -1 })
+        .sort({ _id: 1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
       Problem.countDocuments(filter)
     ]);
+
 
     return sendSuccess(res, {
       problems,
@@ -67,6 +73,7 @@ const getProblemById = async (req, res, next) => {
     const problemId = req.params.id;
 
     const problem = await Problem.findById(problemId)
+      .select('-votedBy')
       .populate('skillId', 'name description')
       .populate('authorId', 'name');
 
@@ -96,7 +103,13 @@ const getProblemById = async (req, res, next) => {
 
     // Build response object with masked test cases
     const problemResponse = problem.toObject();
+    const ed = problemResponse.editorial || {};
+    problemResponse.hasEditorial = !!(ed.approach || (ed.steps && ed.steps.length) || ed.code?.javascript || problemResponse.editorialText);
+    delete problemResponse.editorial; // never ship the editorial with the problem — unlocked separately
+    delete problemResponse.editorialText;
     problemResponse.testCases = maskedTestCases;
+    problemResponse.userSolved = !!(await Submission.exists({ userId, problemId, isCorrect: true }));
+    problemResponse.bookmarked = !!(await User.exists({ _id: userId, bookmarks: problemId }));
     problemResponse.userAttempts = userAttempts;
     problemResponse.userBestScore = userBestScore;
 

@@ -701,4 +701,8 @@ const seedProblems = async () => {
   }
 };
 
-seedProblems();
+if (require.main === module) {
+  seedProblems();
+}
+
+module.exports = { getProblemsBySkill };

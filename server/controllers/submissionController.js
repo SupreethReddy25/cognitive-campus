@@ -1,16 +1,15 @@
 /**
  * Submission Controller
  *
- * Implements the complete 9-step submission flow:
- * 1. Extract data from request
- * 2. Validate problem exists and code is not empty
- * 3. Run test cases via code execution service
- * 4. Analyse code structure via AST analyser
- * 5. Fetch/create SkillState and compute BKT mastery update
- * 6. Apply hint penalty and update mastery state
- * 7. Calculate and award XP, update level and streak, emit XP event
- * 8. Check and unlock prerequisite-gated skills, generate nudges, emit skill events
- * 9. Get next recommendation, save submission, emit leaderboard refresh
+ * The submission pipeline:
+ *  1. validate problem + code
+ *  2. execute against every test case (hidden ones are masked in the response)
+ *  3. static analysis (AST) for complexity feedback
+ *  4. adaptive BKT update (learned per-skill params, difficulty-aware evidence, forgetting)
+ *  5. XP: first-solve only (no farming), streak multiplier, daily-challenge bonus
+ *  6. streak + weekly freeze, level-ups
+ *  7. skill unlocks + achievement evaluation
+ *  8. next recommendation + toast-ready `notifications`
  *
  * @module submissionController
  */
@@ -24,179 +23,119 @@ const bktEngine = require('../services/bktEngine');
 const astAnalyser = require('../services/astAnalyser');
 const codeExecutionService = require('../services/codeExecutionService');
 const recommendationEngine = require('../services/recommendationEngine');
+const knowledge = require('../services/knowledgeService');
+const streakService = require('../services/streakService');
+const dailyChallenge = require('../services/dailyChallengeService');
+const achievementService = require('../services/achievementService');
 const { generateNudge } = require('../services/nudgeService');
 const { emitXPUpdate, emitLeaderboardUpdate, emitSkillUnlocked } = require('../socket/socketHandler');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
 
+const XP_BY_DIFFICULTY = { easy: 10, medium: 20, hard: 40 };
+const DAY = 86400000;
+
 /**
- * Determines if two dates represent consecutive calendar days.
- *
- * @param {Date} lastDate - The previous active date
- * @param {Date} currentDate - The current date
- * @returns {boolean} True if lastDate is exactly yesterday relative to currentDate
+ * Removes anything that would leak hidden test cases from an execution result and tags each
+ * row with a stable id. Hidden rows keep only pass/fail + timing.
  */
-const isConsecutiveDay = (lastDate, currentDate) => {
-  const last = new Date(lastDate);
-  const current = new Date(currentDate);
-  last.setHours(0, 0, 0, 0);
-  current.setHours(0, 0, 0, 0);
-  const diffMs = current.getTime() - last.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  return diffDays === 1;
+const maskResults = (testResults, problem, { hideExpected = true } = {}) => {
+  const results = (testResults.results || []).map((r, idx) => {
+    const tc = problem.testCases[idx];
+    const hidden = !!tc?.isHidden;
+    if (hidden && hideExpected) {
+      return { id: String(idx), index: idx, hidden: true, passed: r.passed, executionTime: r.executionTime, input: null, expectedOutput: null, actualOutput: null };
+    }
+    return { id: String(idx), index: idx, hidden: false, ...r };
+  });
+  return { ...testResults, results };
 };
 
 /**
- * Determines if two dates are the same calendar day.
- *
- * @param {Date} date1 - First date
- * @param {Date} date2 - Second date
- * @returns {boolean} True if both dates fall on the same calendar day
- */
-const isSameDay = (date1, date2) => {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-};
-
-/**
- * @desc    Create a new submission — the full 9-step submission flow
- * @route   POST /api/submissions
- * @access  Protected
- * @param   {import('express').Request} req - Express request with code, problemId, hintsUsed, timeTaken in body
- * @param   {import('express').Response} res - Express response
- * @param   {import('express').NextFunction} next - Express next function
+ * @route POST /api/submissions
  */
 const createSubmission = async (req, res, next) => {
   try {
-    // ─── Step 1: Extract data ───
     const userId = req.user.userId;
     const { problemId, code, hintsUsed = 0, timeTaken = 0, language = 'javascript' } = req.body;
 
-    // ─── Step 2: Validate ───
     const problem = await Problem.findById(problemId);
-    if (!problem || !problem.isActive) {
-      return sendError(res, 'Problem not found or is inactive', 404);
-    }
-
-    if (!code || code.trim().length === 0) {
-      return sendError(res, 'Code cannot be empty');
-    }
+    if (!problem || !problem.isActive) return sendError(res, 'Problem not found or is inactive', 404);
+    if (!code || code.trim().length === 0) return sendError(res, 'Code cannot be empty');
+    if (!problem.skillId) return sendError(res, 'This problem is not linked to a skill yet', 422);
 
     const skillId = problem.skillId;
 
-    // ─── Step 3: Run test cases ───
+    // ─── Execute ───
     const testResults = await codeExecutionService.runTestCases(code, problem.testCases, language, problem);
-
-    // ─── Step 4: Analyse code structure ───
     const astResult = astAnalyser.analyseCode(code, language);
+    const isCorrect = testResults.allPassed;
+    const passRate = testResults.total ? testResults.passed / testResults.total : 0;
 
-    // ─── Step 5: Fetch or create SkillState ───
+    // ─── Prior history on this problem (for XP top-up + editorial gating) ───
+    const prior = await Submission.find({ userId, problemId }).select('isCorrect xpAwarded bonusXp').lean();
+    const alreadySolved = prior.some((s) => s.isCorrect);
+    const priorFails = prior.filter((s) => !s.isCorrect).length;
+    const priorBaseXp = prior.reduce((sum, s) => sum + Math.max(0, (s.xpAwarded || 0) - (s.bonusXp || 0)), 0);
+
+    // ─── Adaptive BKT ───
+    const paramsMap = await knowledge.getParamsMap();
+    const params = knowledge.paramsFor(paramsMap, skillId);
+
     let skillState = await SkillState.findOne({ userId, skillId });
     if (!skillState) {
-      skillState = await SkillState.create({
-        userId,
-        skillId,
-        masteryP: bktEngine.P_L0,
-        isUnlocked: true
-      });
+      skillState = new SkillState({ userId, skillId, masteryP: params.pL0 ?? bktEngine.P_L0, isUnlocked: true });
     }
+    const masteryBefore = skillState.masteryP;
 
-    // ─── Step 6: Compute new mastery via BKT ───
-    const passRate = testResults.passed / testResults.total;
-    const isSignificant = passRate > 0.5;
-    const isCorrect = testResults.allPassed;
-    
-    // Fall back to false if the user submits code that passes <= 50% (prevents leaking)
-    let newMasteryP = bktEngine.updateMastery(skillState.masteryP, isSignificant ? isCorrect : false);
-
-    // Apply hint penalty if hints were used
-    if (hintsUsed > 0) {
-      newMasteryP = bktEngine.applyHintPenalty(newMasteryP, hintsUsed);
+    let priorP = skillState.masteryP;
+    if (skillState.attempts > 0) {
+      const idle = (Date.now() - new Date(skillState.lastUpdated || skillState.updatedAt).getTime()) / DAY;
+      priorP = bktEngine.applyForgetting(priorP, idle, skillState.correctAttempts, params);
     }
+    let newMasteryP = bktEngine.updateMastery(priorP, isCorrect, bktEngine.paramsForDifficulty(params, problem.difficulty));
+    if (hintsUsed > 0) newMasteryP = bktEngine.applyHintPenalty(newMasteryP, hintsUsed);
 
-    // Update SkillState
+    const wasMastered = skillState.isMastered;
     skillState.masteryP = newMasteryP;
     skillState.attempts += 1;
     if (isCorrect) skillState.correctAttempts += 1;
     skillState.isMastered = bktEngine.isMastered(newMasteryP);
     skillState.lastUpdated = new Date();
+    skillState.isUnlocked = true;
     await skillState.save();
+    knowledge.invalidate('cohortStats');
 
-    // ─── Step 7: Calculate and award XP ───
-    const xpMap = { easy: 10, medium: 20, hard: 40 };
-    const fullXP = xpMap[problem.difficulty] || 10;
-    let xpAwarded = 0;
+    // ─── XP (first-solve only; partial credit tops up) ───
+    const fullXP = problem.xpReward || XP_BY_DIFFICULTY[problem.difficulty] || 10;
+    let earnedTotal = 0;
+    if (isCorrect) earnedTotal = fullXP;
+    else if (passRate > 0.5) earnedTotal = Math.floor(fullXP * 0.3);
+    const baseXp = alreadySolved ? 0 : Math.max(0, earnedTotal - priorBaseXp);
 
-    if (testResults.allPassed) {
-      xpAwarded = fullXP;
-    } else if (isSignificant) {
-      xpAwarded = Math.floor(fullXP * 0.3);
-    }
-
-    // Update User: XP, level, streak
     const user = await User.findById(userId);
+    const levelBefore = user.level;
+    const streakInfo = streakService.recordActivity(user, new Date());
+    const multiplier = streakService.streakMultiplier(user.streak);
+    const boostedXp = Math.round(baseXp * multiplier);
+
+    let bonusXp = 0;
+    let isDaily = false;
+    if (isCorrect && (await dailyChallenge.isBonusEligible(userId, problemId))) {
+      isDaily = true;
+      bonusXp = Math.round(fullXP * dailyChallenge.BONUS_MULTIPLIER);
+    }
+    const xpAwarded = boostedXp + bonusXp;
+
     user.xp += xpAwarded;
     user.level = Math.floor(user.xp / 100) + 1;
-
-    const today = new Date();
-    if (user.lastActiveDate) {
-      if (isConsecutiveDay(user.lastActiveDate, today)) {
-        user.streak += 1;
-      } else if (!isSameDay(user.lastActiveDate, today)) {
-        user.streak = 1;
-      }
-      // If same day → streak unchanged
-    } else {
-      user.streak = 1;
-    }
-    user.lastActiveDate = today;
     await user.save();
 
-    // Emit XP update via Socket.io (lazy require to avoid circular dependency)
-    const { io } = require('../index');
-    if (xpAwarded > 0) {
-      emitXPUpdate(io, {
-        userId: userId.toString(),
-        userName: user.name,
-        xpEarned: xpAwarded,
-        newXP: user.xp,
-        newLevel: user.level,
-        newStreak: user.streak
-      });
-    }
-
-    // ─── Step 8: Check and unlock new skills + generate nudges ───
+    // ─── Skill unlocks, nudge, recommendation ───
     const newlyUnlockedSkills = await recommendationEngine.checkAndUnlockSkills(userId);
-
-    // Emit skill unlocked events for each newly unlocked skill
-    for (const skillName of newlyUnlockedSkills) {
-      emitSkillUnlocked(io, userId.toString(), {
-        skillName,
-        newMasteryP
-      });
-    }
-
-    // Get skill name for nudge context
-    const skill = await Skill.findById(skillId).select('name');
+    const skill = await Skill.findById(skillId).select('name').lean();
     const skillName = skill ? skill.name : 'this skill';
-
-    // Count prior failed attempts on this problem
-    const failedAttemptCount = await Submission.countDocuments({
-      userId,
-      problemId,
-      isCorrect: false
-    });
-
-    // Generate nudge using centralised nudge service
-    const nudge = generateNudge(astResult, failedAttemptCount, skillName, newMasteryP);
-
-    // ─── Step 9: Get recommendation, save submission, return response ───
-    const nextRecommendation = await recommendationEngine.getRecommendation(userId);
+    const nudge = generateNudge(astResult, priorFails + (isCorrect ? 0 : 1), skillName, newMasteryP);
 
     const submission = await Submission.create({
       userId,
@@ -213,13 +152,42 @@ const createSubmission = async (req, res, next) => {
       hintsUsed,
       executionTime: testResults.results.length > 0 ? testResults.results[0].executionTime : 0,
       memoryUsed: 0,
-      nudge
+      nudge,
+      masteryBefore,
+      masteryAfter: newMasteryP,
+      isDailyChallenge: isDaily,
+      bonusXp,
+      streakMultiplier: multiplier
     });
 
-    logger.info(`Submission created: user=${userId} problem=${problemId} correct=${isCorrect} xp=${xpAwarded}`);
+    // ─── Achievements (after the submission exists so counts are right) ───
+    const achievements = await achievementService.evaluate(userId);
+    const achievementXp = achievements.reduce((n, a) => n + (a.xp || 0), 0);
+    const fresh = achievementXp ? await User.findById(userId).select('xp level') : user;
 
-    // Emit leaderboard refresh signal
+    const nextRecommendations = await recommendationEngine.getRecommendations(userId, { limit: 3, excludeProblemIds: [String(problemId)] });
+
+    // ─── Notifications (toast-ready) ───
+    const notifications = [];
+    if (fresh.level > levelBefore) notifications.push({ type: 'level_up', level: fresh.level, title: `Level ${fresh.level} reached!`, message: 'Your rank climbs. Keep the momentum.' });
+    if (streakInfo.freezeUsed) notifications.push({ type: 'streak_freeze', title: 'Streak freeze used', message: `You missed a day — your ${user.streak}-day streak is safe. Freeze recharges next week.` });
+    if (streakInfo.milestone) notifications.push({ type: 'streak_milestone', streak: streakInfo.milestone, title: `${streakInfo.milestone}-day streak!`, message: `XP multiplier is now ×${multiplier}.` });
+    if (isDaily) notifications.push({ type: 'daily_bonus', xp: bonusXp, title: 'Daily challenge complete', message: `+${bonusXp} bonus XP` });
+    if (!wasMastered && skillState.isMastered) notifications.push({ type: 'skill_mastered', skill: skillName, title: `${skillName} mastered`, message: 'You crossed the 85% mastery line.' });
+    newlyUnlockedSkills.forEach((n) => notifications.push({ type: 'skill_unlocked', skill: n, title: `Skill unlocked: ${n}`, message: 'New problems are waiting.' }));
+    achievements.forEach((a) => notifications.push({ type: 'achievement', achievement: a, title: `Badge earned: ${a.title}`, message: a.desc }));
+
+    logger.info(`Submission: user=${userId} problem=${problemId} correct=${isCorrect} xp=${xpAwarded} mastery=${masteryBefore.toFixed(2)}→${newMasteryP.toFixed(2)}`);
+
+    // ─── Sockets ───
+    const { io } = require('../index');
+    if (xpAwarded > 0) {
+      emitXPUpdate(io, { userId: String(userId), userName: user.name, xpEarned: xpAwarded, newXP: fresh.xp, newLevel: fresh.level, newStreak: user.streak });
+    }
+    for (const name of newlyUnlockedSkills) emitSkillUnlocked(io, String(userId), { skillName: name, newMasteryP });
     emitLeaderboardUpdate(io);
+
+    const editorialUnlocked = isCorrect || alreadySolved || priorFails + 1 >= 3;
 
     return sendSuccess(res, {
       submission: {
@@ -227,16 +195,27 @@ const createSubmission = async (req, res, next) => {
         isCorrect,
         passedTestCases: testResults.passed,
         totalTestCases: testResults.total,
-        xpAwarded
+        xpAwarded,
+        createdAt: submission.createdAt
       },
-      testResults,
+      testResults: maskResults(testResults, problem),
       astFeedback: astResult,
+      masteryBefore,
       newMastery: newMasteryP,
+      masteryDelta: +(newMasteryP - masteryBefore).toFixed(4),
+      xpBreakdown: { base: baseXp, streakMultiplier: multiplier, boosted: boostedXp, dailyBonus: bonusXp, total: xpAwarded, alreadySolved },
       xpEarned: xpAwarded,
-      newLevel: user.level,
+      newXP: fresh.xp,
+      newLevel: fresh.level,
       newStreak: user.streak,
+      streak: { value: user.streak, freezeUsed: streakInfo.freezeUsed, multiplier },
       newlyUnlockedSkills,
-      nextRecommendation,
+      achievements,
+      notifications,
+      editorialUnlocked,
+      failedAttempts: priorFails + (isCorrect ? 0 : 1),
+      nextRecommendation: nextRecommendations[0] || null,
+      nextRecommendations,
       nudge
     }, 201);
   } catch (error) {
@@ -245,37 +224,30 @@ const createSubmission = async (req, res, next) => {
 };
 
 /**
- * @desc    Get paginated submission history for the authenticated user
- * @route   GET /api/submissions/history
- * @access  Protected
- * @param   {import('express').Request} req - Express request with optional page/limit query params
- * @param   {import('express').Response} res - Express response
- * @param   {import('express').NextFunction} next - Express next function
+ * @route GET /api/submissions/history?page&limit&problemId
  */
 const getHistory = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 1000);
     const skip = (page - 1) * limit;
+    const filter = { userId };
+    if (req.query.problemId) filter.problemId = req.query.problemId;
 
     const [submissions, totalCount] = await Promise.all([
-      Submission.find({ userId })
+      Submission.find(filter)
+        .select('-code -astResult')
         .populate('problemId', 'title difficulty')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Submission.countDocuments({ userId })
+      Submission.countDocuments(filter)
     ]);
 
     return sendSuccess(res, {
       submissions,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit)
-      }
+      pagination: { page, limit, totalCount, totalPages: Math.ceil(totalCount / limit) }
     });
   } catch (error) {
     next(error);
@@ -283,19 +255,18 @@ const getHistory = async (req, res, next) => {
 };
 
 /**
- * @desc    Get the 3 most recent submissions for a specific problem to enable state persistence
- * @route   GET /api/submissions/recent/:problemId
- * @access  Protected
+ * @route GET /api/submissions/recent/:problemId?limit=
  */
 const getRecentSubmissions = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { problemId } = req.params;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 3, 30);
 
     const submissions = await Submission.find({ userId, problemId })
       .sort({ createdAt: -1 })
-      .limit(3)
-      .select('code language isCorrect passedTestCases totalTestCases createdAt');
+      .limit(limit)
+      .select('code language isCorrect passedTestCases totalTestCases xpAwarded executionTime timeTaken hintsUsed masteryBefore masteryAfter createdAt');
 
     return sendSuccess(res, { submissions });
   } catch (error) {
@@ -304,48 +275,45 @@ const getRecentSubmissions = async (req, res, next) => {
 };
 
 /**
- * @desc    Run code against custom inputs or public test cases without affecting mastery/XP
+ * @desc    Dry-run against public examples or a custom input — no mastery/XP effects
  * @route   POST /api/submissions/run
- * @access  Protected
  */
 const runCode = async (req, res, next) => {
   try {
     const { problemId, code, customInput, language = 'javascript' } = req.body;
 
     const problem = await Problem.findById(problemId);
-    if (!problem || !problem.isActive) {
-      return sendError(res, 'Problem not found or is inactive', 404);
-    }
+    if (!problem || !problem.isActive) return sendError(res, 'Problem not found or is inactive', 404);
+    if (!code || code.trim().length === 0) return sendError(res, 'Code cannot be empty');
 
-    if (!code || code.trim().length === 0) {
-      return sendError(res, 'Code cannot be empty');
-    }
-
-    let rawTestCases = [];
-    
-    // If user provided a custom input, map it structure-wise cleanly for the Piston Execution loop
-    if (customInput !== undefined && customInput !== null) {
-      rawTestCases = [{ input: customInput, expectedOutput: null }];
+    const isCustom = customInput !== undefined && customInput !== null && String(customInput).trim() !== '';
+    let cases;
+    if (isCustom) {
+      cases = [{ input: String(customInput), expectedOutput: null, isHidden: false }];
     } else {
-      // Limit dry runs to just the "public" examples so users don't extract hidden validation tests
-      rawTestCases = problem.testCases.filter(tc => !tc.isHidden) || [];
-      if (rawTestCases.length === 0) {
-          rawTestCases = [problem.testCases[0]]; // Fallback if all are hidden
-      }
+      cases = problem.testCases.filter((tc) => !tc.isHidden);
+      if (cases.length === 0) cases = [{ ...problem.testCases[0].toObject(), isHidden: false }];
     }
 
-    // Run custom test cases
-    const testResults = await codeExecutionService.runTestCases(code, rawTestCases, language, problem);
+    const testResults = await codeExecutionService.runTestCases(code, cases, language, problem);
+    const results = (testResults.results || []).map((r, idx) => ({ id: String(idx), index: idx, hidden: false, ...r }));
 
-    // Completely bypass DB (no Submission create, no XP, no SkillState changes)
-    return sendSuccess(res, {
-      testResults,
-      customInputRun: customInput !== undefined && customInput !== null
-    }, 200);
-
+    return sendSuccess(res, { testResults: { ...testResults, results }, customInputRun: isCustom });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = { createSubmission, getHistory, getRecentSubmissions, runCode };
+/**
+ * @desc    Which languages can actually execute right now (and through which engine)
+ * @route   GET /api/submissions/runtimes
+ */
+const getRuntimes = async (req, res, next) => {
+  try {
+    return sendSuccess(res, { runtimes: await codeExecutionService.getRuntimeStatus() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { createSubmission, getHistory, getRecentSubmissions, runCode, getRuntimes, maskResults };

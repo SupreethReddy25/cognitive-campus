@@ -1,5 +1,7 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
+const optionalAuth = require('../middleware/optionalAuth');
+const { aiLimiter } = require('../middleware/rateLimiter');
 const {
   getCompanies,
   getCompany,
@@ -13,9 +15,9 @@ const router = express.Router();
 
 router.route('/').get(getCompanies);
 router.route('/:slug').get(getCompany);
-router.route('/:slug/experiences').get(getCompanyExperiences);
+router.route('/:slug/experiences').get(optionalAuth, getCompanyExperiences);
 router.route('/:slug/stats').get(getCompanyStats);
-router.route('/:slug/related-problems').get(getRelatedProblems);
-router.route('/:slug/prep-plan').post(authenticateToken, generatePrepPlan);
+router.route('/:slug/related-problems').get(optionalAuth, getRelatedProblems);
+router.route('/:slug/prep-plan').post(authenticateToken, aiLimiter, generatePrepPlan);
 
 module.exports = router;

@@ -16,14 +16,12 @@
 
 const axios = require('axios');
 const logger = require('../utils/logger');
+const localRunner = require('./localRunner');
+const { wrapCpp } = require('./cppHarness');
 
-// The local Docker Piston API URL
-const LOCAL_PISTON_URL = process.env.CODE_EXECUTION_API_URL || 'http://127.0.0.1:2000/api/v2';
-// The public free Piston API (used as fallback so Docker isn't strictly required)
-const PUBLIC_PISTON_URL = 'https://emkc.org/api/v2/piston';
-
-// We'll dynamically determine the active URL in the execute() function
-let activePistonUrl = LOCAL_PISTON_URL;
+// Self-hosted Piston (docker run -d --privileged -p 2000:2000 ghcr.io/engineer-man/piston).
+// The public emkc.org instance became whitelist-only in Feb 2026, so it is no longer used.
+const PISTON_URL = process.env.CODE_EXECUTION_API_URL || 'http://127.0.0.1:2000/api/v2';
 
 const SUPPORTED_LANGUAGES = {
   javascript: { pistonName: 'javascript', version: '18.15.0', monacoLang: 'javascript', extension: 'solution.js' },
@@ -32,21 +30,85 @@ const SUPPORTED_LANGUAGES = {
   cpp:        { pistonName: 'c++',        version: '10.2.0',  monacoLang: 'cpp',        extension: 'solution.cpp' }
 };
 
+let pistonUp = false;
+let pistonCheckedAt = 0;
+let pistonRuntimes = null;
+
 /**
- * Checks if the local Piston instance is available. If not, sets the active URL to the public API.
+ * Cached reachability probe for the self-hosted Piston (re-checked every 30 s).
  */
-const ensurePistonConnection = async () => {
+const isPistonAvailable = async () => {
+  if (Date.now() - pistonCheckedAt < 30000) return pistonUp;
+  pistonCheckedAt = Date.now();
   try {
-    await axios.get(`${LOCAL_PISTON_URL}/runtimes`, { timeout: 2000 });
-    activePistonUrl = LOCAL_PISTON_URL;
-  } catch (error) {
-    logger.warn(`Local Piston instance at ${LOCAL_PISTON_URL} is unreachable. Falling back to public Piston API (${PUBLIC_PISTON_URL}). No Docker required!`);
-    activePistonUrl = PUBLIC_PISTON_URL;
+    const res = await axios.get(`${PISTON_URL}/runtimes`, { timeout: 1500 });
+    pistonRuntimes = new Set((res.data || []).map((r) => r.language));
+    if (!pistonUp) logger.info(`Piston reachable at ${PISTON_URL}`);
+    pistonUp = true;
+  } catch {
+    if (pistonUp || pistonRuntimes === null) {
+      logger.warn(`Piston not reachable at ${PISTON_URL} — using the built-in local runner (JavaScript/Python, plus Java/C++ if a JDK/g++ is installed).`);
+    }
+    pistonUp = false;
+    pistonRuntimes = null;
   }
+  return pistonUp;
 };
 
-// Check connection on startup
-ensurePistonConnection();
+/** Which languages can currently execute, and via which engine. */
+const getRuntimeStatus = async () => {
+  const piston = await isPistonAvailable();
+  const status = {};
+  for (const [lang, cfg] of Object.entries(SUPPORTED_LANGUAGES)) {
+    if (piston && pistonRuntimes && pistonRuntimes.has(cfg.pistonName)) status[lang] = { available: true, engine: 'piston' };
+    else if (localRunner.isLanguageAvailable(lang)) status[lang] = { available: true, engine: 'local' };
+    else status[lang] = { available: false, engine: null };
+  }
+  return status;
+};
+
+isPistonAvailable();
+
+
+// ─────────────────────────────────────────────────────────────
+// Output comparison
+// ─────────────────────────────────────────────────────────────
+
+const canonical = (v) => {
+  if (Array.isArray(v)) return `[${v.map(canonical).sort().join(',')}]`;
+  if (v && typeof v === 'object') return `{${Object.keys(v).sort().map((k) => `${k}:${canonical(v[k])}`).join(',')}}`;
+  return JSON.stringify(v);
+};
+
+const tryJson = (s) => {
+  try { return { ok: true, value: JSON.parse(s) }; } catch { return { ok: false }; }
+};
+
+/**
+ * Decide whether `actual` satisfies a test case.
+ * @param {string} actual   trimmed stdout
+ * @param {{expectedOutput:string, alternatives?:string[]}} testCase
+ * @param {'exact'|'unordered'|'numeric'} [checker='exact']
+ */
+const outputsMatch = (actual, testCase, checker = 'exact') => {
+  const norm = (s) => String(s ?? '').replace(/\r\n/g, '\n').trim();
+  const a = norm(actual);
+  const candidates = [norm(testCase.expectedOutput), ...(testCase.alternatives || []).map(norm)];
+  return candidates.some((e) => {
+    if (a === e) return true;
+    if (checker === 'numeric') {
+      const x = Number(a);
+      const y = Number(e);
+      return Number.isFinite(x) && Number.isFinite(y) && Math.abs(x - y) <= 1e-5 * Math.max(1, Math.abs(y));
+    }
+    if (checker === 'unordered') {
+      const ja = tryJson(a);
+      const je = tryJson(e);
+      return ja.ok && je.ok && canonical(ja.value) === canonical(je.value);
+    }
+    return false;
+  });
+};
 
 // ─────────────────────────────────────────────────────────────
 // Signature Parsing — extracts function/method name and params
@@ -170,7 +232,7 @@ const wrapJavaScript = (userCode, starterCode) => {
 ${userCode}
 
 // ─── Hidden execution harness ───
-const __input = require('fs').readFileSync('/dev/stdin', 'utf8').trim();
+const __input = require('fs').readFileSync(0, 'utf8').replace(/[\\r\\n]+$/, '');
 const __lines = __input.split('\\n');
 
 function __parseArg(raw) {
@@ -184,8 +246,9 @@ const __result = ${functionName}(...__args);
 
 // Format output to match expected test case format
 if (__result === undefined || __result === null) {
-  // void return — don't print anything for undefined
+  // void / in-place problems: print the (mutated) first array argument, like the Java harness
   if (__result === null) console.log('null');
+  else { const __first = __args.find(Array.isArray); if (__first) console.log(JSON.stringify(__first)); }
 } else if (typeof __result === 'boolean') {
   console.log(__result.toString());
 } else if (typeof __result === 'number') {
@@ -511,7 +574,7 @@ const wrapPython = (userCode, starterCode) => {
 ${userCode}
 
 # ─── Hidden execution harness ───
-__input = sys.stdin.read().strip()
+__input = sys.stdin.read().rstrip('\\r\\n')
 __lines = __input.split('\\n')
 
 def __parse_arg(raw):
@@ -527,7 +590,9 @@ __args = [__parse_arg(line) for line in __lines]
 __result = ${functionName}(*__args)
 
 if __result is None:
-    pass
+    __first = next((a for a in __args if isinstance(a, list)), None)
+    if __first is not None:
+        print(json.dumps(__first, separators=(',', ':')))
 elif isinstance(__result, bool):
     print(str(__result).lower())
 elif isinstance(__result, (int, float)):
@@ -564,14 +629,15 @@ const wrapCode = (userCode, language, starterCode) => {
       return wrapJava(userCode, starterCode);
     case 'python':
       return wrapPython(userCode, starterCode);
+    case 'cpp':
+      return wrapCpp(userCode, starterCode);
     default:
-      // C++ and others — fallback to raw execution for now
       return userCode;
   }
 };
 
 /**
- * Executes a code snippet using the Piston API.
+ * Executes source code. Prefers a reachable Piston; otherwise the built-in local runner.
  *
  * @param {string} code - The source code to execute
  * @param {string} [stdin=''] - Standard input to provide to the program
@@ -579,69 +645,56 @@ const wrapCode = (userCode, language, starterCode) => {
  * @returns {Promise<{stdout: string, stderr: string, exitCode: number, time: number}>}
  */
 const executeCode = async (code, stdin = '', language = 'javascript') => {
-  const langConfig = SUPPORTED_LANGUAGES[language] || SUPPORTED_LANGUAGES.javascript;
+  const lang = SUPPORTED_LANGUAGES[language] ? language : 'javascript';
+  const langConfig = SUPPORTED_LANGUAGES[lang];
+
+  const piston = await isPistonAvailable();
+  const pistonHasIt = piston && pistonRuntimes && pistonRuntimes.has(langConfig.pistonName);
+
+  if (!pistonHasIt) {
+    if (!localRunner.isLanguageAvailable(lang)) {
+      const need = { java: 'a JDK (javac + java)', cpp: 'g++ or clang++', python: 'Python 3' }[lang] || lang;
+      return {
+        stdout: '',
+        stderr: `No execution engine is available for ${lang}. Start the self-hosted Piston container (see server/.env.example) or install ${need} on the server.`,
+        exitCode: -1,
+        time: 0
+      };
+    }
+    try {
+      return await localRunner.runLocal(lang, code, stdin, 5000);
+    } catch (error) {
+      logger.error('Local runner failed', { error: error.message, language: lang });
+      return { stdout: '', stderr: `Local execution failed: ${error.message}`, exitCode: -1, time: 0 };
+    }
+  }
 
   try {
-    let response;
     const payload = {
       language: langConfig.pistonName,
       version: '*',
       files: [{ name: langConfig.extension, content: code }],
-      stdin
+      stdin,
+      run_timeout: 5000,
+      compile_timeout: 15000
     };
-
-    try {
-      response = await axios.post(`${activePistonUrl}/execute`, payload);
-    } catch (apiError) {
-      if (apiError.code === 'ECONNREFUSED' || (apiError.message && apiError.message.includes('ECONNREFUSED'))) {
-        logger.warn('Piston connection refused. Waiting 500ms and retrying...', { language });
-        await new Promise(r => setTimeout(r, 500));
-        response = await axios.post(`${activePistonUrl}/execute`, payload);
-      } else {
-        throw apiError;
-      }
-    }
-
+    const response = await axios.post(`${PISTON_URL}/execute`, payload, { timeout: 30000 });
     const { run, compile } = response.data;
 
-    // Capture compilation errors (Java, C++) — Piston puts them in compile.stderr
-    const compileStderr = (compile && compile.stderr) ? compile.stderr : '';
-    const runStderr = (run && run.stderr) ? run.stderr : '';
-    const combinedStderr = (compileStderr + runStderr).trim();
-
-    // If compilation failed, run may be empty or null
-    const runStdout = (run && run.stdout) ? run.stdout : '';
-    const runExitCode = (run && run.code !== null && run.code !== undefined) ? run.code : -1;
-    const runTime = (run && run.wall_time) ? Math.round(run.wall_time * 1000) : 0;
-
-    // Log compilation errors for debugging
-    if (compileStderr) {
-      logger.warn('Compilation error detected', {
-        language,
-        compileStderr: compileStderr.substring(0, 500)
-      });
-    }
+    const compileStderr = compile && compile.stderr ? compile.stderr : '';
+    const runStderr = run && run.stderr ? run.stderr : '';
+    if (compileStderr) logger.warn('Compilation error detected', { language, compileStderr: compileStderr.substring(0, 500) });
 
     return {
-      stdout: runStdout,
-      stderr: combinedStderr,
-      exitCode: runExitCode,
-      time: runTime
+      stdout: run && run.stdout ? run.stdout : '',
+      stderr: (compileStderr + runStderr).trim(),
+      exitCode: run && run.code !== null && run.code !== undefined ? run.code : -1,
+      time: run && run.wall_time ? Math.round(run.wall_time * 1000) : 0
     };
   } catch (error) {
     logger.error('Code execution failed', { error: error.message, language });
-    
-    let stderrMsg = error.message || 'Code execution service unavailable';
-    if (error.code === 'ECONNREFUSED' || (error.message && error.message.includes('ECONNREFUSED'))) {
-      stderrMsg = 'Execution Engine (Piston) is offline. Please ensure the local Docker container is running.';
-    }
-
-    return {
-      stdout: '',
-      stderr: stderrMsg,
-      exitCode: -1,
-      time: 0
-    };
+    pistonCheckedAt = 0; // force a re-probe next call
+    return { stdout: '', stderr: error.message || 'Code execution service unavailable', exitCode: -1, time: 0 };
   }
 };
 
@@ -724,7 +777,7 @@ const runTestCases = async (code, testCases, language = 'javascript', problem = 
         const stderrTrimmed = executionResult.stderr.trim();
         const actualOutput = stdoutTrimmed || (stderrTrimmed ? `[ERROR] ${stderrTrimmed}` : '');
         const expectedOutput = testCase.expectedOutput !== null ? (testCase.expectedOutput || '').trim() : null;
-        const passed = expectedOutput !== null ? stdoutTrimmed === expectedOutput : true; // custom cases organically 'pass'
+        const passed = expectedOutput !== null ? outputsMatch(stdoutTrimmed, testCase, problem?.checker) : true; // custom cases organically 'pass'
 
         logger.debug(`Test case ${idx + 1}/${testCases.length}: ${passed ? 'PASS' : 'FAIL'}`, {
           language,
@@ -768,4 +821,4 @@ const runTestCases = async (code, testCases, language = 'javascript', problem = 
   };
 };
 
-module.exports = { executeCode, runTestCases, wrapCode, SUPPORTED_LANGUAGES };
+module.exports = { executeCode, runTestCases, wrapCode, getRuntimeStatus, outputsMatch, SUPPORTED_LANGUAGES };

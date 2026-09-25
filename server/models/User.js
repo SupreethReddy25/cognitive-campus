@@ -85,7 +85,26 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: null
-    }
+    },
+
+    // ─── Engagement: streak freeze, achievements, bookmarks ───
+    longestStreak: { type: Number, default: 0 },
+    /** One freeze per ISO week — lets a student miss a single day without losing their streak. */
+    streakFreeze: {
+      available: { type: Number, default: 1 },
+      lastRefillWeek: { type: String, default: null },
+      lastUsedAt: { type: Date, default: null }
+    },
+    achievements: [
+      {
+        key: { type: String, required: true },
+        unlockedAt: { type: Date, default: Date.now },
+        _id: false
+      }
+    ],
+    bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Problem' }],
+    /** Which AI provider path was last used successfully (BYOK indicator for the profile page). */
+    hasByok: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

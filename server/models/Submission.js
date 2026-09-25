@@ -66,10 +66,20 @@ const submissionSchema = new mongoose.Schema(
     },
     nudge: {
       type: String
-    }
+    },
+    /** Mastery of the skill immediately after this attempt (drives the mastery-over-time charts). */
+    masteryAfter: { type: Number, default: null },
+    masteryBefore: { type: Number, default: null },
+    isDailyChallenge: { type: Boolean, default: false },
+    bonusXp: { type: Number, default: 0 },
+    streakMultiplier: { type: Number, default: 1 }
   },
   { timestamps: true }
 );
+
+submissionSchema.index({ userId: 1, createdAt: -1 });
+submissionSchema.index({ userId: 1, problemId: 1, createdAt: -1 });
+submissionSchema.index({ userId: 1, skillId: 1, createdAt: 1 });
 
 const Submission = mongoose.model('Submission', submissionSchema);
 

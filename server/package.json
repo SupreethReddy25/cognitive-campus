@@ -1,12 +1,15 @@
 {
   "name": "cognitive-campus-server",
   "version": "1.0.0",
-  "description": "Cogni backend — BKT-powered DSA learning platform",
+  "description": "Cogni backend \u2014 BKT-powered DSA learning platform",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --coverage"
+    "test": "jest",
+    "seed": "node seeds/masterSeed.js",
+    "seed:quick": "node seeds/masterSeed.js --quick",
+    "verify:problems": "node seeds/verifyProblems.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

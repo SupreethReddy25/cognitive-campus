@@ -20,6 +20,8 @@ const SkillState = require('../models/SkillState');
 const Skill = require('../models/Skill');
 const { mapTopics } = require('../services/topicSkillMapper');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
+const placementAnalytics = require('../services/placementAnalyticsService');
+const logger = require('../utils/logger');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -101,7 +103,7 @@ exports.getColleges = async (req, res) => {
 
     return sendSuccess(res, { colleges, count: colleges.length });
   } catch (err) {
-    console.error('getColleges error:', err.message);
+    logger.error('getColleges error', { error: err.message });
     return sendError(res, 'Server error', 500);
   }
 };
@@ -130,7 +132,7 @@ exports.getCollege = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('getCollege error:', err.message);
+    logger.error('getCollege error', { error: err.message });
     return sendError(res, 'Server error', 500);
   }
 };
@@ -304,7 +306,7 @@ exports.getCollegeDashboard = async (req, res) => {
       dataConfidence: confidence
     });
   } catch (err) {
-    console.error('getCollegeDashboard error:', err.message);
+    logger.error('getCollegeDashboard error', { error: err.message });
     return sendError(res, 'Server error', 500);
   }
 };
@@ -529,7 +531,7 @@ exports.getCollegeCompanyIntel = async (req, res) => {
       dataConfidence: confidence
     });
   } catch (err) {
-    console.error('getCollegeCompanyIntel error:', err.message);
+    logger.error('getCollegeCompanyIntel error', { error: err.message });
     return sendError(res, 'Server error', 500);
   }
 };
@@ -559,7 +561,7 @@ exports.createCollege = async (req, res) => {
     return sendSuccess(res, { college }, 201);
   } catch (err) {
     if (err.code === 11000) return sendError(res, 'A college with this name or slug already exists');
-    console.error('createCollege error:', err.message);
+    logger.error('createCollege error', { error: err.message });
     return sendError(res, 'Server error', 500);
   }
 };
@@ -590,7 +592,7 @@ exports.createPlacementRecord = async (req, res) => {
     const populated = await record.populate(['collegeId', 'companyId']);
     return sendSuccess(res, { record: populated }, 201);
   } catch (err) {
-    console.error('createPlacementRecord error:', err.message);
+    logger.error('createPlacementRecord error', { error: err.message });
     return sendError(res, 'Server error', 500);
   }
 };
@@ -620,7 +622,25 @@ exports.verifyExperience = async (req, res) => {
     if (!experience) return sendError(res, 'Experience not found', 404);
     return sendSuccess(res, { experience });
   } catch (err) {
-    console.error('verifyExperience error:', err.message);
+    logger.error('verifyExperience error', { error: err.message });
+    return sendError(res, 'Server error', 500);
+  }
+};
+
+
+/**
+ * @desc    College placement analytics: hiring trends, skill-demand heatmap, predictions and the
+ *          signed-in student's skill gap / peer comparison
+ * @route   GET /api/colleges/:slug/insights
+ * @access  Protected
+ */
+exports.getCollegeInsightsHandler = async (req, res) => {
+  try {
+    const data = await placementAnalytics.getCollegeInsights(req.params.slug, req.user.userId);
+    if (!data) return sendError(res, 'College not found', 404);
+    return sendSuccess(res, data);
+  } catch (err) {
+    logger.error('getCollegeInsights error', { error: err.message, stack: err.stack });
     return sendError(res, 'Server error', 500);
   }
 };

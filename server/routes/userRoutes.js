@@ -19,4 +19,7 @@ router.post('/dashboard-quote', authenticateToken, require('../controllers/userC
 // PATCH /api/users/profile — Update placement profile (college, targetCompany, targetRole)
 router.patch('/profile', authenticateToken, require('../controllers/userController').updateProfile);
 
+// GET /api/users/attempted — per-problem attempt/solve map for list views
+router.get('/attempted', authenticateToken, require('../controllers/userController').getAttempted);
+
 module.exports = router;
