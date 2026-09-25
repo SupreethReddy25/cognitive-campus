@@ -2,13 +2,13 @@
  * Intel Service — "The Editor-in-Chief"
  *
  * Takes a raw, potentially messy interview memory dump and uses
- * Gemini 2.0 Flash to refine it into a professional, LeetCode-quality
+ * the unified AI layer (user Gemini key → platform Gemini → Groq) to refine it into a professional, LeetCode-quality
  * DSA problem with test cases, constraints, and starter code.
  *
  * @module intelService
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const aiService = require('./aiService');
 const logger = require('../utils/logger');
 
 /**
@@ -88,7 +88,7 @@ const validateGeminiOutput = (parsed) => {
 };
 
 /**
- * Calls Gemini 2.0 Flash to refine a raw interview memory dump into
+ * Calls the unified AI layer (user Gemini key → platform Gemini → Groq) to refine a raw interview memory dump into
  * a professional DSA problem with test cases and starter code.
  *
  * @param {string} rawDescription - The student's raw memory dump
@@ -96,12 +96,10 @@ const validateGeminiOutput = (parsed) => {
  * @param {string} round - Interview round (optional)
  * @param {number} confidence - Student's confidence level 0-100
  * @param {string[]} existingSkills - Array of skill names from the DB
- * @param {string} apiKey - Gemini API key to use
+ * @param {string} userId - used to look up the caller's own (BYOK) key
  * @returns {Promise<object>} Structured problem JSON
  */
-const refineRawIntel = async (rawDescription, company, round, confidence, existingSkills, apiKey) => {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+const refineRawIntel = async (rawDescription, company, round, confidence, existingSkills, userId) => {
 
   const skillsList = existingSkills.length > 0
     ? `Available DSA skill categories (pick the BEST match): ${existingSkills.join(', ')}`
@@ -160,12 +158,11 @@ OUTPUT STRICT JSON (no markdown, no explanation, ONLY the JSON object):
     confidence
   });
 
-  const result = await model.generateContent(prompt);
-  const responseText = result.response.text();
+  const { text: responseText, data, provider } = await aiService.complete({ userId, prompt, json: true, temperature: 0.3, maxTokens: 4096, timeoutMs: 40000 });
 
-  logger.debug('[Intel] Gemini raw response length', { length: responseText.length });
+  logger.debug('[Intel] AI raw response length', { length: responseText.length, provider });
 
-  const parsed = extractJSON(responseText);
+  const parsed = data || extractJSON(responseText);
   const validated = validateGeminiOutput(parsed);
 
   logger.info('[Intel] Gemini refinement successful', {

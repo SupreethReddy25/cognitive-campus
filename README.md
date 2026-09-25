@@ -136,10 +136,25 @@ CLIENT_URL=http://localhost:5173 # Frontend URL for CORS
 
 ### 3. Seed the Database
 
+One idempotent command loads everything (safe to re-run; it only upserts, and regenerates derived data for the demo cohort only):
+
 ```bash
-node seeds/skillSeed.js    # Seeds 12 DSA skills with prerequisites
-node seeds/problemSeed.js  # Seeds 36 problems with multi-language starter code
+cd server
+npm run seed          # skills, 20 colleges, 23 companies, 78+ verified problems w/ editorials,
+                      # 7 sheets, 660+ placement records, 50 interview experiences, a 60-student cohort
+npm run seed:quick    # reference data only (no demo users / submissions)
+npm run verify:problems   # runs every reference solution (JS + Python) against every test case
 ```
+
+Demo logins (password `Demo@12345`): `demo@cognitivecampus.dev` (student), `admin@cognitivecampus.dev` (placement-cell admin).
+
+### AI features
+
+Optional. Provider order: the user's own Gemini key (Profile → AI settings, stored AES-256 encrypted) → platform `GEMINI_API_KEY` → `GROQ_API_KEY`. With no key configured every AI feature (hints, experience parser, prep plan, dashboard tip) degrades to a deterministic offline fallback.
+
+### Code execution
+
+Piston is used when `CODE_EXECUTION_API_URL` is reachable; otherwise a built-in sandboxed local runner executes JavaScript and Python (Java / C++ only if a JDK / g++ is installed).
 
 ### 4. Client Setup
 

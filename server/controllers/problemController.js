@@ -195,23 +195,6 @@ const proposeProblem = async (req, res, next) => {
       return sendError(res, `Unsupported language: ${lang}. Supported: ${Object.keys(SUPPORTED_LANGUAGES).join(', ')}`, 400);
     }
 
-    // ─── Resolve API key (BYOK or system) ───
-    let apiKey = process.env.GEMINI_API_KEY;
-    const user = await User.findById(userId);
-    if (user?.encryptedGeminiKey && user?.keyIv && user?.keyAuthTag) {
-      try {
-        const encryptionService = require('../services/encryptionService');
-        apiKey = encryptionService.decryptKey(user.encryptedGeminiKey, user.keyIv, user.keyAuthTag);
-        logger.info(`[Intel] User ${userId} using BYOK for Intel pipeline.`);
-      } catch (err) {
-        logger.warn('[Intel] BYOK decryption failed, falling back to system key');
-      }
-    }
-
-    if (!apiKey) {
-      return sendError(res, 'No Gemini API key configured. Add one in your profile settings.', 503);
-    }
-
     // ─── Step A: AI Framing — Gemini refines the raw intel ───
     logger.info(`[Intel] Step A: Refining raw intel for user ${userId}`);
 
@@ -226,11 +209,12 @@ const proposeProblem = async (req, res, next) => {
         round?.trim() || null,
         confidence || 50,
         skillNames,
-        apiKey
+        userId
       );
     } catch (aiError) {
-      logger.error('[Intel] Gemini refinement failed', { error: aiError.message });
-      return sendError(res, `AI refinement failed: ${aiError.message}`, 422);
+      logger.error('[Intel] AI refinement failed', { error: aiError.message, code: aiError.code });
+      const status = aiError.code === 'NO_KEY' ? 503 : aiError.code === 'RATE_LIMITED' ? 429 : 422;
+      return sendError(res, aiError.code ? aiError.message : `AI refinement failed: ${aiError.message}`, status);
     }
 
     // ─── Match skill from Gemini's suggestion ───

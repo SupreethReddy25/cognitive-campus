@@ -16,7 +16,7 @@ let javaParser;
 try {
   javaParser = require('java-parser');
 } catch (e) {
-  console.warn('java-parser not installed. Java AST analysis disabled.');
+  require('../utils/logger').warn('java-parser not installed. Java AST analysis disabled.');
 }
 
 /**

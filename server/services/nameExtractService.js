@@ -10,6 +10,8 @@
  * Graceful fallback at every step — never throws, always returns string|null.
  */
 
+const logger = require('../utils/logger');
+
 const Groq = require('groq-sdk');
 
 let groqClient = null;
@@ -166,7 +168,7 @@ async function extractFirstName(email) {
     //   (we trust our own filter; Groq might be conservative)
     return verified ?? candidate;
   } catch (err) {
-    console.warn('[nameExtract] Groq verify failed, using pre-filter result:', err.message);
+    logger.warn(`[nameExtract] Groq verify failed, using pre-filter result: ${err.message}`);
     // Network/key error — we already passed the pre-filter, return that
     return candidate;
   }
