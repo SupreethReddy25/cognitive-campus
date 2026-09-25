@@ -1,437 +1,234 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Search, Shield, Plus, TrendingUp, Flame, ArrowUpRight, Activity, FileText, Layers, X, SlidersHorizontal, Eye, Users } from 'lucide-react';
 import { companiesService } from '../services/api';
-import {
-  Search, Shield, Loader2, X, ChevronDown, ChevronRight,
-  ArrowUpRight, Sparkles, Activity, TrendingUp
-} from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
 import { ReviewQueue } from '../components/intel/ReviewQueue';
+import { Card, Label, CompanyLogo, TierBadge, Skeleton, EmptyState, Pill, Bar, CountUp, cn } from '../components/ui/kit';
 
-// ─── Config ─────────────────────────────────────────────────────────────────
-const TIER_DOT = {
-  'FAANG':   'bg-violet-400',
-  'Product': 'bg-[var(--signal)]',
-  'Service': 'bg-sky-400',
-  'Startup': 'bg-amber-400',
-};
-const DIFF_DOT = {
-  'Brain-melting': 'bg-rose-500', 'Very Hard': 'bg-rose-500', 'Hard': 'bg-rose-500',
-  'Grueling': 'bg-amber-500',    'Challenging': 'bg-amber-500', 'Medium': 'bg-amber-500',
-  'Easy': 'bg-[var(--signal)]',  'Smooth': 'bg-[var(--signal)]',
-};
-const DIFF_RANK = {
-  'Brain-melting': 5, 'Very Hard': 5, 'Hard': 4,
-  'Grueling': 3, 'Challenging': 3, 'Medium': 2, 'Easy': 1, 'Smooth': 1,
-};
-const FILTERS = ['All', 'FAANG', 'Product', 'Service', 'Startup'];
+const TIERS = ['FAANG', 'Product', 'Finance', 'Service', 'Startup'];
+const SORTS = [['trending', 'Trending'], ['experiences', 'Most reports'], ['ctc', 'Highest CTC'], ['name', 'A–Z']];
+const DIFF_TONE = { Easy: 'green', Medium: 'amber', Hard: 'red' };
+const MAX_CTC = 80;
 
-// ─── Main ────────────────────────────────────────────────────────────────────
+function CtcRange({ min, max }) {
+  if (min == null) return <span className="text-zinc-600">Not disclosed</span>;
+  const cap = (v) => Math.min(100, (v / MAX_CTC) * 100);
+  return (
+    <div>
+      <div className="mb-1.5 font-mono text-[12px] text-zinc-200">{min === max ? `${min}` : `${min}–${max}`} <span className="text-zinc-500">LPA</span></div>
+      <div className="relative h-1.5 rounded-full bg-white/[0.06]">
+        <div className="absolute inset-y-0 rounded-full bg-gradient-to-r from-emerald-500/60 to-sky-400/80" style={{ left: `${cap(min)}%`, width: `${Math.max(3, cap(max) - cap(min))}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function CompanyCard({ c, index, trending, onSubmit }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(index * 0.03, 0.4), duration: 0.35 }}>
+      <Card padded={false} glow className="group h-full overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-white/[0.16]">
+        <Link to={`/companies/${c.slug}`} className="block p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <CompanyLogo company={c} size={46} />
+              <div className="min-w-0">
+                <div className="truncate text-[16px] font-semibold text-zinc-100">{c.name}</div>
+                <div className="mt-1 flex items-center gap-1.5"><TierBadge tier={c.tier} />{trending && <Pill tone="amber" icon={Flame}>Trending</Pill>}</div>
+              </div>
+            </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-700 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--signal)]" />
+          </div>
+
+          <div className="mt-5 grid grid-cols-[1.3fr_1fr] gap-5">
+            <div><Label className="mb-1.5 block text-zinc-600">Avg CTC</Label><CtcRange min={c.ctcMin} max={c.ctcMax} /></div>
+            <div>
+              <Label className="mb-1.5 block text-zinc-600">Reports</Label>
+              <div className="flex items-baseline gap-1.5"><span className="text-[17px] font-semibold tabular-nums text-zinc-100">{c.experienceCount}</span>{c.recentExperiences > 0 && <span className="font-mono text-[10px] text-emerald-400">+{c.recentExperiences} new</span>}</div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Pill tone={DIFF_TONE[c.interviewProcess?.difficulty] || 'zinc'}>{c.interviewProcess?.difficulty || 'Medium'}</Pill>
+            <Pill tone="zinc">{c.interviewProcess?.rounds?.length || 0} rounds</Pill>
+            {c.offerRate != null && <Pill tone="blue">{c.offerRate}% offer rate</Pill>}
+          </div>
+
+          <div className="mt-3.5 line-clamp-1 text-[11.5px] text-zinc-500">{(c.roles || []).slice(0, 4).join(' · ')}</div>
+        </Link>
+        <div className="flex items-center justify-between border-t border-white/[0.05] bg-white/[0.015] px-5 py-2.5">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] text-zinc-600"><Eye className="h-3 w-3" />{(c.viewCount || 0).toLocaleString()} views</span>
+          <button onClick={() => onSubmit(c)} className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-[var(--signal)]"><Plus className="h-3 w-3" /> Add your experience</button>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
 export default function IntelHubPage() {
-  const [companies, setCompanies]       = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [search, setSearch]             = useState('');
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [sortBy, setSortBy]             = useState('default');
-  const [expandedId, setExpandedId]     = useState(null);
+  const toast = useToast();
+  const [companies, setCompanies] = useState([]);
+  const [meta, setMeta] = useState({ trending: { mostViewed: [], mostSubmitted: [] }, totalExperiences: 0 });
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('companies');
+
+  const [search, setSearch] = useState('');
+  const [tiers, setTiers] = useState([]);
+  const [ctc, setCtc] = useState([0, MAX_CTC]);
+  const [minReports, setMinReports] = useState(0);
+  const [sort, setSort] = useState('trending');
+  const [showFilters, setShowFilters] = useState(false);
   const [submitTarget, setSubmitTarget] = useState(null);
-  const [successMsg, setSuccessMsg]     = useState(false);
-  const [activeTab, setActiveTab]       = useState('companies'); // 'companies' | 'review'
   const searchRef = useRef(null);
 
-  // `/` keyboard shortcut → focus search
-  useEffect(() => {
-    const handler = (e) => {
-      if (
-        e.key === '/'
-        && document.activeElement.tagName !== 'INPUT'
-        && document.activeElement.tagName !== 'TEXTAREA'
-      ) {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
+  const load = () => companiesService.getCompanies().then((r) => { setCompanies(r.data.data); setMeta(r.data.meta || meta); }).catch(() => toast.error('Could not load companies')).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    companiesService.getCompanies()
-      .then(res => { if (res.data.success) setCompanies(res.data.data); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const h = (e) => { if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) { e.preventDefault(); searchRef.current?.focus(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, []);
-
-  const stats = useMemo(() => {
-    const totalRounds = companies.reduce(
-      (a, c) => a + (c.interviewProcess?.rounds?.length || 0), 0
-    );
-    return {
-      total:     companies.length,
-      faang:     companies.filter(c => c.tier === 'FAANG').length,
-      avgRounds: companies.length ? (totalRounds / companies.length).toFixed(1) : '—',
-    };
-  }, [companies]);
 
   const filtered = useMemo(() => {
-    let list = companies.filter(c => {
-      const q = search.toLowerCase();
-      const matchSearch = !q
-        || c.name.toLowerCase().includes(q)
-        || c.tier?.toLowerCase().includes(q)
-        || c.roles?.some(r => r.toLowerCase().includes(q));
-      const matchFilter = activeFilter === 'All' || c.tier === activeFilter;
-      return matchSearch && matchFilter;
+    const q = search.trim().toLowerCase();
+    let list = companies.filter((c) => {
+      if (q && !c.name.toLowerCase().includes(q) && !(c.roles || []).some((r) => r.toLowerCase().includes(q)) && !c.tier.toLowerCase().includes(q)) return false;
+      if (tiers.length && !tiers.includes(c.tier)) return false;
+      if ((c.ctcMax ?? 0) < ctc[0] || (c.ctcMin ?? Infinity) > ctc[1]) return false;
+      if (c.experienceCount < minReports) return false;
+      return true;
     });
-    if (sortBy === 'difficulty')
-      list = [...list].sort((a, b) =>
-        (DIFF_RANK[b.interviewProcess?.difficulty] || 0) - (DIFF_RANK[a.interviewProcess?.difficulty] || 0)
-      );
-    else if (sortBy === 'rounds')
-      list = [...list].sort((a, b) =>
-        (b.interviewProcess?.rounds?.length || 0) - (a.interviewProcess?.rounds?.length || 0)
-      );
-    return list;
-  }, [companies, search, activeFilter, sortBy]);
+    const sorters = {
+      trending: (a, b) => b.recentExperiences - a.recentExperiences || (b.viewCount || 0) - (a.viewCount || 0),
+      experiences: (a, b) => b.experienceCount - a.experienceCount,
+      ctc: (a, b) => (b.ctcMax ?? 0) - (a.ctcMax ?? 0),
+      name: (a, b) => a.name.localeCompare(b.name)
+    };
+    return [...list].sort(sorters[sort]);
+  }, [companies, search, tiers, ctc, minReports, sort]);
 
-  const toggleExpand = useCallback(
-    (id) => setExpandedId(prev => prev === id ? null : id),
-    []
-  );
+  const byId = useMemo(() => new Map(companies.map((c) => [c._id, c])), [companies]);
+  const trendingIds = new Set(meta.trending?.mostSubmitted?.slice(0, 3));
+  const mostViewed = (meta.trending?.mostViewed || []).map((id) => byId.get(id)).filter(Boolean).slice(0, 5);
+  const mostSubmitted = (meta.trending?.mostSubmitted || []).map((id) => byId.get(id)).filter(Boolean).slice(0, 5);
+  const anyFilter = search || tiers.length || ctc[0] > 0 || ctc[1] < MAX_CTC || minReports > 0;
+
+  const totalReports = meta.totalExperiences || companies.reduce((n, c) => n + c.experienceCount, 0);
 
   return (
     <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-
-      {/* ── Sticky header ──────────────────────────────────────── */}
-      <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-10 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-6 backdrop-blur-xl md:px-10">
         <div className="flex items-center gap-3">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)] status-dot" />
-          <span className="font-mono text-[10px] tracking-[0.24em] text-zinc-200 uppercase">Intel Hub</span>
-          <span className="mx-2 h-3 w-px bg-white/[0.06]" />
-          <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-600 uppercase">Company Intelligence</span>
+          <span className="status-dot h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-200">Intel Hub</span>
+          <span className="mx-2 hidden h-3 w-px bg-white/[0.06] sm:block" />
+          <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600 sm:block">Company intelligence</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-1.5">
-            <Activity className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.6} />
-            <span className="font-mono text-[12px] text-zinc-400 tabular-nums">{stats.total}</span>
-            <span className="font-mono text-[11px] text-zinc-600">companies</span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-3 py-1.5">
-            <span className="h-2 w-2 rounded-full bg-[var(--signal)]" />
-            <span className="font-mono text-[12px] font-semibold text-zinc-200 tabular-nums">{stats.faang}</span>
-            <span className="font-mono text-[11px] text-zinc-500">FAANG</span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-1.5">
-            <span className="font-mono text-[12px] text-zinc-400 tabular-nums">{stats.avgRounds}</span>
-            <span className="font-mono text-[11px] text-zinc-600">avg rounds</span>
-          </div>
+        <div className="flex items-center gap-1 rounded-lg border border-white/[0.06] p-[3px]">
+          {[['companies', 'Companies', Layers], ['review', 'Review queue', Shield]].map(([k, l, I]) => (
+            <button key={k} onClick={() => setTab(k)} className={cn('flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors', tab === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}><I className="h-3 w-3" />{l}</button>
+          ))}
         </div>
       </header>
 
-      {/* ── Command Search Hero ─────────────────────────────────── */}
-      <section className="border-b border-white/[0.04] px-10 py-10">
-        <div className="flex items-center gap-2 mb-6 justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-3 w-3 text-[var(--signal)]" strokeWidth={2} />
-            <span className="font-mono text-[10px] tracking-[0.22em] text-zinc-600 uppercase">
-              03 / 05 · Company Intelligence
-            </span>
+      {tab === 'review' ? <ReviewQueue /> : (
+        <div className="space-y-6 px-6 py-8 md:px-10">
+          {/* Hero */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-br from-[#0d1218] via-[#0b0f15] to-[#0a0d13] p-7 md:p-9">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-500/[0.08] blur-[80px]" />
+            <div className="pointer-events-none absolute -bottom-24 left-1/4 h-56 w-56 rounded-full bg-[var(--signal)]/[0.07] blur-[80px]" />
+            <div className="relative grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-center">
+              <div>
+                <Label>Interview intelligence database</Label>
+                <h1 className="mt-3 font-display text-[40px] font-light leading-[1.08] tracking-tight text-zinc-50 md:text-[48px]">Know the interview <span className="italic text-[var(--signal)]">before</span> you walk in.</h1>
+                <p className="mt-3 max-w-xl text-[13.5px] leading-relaxed text-zinc-500">Real questions, round structures, difficulty ratings and offer rates — crowdsourced from students who just sat the interviews. Statistics show confidence intervals, so you always know how much to trust a number.</p>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <button onClick={() => setSubmitTarget({})} className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-[12.5px] font-semibold text-black shadow-lg shadow-emerald-500/20 transition-all hover:brightness-110"><Plus className="h-4 w-4" strokeWidth={2.4} /> Submit your experience</button>
+                  <span className="text-[11.5px] text-zinc-500">Paste raw text and AI structures it · earn up to <b className="text-amber-300">200 XP</b></span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[['Companies', companies.length, Layers], ['Reports', totalReports, FileText], ['This month', companies.reduce((n, c) => n + c.recentExperiences, 0), Activity]].map(([l, v, I]) => (
+                  <div key={l} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4"><I className="mb-2 h-4 w-4 text-[var(--signal)]" strokeWidth={1.6} /><div className="text-[26px] font-semibold tabular-nums text-zinc-100"><CountUp value={v} /></div><Label className="text-zinc-600">{l}</Label></div>
+                ))}
+              </div>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-1 rounded-lg border border-white/[0.06] bg-black/40 p-1">
-            <button
-              onClick={() => setActiveTab('companies')}
-              className={`press rounded px-4 py-1.5 font-mono text-[10px] tracking-widest uppercase transition-colors ${
-                activeTab === 'companies' ? 'bg-white/[0.08] text-white' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              Companies
-            </button>
-            <button
-              onClick={() => setActiveTab('review')}
-              className={`press rounded px-4 py-1.5 font-mono text-[10px] tracking-widest uppercase transition-colors flex items-center gap-2 ${
-                activeTab === 'review' ? 'bg-white/[0.08] text-white' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              Review Queue
-              <div className="h-1.5 w-1.5 rounded-full bg-[var(--signal)] animate-pulse" />
-            </button>
-          </div>
-        </div>
 
-        {/* Large search bar is the hero */}
-        <div
-          className="group relative flex items-center gap-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 transition-all duration-300 focus-within:border-[var(--signal)]/30 focus-within:bg-[var(--signal)]/[0.02] hover:border-white/[0.12] max-w-2xl cursor-text"
-          onClick={() => searchRef.current?.focus()}
-        >
-          <Search
-            className="h-5 w-5 text-zinc-600 shrink-0 group-focus-within:text-[var(--signal)] transition-colors duration-200"
-            strokeWidth={1.6}
-          />
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Which company are you preparing for?"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="flex-1 bg-transparent font-sans text-[15px] text-zinc-200 outline-none placeholder:text-zinc-600"
-          />
-          {search ? (
-            <button
-              onClick={e => { e.stopPropagation(); setSearch(''); }}
-              className="text-zinc-600 hover:text-zinc-300 transition-colors"
-            >
-              <X className="h-4 w-4" strokeWidth={1.6} />
-            </button>
+          {/* Trending */}
+          {!loading && (mostViewed.length > 0 || mostSubmitted.length > 0) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {[['Most viewed', Eye, mostViewed, (c) => `${(c.viewCount || 0).toLocaleString()} views`], ['Most active this month', TrendingUp, mostSubmitted, (c) => `${c.recentExperiences} new · ${c.experienceCount} total`]].map(([title, I, list, sub]) => (
+                <Card key={title}>
+                  <div className="mb-3 flex items-center gap-2"><I className="h-3.5 w-3.5 text-amber-400" /><Label className="text-zinc-300">{title}</Label></div>
+                  <div className="space-y-1.5">
+                    {list.map((c, i) => (
+                      <Link key={c._id} to={`/companies/${c.slug}`} className="group flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/[0.04]">
+                        <span className="w-4 font-mono text-[11px] text-zinc-600">{i + 1}</span>
+                        <CompanyLogo company={c} size={28} className="rounded-lg" />
+                        <span className="flex-1 truncate text-[13px] text-zinc-200 group-hover:text-[var(--signal)]">{c.name}</span>
+                        <span className="font-mono text-[10.5px] text-zinc-600">{sub(c)}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Toolbar */}
+          <Card padded={false} className="p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-2">
+                <Search className="h-3.5 w-3.5 text-zinc-600" />
+                <input ref={searchRef} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search company, role or tier…   ( / )" className="w-full bg-transparent text-[13px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none" />
+                {search && <button onClick={() => setSearch('')}><X className="h-3.5 w-3.5 text-zinc-600 hover:text-zinc-300" /></button>}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {TIERS.map((t) => <button key={t} onClick={() => setTiers((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]))} className={cn('rounded-lg border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors', tiers.includes(t) ? 'border-[var(--signal)]/40 bg-[var(--signal)]/10 text-[var(--signal)]' : 'border-white/[0.07] text-zinc-500 hover:text-zinc-200')}>{t}</button>)}
+              </div>
+              <button onClick={() => setShowFilters((s) => !s)} className={cn('flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors', showFilters ? 'border-white/20 bg-white/[0.06] text-zinc-100' : 'border-white/[0.07] text-zinc-500 hover:text-zinc-200')}><SlidersHorizontal className="h-3 w-3" /> Filters</button>
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-lg border border-white/[0.07] bg-[#0b0f15] px-3 py-2 font-mono text-[10.5px] uppercase tracking-wider text-zinc-300 focus:outline-none">{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+            </div>
+            {showFilters && (
+              <div className="mt-4 grid gap-6 border-t border-white/[0.05] pt-4 md:grid-cols-2">
+                <div>
+                  <div className="mb-2 flex items-center justify-between"><Label>CTC range (LPA)</Label><span className="font-mono text-[11px] text-zinc-300">{ctc[0]} – {ctc[1] >= MAX_CTC ? `${MAX_CTC}+` : ctc[1]}</span></div>
+                  <div className="flex items-center gap-3"><input type="range" min={0} max={MAX_CTC} step={5} value={ctc[0]} onChange={(e) => setCtc([Math.min(Number(e.target.value), ctc[1] - 5), ctc[1]])} className="h-1 flex-1 accent-emerald-400" /><input type="range" min={0} max={MAX_CTC} step={5} value={ctc[1]} onChange={(e) => setCtc([ctc[0], Math.max(Number(e.target.value), ctc[0] + 5)])} className="h-1 flex-1 accent-sky-400" /></div>
+                </div>
+                <div>
+                  <div className="mb-2 flex items-center justify-between"><Label>Minimum reports</Label><span className="font-mono text-[11px] text-zinc-300">{minReports}+</span></div>
+                  <input type="range" min={0} max={8} value={minReports} onChange={(e) => setMinReports(Number(e.target.value))} className="h-1 w-full accent-emerald-400" />
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Grid */}
+          {loading ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-56 rounded-2xl" />)}</div>
+          ) : filtered.length === 0 ? (
+            <EmptyState icon={Search} title="No companies match" text="Loosen a filter or clear the search." action={anyFilter && <button onClick={() => { setSearch(''); setTiers([]); setCtc([0, MAX_CTC]); setMinReports(0); }} className="rounded-lg border border-white/10 px-4 py-2 text-[12px] text-zinc-300 hover:bg-white/[0.05]">Clear filters</button>} />
           ) : (
-            <kbd className="flex items-center gap-0.5 rounded border border-white/[0.08] px-2 py-1 font-mono text-[9px] text-zinc-700">
-              /
-            </kbd>
+            <>
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((c, i) => <CompanyCard key={c._id} c={c} index={i} trending={trendingIds.has(c._id)} onSubmit={setSubmitTarget} />)}
+              </div>
+              <p className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-zinc-700">{filtered.length} {filtered.length === 1 ? 'company' : 'companies'}{tiers.length ? ` · ${tiers.join(', ')}` : ''}{search ? ` matching “${search}”` : ''}</p>
+            </>
           )}
         </div>
-
-        <p className="mt-3 font-mono text-[10px] tracking-[0.16em] text-zinc-700">
-          {filtered.length} {filtered.length === 1 ? 'company' : 'companies'} ·
-          Click any row to preview intel
-        </p>
-      </section>
-
-      {/* ── Filter + sort bar (Companies Tab) ────────────────── */}
-      {activeTab === 'companies' && (
-      <div className="flex flex-wrap items-center gap-3 border-b border-white/[0.04] px-10 py-3">
-        {/* Tier filters */}
-        <div className="flex items-center gap-1 border border-white/[0.06] bg-white/[0.01] p-[2px]">
-          {FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`press ease-signature px-3 py-1 font-mono text-[10px] tracking-[0.15em] uppercase transition-all duration-300 ${
-                activeFilter === f
-                  ? 'bg-[var(--signal)]/10 text-[var(--signal)] border border-[var(--signal)]/20'
-                  : 'text-zinc-600 hover:text-zinc-300'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        {/* Sort */}
-        <div className="relative flex items-center gap-2 border border-white/[0.06] bg-white/[0.02] px-3 py-1.5">
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="appearance-none bg-transparent font-mono text-[10px] tracking-widest text-zinc-500 outline-none cursor-pointer pr-4"
-          >
-            <option value="default"    className="bg-[#0d1117]">DEFAULT</option>
-            <option value="difficulty" className="bg-[#0d1117]">DIFFICULTY</option>
-            <option value="rounds"     className="bg-[#0d1117]">ROUNDS</option>
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-700 pointer-events-none" strokeWidth={1.6} />
-        </div>
-
-        {/* Share CTA */}
-        <button
-          onClick={() => setSubmitTarget({ _id: '', name: '' })}
-          className="ml-auto group flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-[11px] font-semibold tracking-wide text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-emerald-500/30 hover:brightness-110"
-        >
-          <Shield className="h-3 w-3" strokeWidth={1.6} />
-          Share Intel
-        </button>
-      </div>
       )}
 
-      {/* ── Company table (Companies Tab) ────────────────────── */}
-      {activeTab === 'companies' && (
-      <section className="px-10 py-4">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-24 text-zinc-700">
-            <Loader2 className="h-5 w-5 animate-spin" strokeWidth={1.5} />
-            <span className="font-mono text-[10px] tracking-[0.24em]">LOADING INTEL...</span>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-24">
-            <span className="h-1.5 w-1.5 rounded-full bg-zinc-700" />
-            <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-700 uppercase">No companies match</span>
-            <button
-              onClick={() => { setSearch(''); setActiveFilter('All'); }}
-              className="mt-2 font-mono text-[10px] text-zinc-600 hover:text-[var(--signal)] transition-colors underline underline-offset-2"
-            >
-              Clear filters
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Table header */}
-            <div className="grid grid-cols-[2.5fr_90px_120px_160px_100px] items-center gap-4 border-b border-white/[0.06] py-2.5 font-mono text-[9px] tracking-[0.26em] text-zinc-700 uppercase">
-              <span className="pl-6">Company</span>
-              <span>Tier</span>
-              <span>Avg CTC</span>
-              <span>Rounds</span>
-              <span>Difficulty</span>
-            </div>
-
-            <ul>
-              {filtered.map((company, i) => {
-                const rounds   = company.interviewProcess?.rounds || [];
-                const diff     = company.interviewProcess?.difficulty;
-                const tierDot  = TIER_DOT[company.tier] || 'bg-zinc-500';
-                const diffDot  = DIFF_DOT[diff]         || 'bg-zinc-600';
-                const expanded = expandedId === company._id;
-
-                return (
-                  <li
-                    key={company._id}
-                    className="stagger-in border-b border-white/[0.04]"
-                    style={{ animationDelay: `${Math.min(i * 25, 300)}ms` }}
-                  >
-                    {/* ── Main row ── */}
-                    <div
-                      className={`group grid grid-cols-[2.5fr_90px_120px_160px_100px] items-center gap-4 py-4 cursor-pointer transition-all duration-200 row-interactive ${
-                        expanded ? 'bg-[var(--signal)]/[0.03] border-l-2 border-l-[var(--signal)]/30' : ''
-                      }`}
-                      onClick={() => toggleExpand(company._id)}
-                    >
-                      {/* Name + roles */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        <ChevronRight
-                          className={`h-3.5 w-3.5 text-zinc-700 shrink-0 transition-transform duration-200 ${expanded ? 'rotate-90 !text-[var(--signal)]' : ''}`}
-                          strokeWidth={1.6}
-                        />
-                        <div className="min-w-0">
-                          <div className="font-sans text-[14px] font-medium text-zinc-100 group-hover:text-white transition-colors truncate">
-                            {company.name}
-                          </div>
-                          <div className="mt-0.5 font-mono text-[10px] tracking-[0.1em] text-zinc-600 truncate">
-                            {company.roles?.slice(0, 3).join(' · ')}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Tier */}
-                      <div className="flex items-center gap-2">
-                        <span className={`h-2 w-2 rounded-full shrink-0 ${tierDot} shadow-[0_0_6px_currentColor]`} />
-                        <span className="font-mono text-[10px] tracking-[0.12em] text-zinc-400">{company.tier}</span>
-                      </div>
-
-                      {/* CTC */}
-                      <span className="font-mono text-[11px] text-zinc-300 tabular-nums">{company.avgCTC || '—'}</span>
-
-                      {/* Rounds */}
-                      <div className="flex flex-wrap gap-1 min-w-0">
-                        {rounds.slice(0, 2).map((r, j) => (
-                          <span key={j} className="rounded border border-white/[0.06] px-1.5 py-0.5 font-mono text-[9px] tracking-widest text-zinc-600 max-w-[80px] truncate">
-                            {r.name}
-                          </span>
-                        ))}
-                        {rounds.length > 2 && (
-                          <span className="font-mono text-[9px] text-zinc-700 self-center">+{rounds.length - 2}</span>
-                        )}
-                        {rounds.length === 0 && <span className="font-mono text-[9px] text-zinc-700">—</span>}
-                      </div>
-
-                      {/* Difficulty */}
-                      <div className="flex items-center gap-2">
-                        <span className={`h-1.5 w-1.5 rounded-full ${diffDot}`} />
-                        <span className="font-mono text-[10px] tracking-widest text-zinc-500">{diff || '—'}</span>
-                      </div>
-                    </div>
-
-                    {/* ── Expanded preview ── */}
-                    {expanded && (
-                      <div className="animate-in fade-in slide-in-from-top-1 duration-200 bg-white/[0.015] border-t border-white/[0.04] px-8 py-5">
-                        <div className="grid grid-cols-[1fr_auto] gap-8 items-start">
-                          {/* Left: detail content */}
-                          <div className="space-y-5">
-                            {/* All rounds as pill chain */}
-                            {rounds.length > 0 && (
-                              <div>
-                                <div className="font-mono text-[9px] tracking-[0.24em] text-zinc-700 uppercase mb-2.5">Interview Structure</div>
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                  {rounds.map((r, j) => (
-                                    <React.Fragment key={j}>
-                                      <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-widest text-zinc-300">
-                                        {r.name}
-                                      </span>
-                                      {j < rounds.length - 1 && (
-                                        <span className="h-px w-4 bg-white/[0.1] shrink-0" />
-                                      )}
-                                    </React.Fragment>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Insider tip */}
-                            {company.interviewProcess?.tipsSummary && (
-                              <div className="flex gap-3">
-                                <div className="mt-1.5 w-0.5 shrink-0 rounded-full bg-[var(--signal)]/30 self-stretch min-h-[16px]" />
-                                <p className="font-sans text-[12px] leading-relaxed text-zinc-500 line-clamp-2">
-                                  {company.interviewProcess.tipsSummary}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Right: action buttons */}
-                          <div className="flex flex-col items-end gap-3 shrink-0">
-                            <Link
-                              to={`/companies/${company.slug}`}
-                              onClick={e => e.stopPropagation()}
-                              className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 px-5 py-2 text-[11px] font-bold tracking-[0.15em] text-white uppercase border border-[var(--signal)]/20 transition-all duration-300 hover:from-emerald-500/25 hover:to-teal-500/25 hover:shadow-[0_0_25px_-5px_rgba(52,211,153,0.3)]"
-                            >
-                              Full Intel
-                              <ArrowUpRight
-                                className="h-3.5 w-3.5 text-emerald-400/70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200"
-                                strokeWidth={2}
-                              />
-                            </Link>
-                            <button
-                              onClick={e => { e.stopPropagation(); setSubmitTarget(company); }}
-                              className="press font-mono text-[9px] tracking-[0.18em] text-zinc-600 hover:text-[var(--signal)] transition-colors uppercase"
-                            >
-                              + Share Intel
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-
-            <p className="pt-5 font-mono text-[9px] tracking-[0.2em] text-zinc-700 uppercase">
-              {filtered.length} {filtered.length === 1 ? 'company' : 'companies'}
-              {activeFilter !== 'All' && ` · ${activeFilter}`}
-              {search && ` matching "${search}"`}
-            </p>
-          </>
-        )}
-      </section>
-      )}
-
-      {/* ── Review Queue Tab ──────────────────────────────────── */}
-      {activeTab === 'review' && <ReviewQueue />}
-
-      {/* ── Success toast ─────────────────────────────────────── */}
-      {successMsg && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-[var(--signal)]/20 bg-background/90 px-5 py-3 font-mono text-[11px] text-[var(--signal)] shadow-xl backdrop-blur-xl stagger-in">
-          <Shield className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
-          <span>Intel published · Thank you</span>
-          <button onClick={() => setSuccessMsg(false)} className="ml-2 opacity-50 hover:opacity-100 transition-opacity">
-            <X className="h-3.5 w-3.5" strokeWidth={1.6} />
-          </button>
-        </div>
-      )}
-
-      {/* ── Modal ─────────────────────────────────────────────── */}
       {submitTarget !== null && (
         <SubmitExperienceModal
           company={submitTarget._id ? submitTarget : null}
           companies={companies}
           onClose={() => setSubmitTarget(null)}
-          onSuccess={() => { setSubmitTarget(null); setSuccessMsg(true); }}
+          onSuccess={() => { load(); }}
         />
       )}
     </div>

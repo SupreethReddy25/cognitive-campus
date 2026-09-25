@@ -1,1033 +1,377 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { companiesService, experiencesService } from '../services/api';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Loader2, ArrowLeft, TrendingUp, ThumbsUp, BadgeCheck,
-  ChevronDown, ChevronUp, Shield, X, Sparkles,
-  Search, Clock, Play, Tag, ExternalLink
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar as RBar, XAxis, YAxis, Tooltip, CartesianGrid, ComposedChart, Line, Legend
+} from 'recharts';
+import {
+  ArrowLeft, Plus, Sparkles, ThumbsUp, ThumbsDown, ChevronDown, ShieldCheck, Clock, Users, Target, Trophy, BookOpen, Loader2, KeyRound,
+  MapPin, Search, CheckCircle2, Info, Wand2, ListChecks, Building2, Gauge, FileText, Layers
 } from 'lucide-react';
+import { companiesService, experiencesService, skillsService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
+import { Card, Label, SectionTitle, CompanyLogo, TierBadge, Pill, DiffPill, Bar, Ring, Skeleton, EmptyState, ErrorNote, CountUp, chartTooltipStyle, CHART_COLORS, cn } from '../components/ui/kit';
 
-// ─── Config ─────────────────────────────────────────────────────────────────
-const DIFF_DOT = {
-  'Brain-melting': 'bg-rose-500', 'Very Hard': 'bg-rose-500', 'Hard': 'bg-rose-500',
-  'Grueling': 'bg-amber-500',    'Challenging': 'bg-amber-500', 'Medium': 'bg-amber-500',
-  'Easy': 'bg-[var(--signal)]',  'Smooth': 'bg-[var(--signal)]',
-};
-const TIER_DOT = {
-  'FAANG':   'bg-violet-400',
-  'Product': 'bg-[var(--signal)]',
-  'Service': 'bg-sky-400',
-  'Startup': 'bg-amber-400',
-};
-// Color palette for round nodes in the timeline
-const ROUND_COLORS = [
-  { border: 'border-violet-500/30', bg: 'bg-violet-500/10', text: 'text-violet-400' },
-  { border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
-  { border: 'border-sky-500/30', bg: 'bg-sky-500/10', text: 'text-sky-400' },
-  { border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  { border: 'border-rose-500/30', bg: 'bg-rose-500/10', text: 'text-rose-400' },
-];
+const TABS = [['overview', 'Overview', Gauge], ['process', 'Process', Layers], ['topics', 'Topics & questions', Target], ['experiences', 'Experiences', FileText], ['prep', 'Prep plan', Wand2]];
+const BUCKET_COLOR = { Easy: '#34d399', Medium: '#fbbf24', Hard: '#fb7185' };
+const CONF = { none: ['No data', 'zinc'], low: ['Low confidence', 'red'], medium: ['Medium confidence', 'amber'], high: ['High confidence', 'green'] };
 
-const NAV_SECTIONS = [
-  { id: 'process',   label: 'Process'   },
-  { id: 'reports',   label: 'Reports'   },
-  { id: 'questions', label: 'Questions' },
-  { id: 'prep',      label: 'Prep Kit'  },
-  { id: 'practice',  label: 'Practice'  },
-];
+// ─── Experience card ─────────────────────────────────────────────────────────
+function ExperienceCard({ exp, onVote }) {
+  const [open, setOpen] = useState(false);
+  const qCount = exp.rounds?.reduce((n, r) => n + (r.questions?.length || 0), 0) || 0;
+  return (
+    <Card padded={false} className="overflow-hidden">
+      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-start gap-4 p-5 text-left transition-colors hover:bg-white/[0.02]">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[14.5px] font-semibold text-zinc-100">{exp.role}</span>
+            <Pill tone={exp.offerReceived === 'Yes' ? 'green' : exp.offerReceived === 'No' ? 'red' : 'amber'}>{exp.offerReceived === 'Yes' ? 'Offer' : exp.offerReceived === 'No' ? 'No offer' : 'Pending'}</Pill>
+            {exp.difficulty && <Pill tone="zinc">{exp.difficulty}</Pill>}
+            {exp.isVerified && <Pill tone="blue" icon={ShieldCheck}>Verified</Pill>}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-zinc-500">
+            <span>{exp.month} {exp.year}</span>
+            {(exp.collegeId?.shortName || exp.college) && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{exp.collegeId?.shortName || exp.college}</span>}
+            <span>{exp.rounds?.length || 0} rounds · {qCount} questions</span>
+            <span>{exp.author ? `by ${exp.author}` : 'Anonymous'}</span>
+          </div>
+          {!open && exp.overallTips && <p className="mt-2.5 line-clamp-2 text-[12.5px] leading-relaxed text-zinc-500">{exp.overallTips}</p>}
+        </div>
+        <ChevronDown className={cn('mt-1 h-4 w-4 shrink-0 text-zinc-600 transition-transform', open && 'rotate-180')} />
+      </button>
 
-// ─── Main ────────────────────────────────────────────────────────────────────
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-white/[0.05]">
+            <div className="space-y-4 p-5">
+              {exp.compensation && (exp.compensation.base || exp.compensation.bonus || exp.compensation.stock) && (
+                <div className="flex flex-wrap gap-2">{[['Base', exp.compensation.base], ['Bonus', exp.compensation.bonus], ['Stock', exp.compensation.stock]].filter(([, v]) => v).map(([k, v]) => <span key={k} className="rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] px-2.5 py-1 font-mono text-[11px] text-emerald-300">{k}: {v}</span>)}</div>
+              )}
+              {exp.rounds?.map((r, i) => (
+                <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                  <div className="flex flex-wrap items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--signal)]/15 font-mono text-[10px] text-[var(--signal)]">{i + 1}</span><b className="text-[13px] text-zinc-200">{r.type}</b>{r.duration && <span className="flex items-center gap-1 font-mono text-[10.5px] text-zinc-500"><Clock className="h-3 w-3" />{r.duration}</span>}{r.vibe && <Pill tone="zinc">{r.vibe}</Pill>}</div>
+                  {r.topics?.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{r.topics.map((t) => <span key={t} className="rounded bg-[var(--signal)]/10 px-1.5 py-0.5 text-[10.5px] text-[var(--signal)]">{t}</span>)}</div>}
+                  {r.questions?.filter((q) => q.text).map((q, j) => (
+                    <div key={j} className="mt-2.5 border-l-2 border-white/10 pl-3"><div className="text-[12.5px] leading-relaxed text-zinc-300">{q.text}</div><div className="mt-0.5 font-mono text-[9.5px] uppercase tracking-wider text-zinc-600">{q.questionType}{q.topicTags?.length ? ` · ${q.topicTags.join(', ')}` : ''}</div></div>
+                  ))}
+                  {r.tips && <p className="mt-3 text-[12px] italic leading-relaxed text-zinc-500">“{r.tips}”</p>}
+                </div>
+              ))}
+              {exp.overallTips && <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.04] p-4 text-[12.5px] leading-relaxed text-emerald-100/80"><b className="text-emerald-300">Advice · </b>{exp.overallTips}</div>}
+              {exp.resourcesUsed && <div className="text-[11.5px] text-zinc-500"><b className="text-zinc-400">Resources:</b> {exp.resourcesUsed}</div>}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex items-center justify-between border-t border-white/[0.05] bg-white/[0.015] px-5 py-2">
+        <div className="flex items-center gap-1">
+          <button onClick={() => onVote(exp, 'up')} className={cn('flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono text-[11px] transition-colors', exp.userVote === 'up' ? 'bg-emerald-400/15 text-emerald-300' : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200')}><ThumbsUp className="h-3.5 w-3.5" />{exp.upvotes}</button>
+          <button onClick={() => onVote(exp, 'down')} className={cn('flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono text-[11px] transition-colors', exp.userVote === 'down' ? 'bg-rose-400/15 text-rose-300' : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200')}><ThumbsDown className="h-3.5 w-3.5" />{exp.downvotes}</button>
+        </div>
+        {exp.qualityScore != null && <span className="font-mono text-[10px] text-zinc-600">quality {exp.qualityScore}/100</span>}
+      </div>
+    </Card>
+  );
+}
+
+// ─── Prep plan ──────────────────────────────────────────────────────────────
+function PrepPlan({ slug, companyName }) {
+  const toast = useToast();
+  const [days, setDays] = useState(30);
+  const [plan, setPlan] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const r = await companiesService.generatePrepPlan(slug, days);
+      setPlan(r.data.data);
+    } catch (e) {
+      toast.error('Could not build the plan', e.response?.data?.error);
+    } finally { setLoading(false); }
+  };
+
+  const TYPE = { practice: ['Practice', 'green'], review: ['Review', 'blue'], mock: ['Mock', 'violet'], behavioral: ['Behavioural', 'amber'], study: ['Study', 'blue'], read: ['Read', 'zinc'] };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div><SectionTitle icon={Wand2} title="Personalised prep plan" sub={`Built from real ${companyName} interview statistics and your live BKT mastery. An AI coach polishes the narrative when available.`} className="mb-0" /></div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 rounded-lg border border-white/[0.07] p-[3px]">{[14, 30, 45, 60].map((d) => <button key={d} onClick={() => setDays(d)} className={cn('rounded-md px-3 py-1.5 font-mono text-[10.5px] transition-colors', days === d ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{d}d</button>)}</div>
+            <button onClick={generate} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2.5 text-[12.5px] font-semibold text-white shadow-lg shadow-violet-500/20 transition-all hover:brightness-110 disabled:opacity-60">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{plan ? 'Regenerate' : 'Generate plan'}</button>
+          </div>
+        </div>
+      </Card>
+
+      {!plan && !loading && <EmptyState icon={ListChecks} title="No plan yet" text="Pick a horizon and generate — the plan targets the topics this company asks most where your mastery is lowest." />}
+      {loading && <div className="space-y-3"><Skeleton className="h-32" /><Skeleton className="h-64" /></div>}
+
+      {plan && !loading && (
+        <>
+          {plan.ai && !plan.ai.used && (
+            <div className={cn('flex items-start gap-3 rounded-2xl border px-4 py-3 text-[12.5px]', plan.ai.needsKey ? 'border-amber-400/25 bg-amber-400/[0.06] text-amber-100' : 'border-white/10 bg-white/[0.03] text-zinc-400')}>
+              {plan.ai.needsKey ? <KeyRound className="mt-0.5 h-4 w-4 shrink-0" /> : <Info className="mt-0.5 h-4 w-4 shrink-0" />}
+              <div>{plan.ai.message} <span className="text-zinc-500">The plan below is the data-driven version — every number and problem link is real.</span> {plan.ai.needsKey && <Link to="/profile#ai" className="font-semibold underline underline-offset-2">Add your Gemini key</Link>}</div>
+            </div>
+          )}
+          <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+            <Card>
+              <div className="flex items-center gap-5">
+                <Ring value={plan.readiness / 100} size={104} stroke={9} color={plan.readiness >= 70 ? '#34d399' : plan.readiness >= 40 ? '#fbbf24' : '#fb7185'}><div className="text-center"><div className="text-[26px] font-semibold tabular-nums text-zinc-100">{plan.readiness}</div><div className="font-mono text-[8px] uppercase tracking-widest text-zinc-500">ready</div></div></Ring>
+                <p className="text-[13px] leading-relaxed text-zinc-400">{plan.summary}</p>
+              </div>
+              <div className="mt-6"><Label className="mb-3 block text-zinc-500">Focus areas · frequency × (1 − mastery)</Label>
+                <div className="space-y-3">{plan.focusAreas.slice(0, 7).map((f) => (
+                  <div key={f.skill}>
+                    <div className="mb-1 flex items-center justify-between text-[12px]"><span className="text-zinc-300">{f.skill}</span><span className="flex items-center gap-2 font-mono text-[10.5px] text-zinc-500">{f.frequencyPct}% of reports · you {Math.round(f.mastery * 100)}%<Pill tone={f.level === 'high' ? 'red' : f.level === 'medium' ? 'amber' : 'green'}>{f.level}</Pill></span></div>
+                    <div className="grid grid-cols-2 gap-1.5"><Bar value={f.frequencyPct} max={100} height={4} color="#a78bfa" /><Bar value={f.mastery} max={1} height={4} color="#34d399" /></div>
+                  </div>
+                ))}</div>
+                <div className="mt-2 flex gap-4 font-mono text-[9.5px] text-zinc-600"><span className="flex items-center gap-1"><span className="h-1.5 w-3 rounded bg-violet-400" /> company demand</span><span className="flex items-center gap-1"><span className="h-1.5 w-3 rounded bg-emerald-400" /> your mastery</span></div>
+              </div>
+            </Card>
+
+            <div className="space-y-4">
+              {plan.phases.map((ph, i) => (
+                <Card key={i}>
+                  <div className="mb-3 flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-400/15 font-mono text-[11px] text-violet-300">{i + 1}</span><span className="text-[15px] font-semibold text-zinc-100">{ph.name}</span></div><p className="mt-1 text-[12px] text-zinc-500">{ph.goal}</p></div><Pill tone="zinc">Days {ph.days}</Pill></div>
+                  <div className="space-y-2.5">
+                    {ph.tasks.map((t, j) => { const [label, tone] = TYPE[t.type] || TYPE.study; return (
+                      <div key={j} className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-3">
+                        <div className="flex items-start gap-2.5"><Pill tone={tone}>{label}</Pill><p className="text-[12.5px] leading-relaxed text-zinc-300">{t.text}</p></div>
+                        {t.problems?.length > 0 && <div className="mt-2.5 flex flex-wrap gap-1.5 pl-1">{t.problems.map((p) => <Link key={p._id} to={`/problems/${p._id}`} className="flex items-center gap-1.5 rounded-lg border border-white/[0.07] bg-black/20 px-2.5 py-1 text-[11.5px] text-zinc-300 transition-colors hover:border-[var(--signal)]/40 hover:text-[var(--signal)]">{p.title}<DiffPill difficulty={p.difficulty} className="scale-90" /></Link>)}</div>}
+                      </div>
+                    ); })}
+                  </div>
+                </Card>
+              ))}
+              <Card><Label className="mb-2 block text-zinc-500">Coach tips</Label><ul className="space-y-2">{plan.tips.map((t, i) => <li key={i} className="flex gap-2.5 text-[12.5px] leading-relaxed text-zinc-400"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />{t}</li>)}</ul></Card>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────
 export default function CompanyDetailPage() {
   const { slug } = useParams();
-  const [company, setCompany]             = useState(null);
-  const [experiences, setExperiences]     = useState([]);
-  const [relatedProblems, setRelatedProblems] = useState([]);
-  const [relatedTopics, setRelatedTopics] = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const [expandedExp, setExpandedExp]     = useState(null);
-  const [prepPlan, setPrepPlan]           = useState(null);
-  const [prepWeaknesses, setPrepWeaknesses] = useState([]);
-  const [generatingPlan, setGeneratingPlan] = useState(false);
-  const [planError, setPlanError]           = useState(null);
-  const [showSubmit, setShowSubmit]       = useState(false);
-  const [successMsg, setSuccessMsg]       = useState(false);
-  const [filterOffer, setFilterOffer]     = useState('All');
-  const [sortExp, setSortExp]             = useState('newest');
-  const [qSearch, setQSearch]             = useState('');
-  const [qType, setQType]                 = useState('All');
-  const [activeSection, setActiveSection] = useState('process');
-  const mainRef = useRef(null);
+  const { user } = useAuth();
+  const toast = useToast();
 
-  const sectionRefs = {
-    process:   useRef(null),
-    reports:   useRef(null),
-    questions: useRef(null),
-    prep:      useRef(null),
-    practice:  useRef(null),
-  };
+  const [company, setCompany] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [experiences, setExperiences] = useState([]);
+  const [related, setRelated] = useState({ data: [], matchedTopics: [] });
+  const [mastery, setMastery] = useState({});
+  const [tab, setTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showSubmit, setShowSubmit] = useState(false);
 
-  // ── Data loading ────────────────────────────────────────────────────────────
+  const [expFilter, setExpFilter] = useState({ offer: 'All', sort: 'recent', q: '' });
+  const [qFilter, setQFilter] = useState({ type: 'All', q: '' });
+
+  const loadExperiences = () => companiesService.getCompanyExperiences(slug).then((r) => setExperiences(r.data.data));
+  const loadStats = () => companiesService.getCompanyStats(slug).then((r) => setStats(r.data.data));
+
   useEffect(() => {
-    Promise.all([
-      companiesService.getCompany(slug),
-      companiesService.getCompanyExperiences(slug),
-      companiesService.getRelatedProblems(slug),
-    ]).then(([compRes, expRes, relRes]) => {
-      if (compRes.data.success) setCompany(compRes.data.data);
-      if (expRes.data.success)  setExperiences(expRes.data.data);
-      if (relRes.data.success) {
-        setRelatedProblems(relRes.data.data || []);
-        setRelatedTopics(relRes.data.matchedTopics || []);
-      }
-      setLoading(false);
-    }).catch(console.error);
+    setLoading(true);
+    Promise.all([companiesService.getCompany(slug), companiesService.getCompanyStats(slug), companiesService.getCompanyExperiences(slug), companiesService.getRelatedProblems(slug), skillsService.getMySkillStates()])
+      .then(([c, s, e, rel, st]) => {
+        setCompany(c.data.data); setStats(s.data.data); setExperiences(e.data.data); setRelated(rel.data);
+        const m = {}; st.data.data.skillStates.forEach((x) => { if (x.skillId?.name) m[x.skillId.name] = x.masteryP; }); setMastery(m);
+      })
+      .catch((e) => setError(e.response?.status === 404 ? 'Company not found.' : 'Could not load this company.'))
+      .finally(() => setLoading(false));
   }, [slug]);
 
-  // ── Scroll spy ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const main = mainRef.current;
-    if (!main) return;
-    const handler = () => {
-      const scrollTop = main.scrollTop;
-      // Walk sections in reverse — first one whose offsetTop <= scrollTop+80 wins
-      const entries = Object.entries(sectionRefs);
-      for (let i = entries.length - 1; i >= 0; i--) {
-        const [id, ref] = entries[i];
-        if (ref.current && ref.current.offsetTop - 100 <= scrollTop) {
-          setActiveSection(id);
-          break;
-        }
-      }
-    };
-    main.addEventListener('scroll', handler, { passive: true });
-    return () => main.removeEventListener('scroll', handler);
-  });
-
-  const scrollToSection = useCallback((id) => {
-    const el = sectionRefs[id]?.current;
-    if (!el || !mainRef.current) return;
-    mainRef.current.scrollTo({ top: el.offsetTop - 56, behavior: 'smooth' });
-  }, []);
-
-  const handleUpvote = async (id) => {
+  const vote = async (exp, v) => {
     try {
-      await experiencesService.upvoteExperience(id);
-      setExperiences(prev => prev.map(e => e._id === id ? { ...e, upvotes: (e.upvotes || 0) + 1 } : e));
-    } catch (e) { console.error(e); }
+      const r = await experiencesService.vote(exp._id, v);
+      setExperiences((list) => list.map((e) => (e._id === exp._id ? { ...e, ...r.data.data } : e)));
+    } catch { toast.error('Sign in to vote'); }
   };
 
-  // ── Derived state ───────────────────────────────────────────────────────────
-  const allQuestions = useMemo(() => {
-    const qs = [];
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        round.questions?.forEach(q => {
-          if (q.text?.trim()) {
-            qs.push({
-              ...q,
-              roundType: round.type,
-              role: exp.role,
-              date: `${exp.month} ${exp.year}`,
-            });
-          }
-        });
-      });
-    });
-    return qs;
-  }, [experiences]);
+  const filteredExps = useMemo(() => {
+    let list = experiences.filter((e) => (expFilter.offer === 'All' || e.offerReceived === expFilter.offer) && (!expFilter.q || `${e.role} ${e.overallTips || ''} ${e.rounds?.map((r) => r.questions?.map((q) => q.text).join(' ')).join(' ')}`.toLowerCase().includes(expFilter.q.toLowerCase())));
+    if (expFilter.sort === 'top') list = [...list].sort((a, b) => b.upvotes - b.downvotes - (a.upvotes - a.downvotes));
+    if (expFilter.sort === 'quality') list = [...list].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+    return list;
+  }, [experiences, expFilter]);
 
-  // Topic frequency (from all community experience rounds)
-  const topicFreq = useMemo(() => {
-    const map = {};
-    experiences.forEach(exp => {
-      exp.rounds?.forEach(round => {
-        round.topics?.forEach(t => { map[t] = (map[t] || 0) + 1; });
-      });
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  }, [experiences]);
+  const allQuestions = useMemo(() => experiences.flatMap((e) => (e.rounds || []).flatMap((r) => (r.questions || []).filter((q) => q.text).map((q) => ({ ...q, round: r.type, year: e.year, offer: e.offerReceived })))), [experiences]);
+  const filteredQs = allQuestions.filter((q) => (qFilter.type === 'All' || q.questionType === qFilter.type) && (!qFilter.q || `${q.text} ${(q.topicTags || []).join(' ')}`.toLowerCase().includes(qFilter.q.toLowerCase())));
 
-  // Resource frequency
-  const resourceFreq = useMemo(() => {
-    const map = {};
-    experiences.forEach(exp => {
-      const raw = typeof exp.resourcesUsed === 'string' ? exp.resourcesUsed : '';
-      raw.split(',').map(r => r.trim()).filter(Boolean).forEach(r => {
-        map[r] = (map[r] || 0) + 1;
-      });
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]);
-  }, [experiences]);
+  if (loading) return <div className="space-y-6 px-6 py-8 md:px-10"><Skeleton className="h-56 rounded-3xl" /><Skeleton className="h-96" /></div>;
+  if (error || !company) return <div className="p-10"><Link to="/intel" className="mb-4 inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-zinc-200"><ArrowLeft className="h-3.5 w-3.5" /> Intel Hub</Link><ErrorNote>{error || 'Company not found.'}</ErrorNote></div>;
 
-  const offerYes  = experiences.filter(e => e.offerReceived === 'Yes').length;
-  const offerRate = experiences.length ? Math.round((offerYes / experiences.length) * 100) : null;
-  const verified  = experiences.filter(e => e.isVerified).length;
+  const conf = CONF[stats.dataConfidence] || CONF.none;
+  const topics = stats.topTopics.slice(0, 12);
+  const pieData = stats.difficultyBuckets.filter((b) => b.count > 0);
+  const pieTotal = pieData.reduce((n, b) => n + b.count, 0);
 
-  const filteredExp = useMemo(() =>
-    experiences
-      .filter(e => filterOffer === 'All' || e.offerReceived === filterOffer)
-      .sort((a, b) => sortExp === 'upvotes'
-        ? (b.upvotes || 0) - (a.upvotes || 0)
-        : new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-      ),
-    [experiences, filterOffer, sortExp]
-  );
-
-  const filteredQ = useMemo(() =>
-    allQuestions.filter(q => {
-      const matchText = !qSearch || q.text.toLowerCase().includes(qSearch.toLowerCase());
-      const matchType = qType === 'All' || q.questionType === qType;
-      return matchText && matchType;
-    }),
-    [allQuestions, qSearch, qType]
-  );
-
-  const qTypes = useMemo(
-    () => ['All', ...new Set(allQuestions.map(q => q.questionType).filter(Boolean))],
-    [allQuestions]
-  );
-
-  // ── Loading / error ─────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 text-zinc-700">
-        <Loader2 className="h-5 w-5 animate-spin" strokeWidth={1.5} />
-        <span className="font-mono text-[10px] tracking-[0.24em]">LOADING...</span>
-      </div>
-    );
-  }
-  if (!company) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-2">
-        <span className="font-mono text-[10px] tracking-[0.22em] text-zinc-700">COMPANY NOT FOUND</span>
-        <Link to="/intel" className="mt-2 font-mono text-[10px] text-zinc-600 hover:text-[var(--signal)] transition-colors underline underline-offset-2">
-          ← Back to Intel Hub
-        </Link>
-      </div>
-    );
-  }
-
-  const rounds  = company.interviewProcess?.rounds || [];
-  const diff    = company.interviewProcess?.difficulty;
-  const diffDot = DIFF_DOT[diff]         || 'bg-zinc-600';
-  const tierDot = TIER_DOT[company.tier] || 'bg-zinc-500';
-
-  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full min-h-0 overflow-hidden">
+    <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
+      <header className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-white/[0.04] bg-background/80 px-6 backdrop-blur-xl md:px-10">
+        <Link to="/intel" className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 transition-colors hover:text-zinc-200"><ArrowLeft className="h-3.5 w-3.5" /> Intel Hub <span className="text-zinc-700">/</span> <span className="text-zinc-300">{company.name}</span></Link>
+        <button onClick={() => setShowSubmit(true)} className="flex items-center gap-1.5 rounded-lg border border-[var(--signal)]/30 bg-[var(--signal)]/10 px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-wider text-[var(--signal)] transition-colors hover:bg-[var(--signal)]/20"><Plus className="h-3.5 w-3.5" /> Submit experience</button>
+      </header>
 
-      {/* ════ LEFT SIDEBAR ════════════════════════════════════════════════════ */}
-      <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-white/[0.04] bg-[#060608] overflow-y-auto scrollbar-surgical">
-
-        {/* Back link */}
-        <div className="flex items-center gap-2 border-b border-white/[0.04] px-5 h-12 shrink-0">
-          <Link to="/intel" className="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-300 transition-colors duration-200">
-            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase">Intel Hub</span>
-          </Link>
-        </div>
-
-        {/* Company identity */}
-        <div className="px-5 pt-6 pb-5 border-b border-white/[0.04]">
-          <h1 className="font-serif text-[28px] italic font-medium leading-tight text-zinc-100 mb-3">
-            {company.name}
-            <span style={{ color: 'var(--signal)' }}>.</span>
-          </h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-            <span className="flex items-center gap-1.5">
-              <span className={`h-1.5 w-1.5 rounded-full ${tierDot}`} />
-              <span className="font-mono text-[10px] tracking-[0.12em] text-zinc-400">{company.tier}</span>
-            </span>
-            {diff && (
-              <span className="flex items-center gap-1.5">
-                <span className={`h-1.5 w-1.5 rounded-full ${diffDot}`} />
-                <span className="font-mono text-[10px] tracking-[0.12em] text-zinc-500">{diff}</span>
-              </span>
-            )}
-          </div>
-          {company.avgCTC && (
-            <div className="mt-2.5 flex items-center gap-1.5 font-mono text-[11px] text-zinc-400">
-              <TrendingUp className="h-3 w-3" strokeWidth={1.6} />
-              <span>{company.avgCTC}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Key stats 2×2 grid */}
-        <div className="grid grid-cols-2 gap-px bg-white/[0.04] border-b border-white/[0.04]">
-          <StatCell label="Reports"   value={experiences.length || '—'} />
-          <StatCell label="Offer Rate" value={offerRate !== null ? `${offerRate}%` : '—'} accent={offerRate !== null} />
-          <StatCell label="Rounds"    value={rounds.length || '—'} />
-          <StatCell label="Verified"  value={verified || '—'} />
-        </div>
-
-        {/* Round breakdown (compact list) */}
-        {rounds.length > 0 && (
-          <div className="px-5 py-4 border-b border-white/[0.04]">
-            <div className="font-mono text-[9px] tracking-[0.22em] text-zinc-700 uppercase mb-3">Interview Rounds</div>
-            <div className="space-y-2">
-              {rounds.map((r, i) => {
-                const col = ROUND_COLORS[i % ROUND_COLORS.length];
-                return (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${col.bg}`} style={{ opacity: 0.9 }} />
-                    <span className="font-mono text-[10px] text-zinc-500 truncate">{r.name}</span>
-                    {r.duration && <span className="font-mono text-[9px] text-zinc-700 ml-auto shrink-0">{r.duration}</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Topic frequency chips */}
-        {topicFreq.length > 0 && (
-          <div className="px-5 py-4 border-b border-white/[0.04]">
-            <div className="font-mono text-[9px] tracking-[0.22em] text-zinc-700 uppercase mb-2.5">
-              Hot Topics
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {topicFreq.map(([topic, count]) => (
-                <span
-                  key={topic}
-                  className="rounded border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-2 py-0.5 font-mono text-[9px] tracking-wide text-[var(--signal)]"
-                >
-                  {topic}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Section nav */}
-        <div className="px-5 py-4 border-b border-white/[0.04]">
-          <div className="font-mono text-[9px] tracking-[0.22em] text-zinc-700 uppercase mb-2">Jump to</div>
-          <nav className="flex flex-col gap-0.5">
-            {NAV_SECTIONS.map(s => (
-              <button
-                key={s.id}
-                onClick={() => scrollToSection(s.id)}
-                className={`press ease-signature flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left font-mono text-[11px] tracking-[0.1em] transition-all duration-200 ${
-                  activeSection === s.id
-                    ? 'bg-[var(--signal)]/10 text-[var(--signal)]'
-                    : 'text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.03]'
-                }`}
-              >
-                {activeSection === s.id && (
-                  <span className="h-1 w-1 rounded-full bg-[var(--signal)]" />
-                )}
-                {s.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* CTA */}
-        <div className="p-5 border-t border-white/[0.04]">
-          <button
-            onClick={() => setShowSubmit(true)}
-            className="group w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 px-4 py-2.5 text-[11px] font-bold tracking-[0.15em] text-white uppercase border border-[var(--signal)]/20 transition-all duration-500 hover:from-emerald-500/25 hover:to-teal-500/25 hover:shadow-[0_0_25px_-5px_rgba(52,211,153,0.3)]"
-          >
-            <Shield className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={1.6} />
-            Share Experience
-          </button>
-          {company.roles?.length > 0 && (
-            <p className="mt-2 text-center font-mono text-[9px] text-zinc-700 leading-relaxed">
-              {company.roles.slice(0, 2).join(' · ')}
-            </p>
-          )}
-        </div>
-      </aside>
-
-      {/* ════ MAIN CONTENT (scrollable) ═══════════════════════════════════════ */}
-      <div ref={mainRef} className="flex-1 overflow-y-auto scrollbar-surgical">
-
-        {/* Sticky section tracker bar */}
-        <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-8 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)] status-dot" />
-            <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-200 uppercase">{company.name}</span>
-            <span className="mx-2 h-3 w-px bg-white/[0.06]" />
-            <span className="font-mono text-[10px] tracking-[0.18em] text-zinc-600 capitalize">{activeSection}</span>
-          </div>
-          {experiences.length > 0 && (
-            <span className="font-mono text-[10px] tracking-[0.16em] text-zinc-600">
-              {experiences.length} report{experiences.length !== 1 ? 's' : ''}
-              {offerRate !== null && ` · ${offerRate}% offer rate`}
-            </span>
-          )}
-        </header>
-
-        {/* ── § 1: Interview Process ──────────────────────────────────────── */}
-        <section ref={sectionRefs.process} id="process" className="border-b border-white/[0.04] px-8 py-8">
-          <SectionLabel>Interview Process · {rounds.length} round{rounds.length !== 1 ? 's' : ''}</SectionLabel>
-
-          {rounds.length > 0 ? (
-            <>
-              {/* Visual horizontal timeline */}
-              <div className="mt-6 flex items-start gap-0 overflow-x-auto pb-4">
-                {rounds.map((round, idx) => {
-                  const col = ROUND_COLORS[idx % ROUND_COLORS.length];
-                  return (
-                    <React.Fragment key={idx}>
-                      <div className="flex flex-col items-center gap-3 min-w-[130px]">
-                        <div className={`flex items-center justify-center h-10 w-10 rounded-xl border text-[11px] font-mono font-bold ${col.border} ${col.bg} ${col.text}`}>
-                          {String(idx + 1).padStart(2, '0')}
-                        </div>
-                        <div className="text-center px-2">
-                          <div className="font-sans text-[12px] font-medium text-zinc-100 leading-snug">{round.name}</div>
-                          {round.duration && (
-                            <div className="mt-0.5 flex items-center justify-center gap-1 font-mono text-[9px] text-zinc-600">
-                              <Clock className="h-2.5 w-2.5" strokeWidth={1.5} />
-                              {round.duration}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {idx < rounds.length - 1 && (
-                        <div className="flex items-center mt-5 min-w-[24px] flex-1">
-                          <div className="h-px w-full bg-gradient-to-r from-white/[0.08] to-white/[0.04]" />
-                        </div>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-
-              {/* Round detail rows */}
-              <div className="mt-4 space-y-0">
-                {rounds.map((round, idx) => (
-                  <div
-                    key={idx}
-                    className="stagger-in grid grid-cols-[52px_1fr] gap-5 border-b border-white/[0.04] py-4 hover:bg-white/[0.01] transition-colors duration-200"
-                    style={{ animationDelay: `${idx * 40}ms` }}
-                  >
-                    <span className="font-mono text-[11px] tabular-nums text-zinc-700 pt-0.5">
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
-                    <div>
-                      <div className="flex items-center gap-3 flex-wrap mb-1">
-                        <span className="font-sans text-[14px] font-medium text-zinc-100">{round.name}</span>
-                        {round.duration && (
-                          <span className="rounded border border-white/[0.06] px-2 py-0.5 font-mono text-[9px] tracking-widest text-zinc-600">
-                            {round.duration}
-                          </span>
-                        )}
-                      </div>
-                      {round.description && (
-                        <p className="font-sans text-[13px] text-zinc-500 leading-relaxed">{round.description}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="mt-6 py-10 text-center font-mono text-[10px] tracking-[0.2em] text-zinc-700 uppercase">
-              No process data yet
-            </div>
-          )}
-
-          {/* Insider tip */}
-          {company.interviewProcess?.tipsSummary && (
-            <div className="mt-8 flex gap-4">
-              <div className="mt-1 w-0.5 shrink-0 rounded-full bg-[var(--signal)]/30 self-stretch min-h-[20px]" />
+      <div className="space-y-6 px-6 py-8 md:px-10">
+        {/* Dossier header */}
+        <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-br from-[#0d1218] via-[#0b0f15] to-[#0a0d13] p-7">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-sky-500/[0.07] blur-[80px]" />
+          <div className="relative flex flex-wrap items-start justify-between gap-6">
+            <div className="flex items-start gap-5">
+              <CompanyLogo company={company} size={72} className="rounded-2xl" />
               <div>
-                <div className="font-mono text-[9px] tracking-[0.22em] text-zinc-700 uppercase mb-1.5">Insider Tip</div>
-                <p className="font-sans text-[13px] text-zinc-400 leading-relaxed">
-                  {company.interviewProcess.tipsSummary}
-                </p>
+                <div className="flex flex-wrap items-center gap-2"><h1 className="text-[32px] font-semibold leading-none tracking-tight text-zinc-50">{company.name}</h1><TierBadge tier={company.tier} /><Pill tone={conf[1]}>{conf[0]}</Pill></div>
+                {company.headquarters && <div className="mt-2 flex items-center gap-1.5 text-[12px] text-zinc-500"><MapPin className="h-3.5 w-3.5" />{company.headquarters}</div>}
+                {company.description && <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-zinc-400">{company.description}</p>}
+                <div className="mt-3 flex flex-wrap gap-1.5">{(company.roles || []).map((r) => <span key={r} className="rounded-md border border-white/[0.07] bg-white/[0.03] px-2 py-0.5 text-[11px] text-zinc-400">{r}</span>)}</div>
               </div>
             </div>
-          )}
-        </section>
-
-        {/* ── § 2: Community Reports ──────────────────────────────────────── */}
-        <section ref={sectionRefs.reports} id="reports" className="border-b border-white/[0.04] px-8 py-8">
-          {/* Section header + offer rate bar */}
-          <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
-            <SectionLabel>Community Reports · {experiences.length}</SectionLabel>
-            {offerRate !== null && (
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-[10px] tracking-[0.12em] text-zinc-600">
-                  {offerYes}/{experiences.length} got offers
-                </span>
-                <div className="h-1.5 w-20 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[var(--signal)] transition-all duration-700"
-                    style={{ width: `${offerRate}%` }}
-                  />
-                </div>
-                <span className="font-mono text-[11px] font-semibold text-[var(--signal)]">
-                  {offerRate}%
-                </span>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-3"><Label className="text-zinc-600">CTC</Label><div className="mt-1 font-mono text-[15px] text-zinc-100">{company.ctcMin != null ? `${company.ctcMin}–${company.ctcMax}` : '—'} <span className="text-[10px] text-zinc-500">LPA</span></div></div>
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-3"><Label className="text-zinc-600">Reports</Label><div className="mt-1 text-[19px] font-semibold text-zinc-100"><CountUp value={stats.totalReports} /></div></div>
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-3"><Label className="text-zinc-600">Avg rounds</Label><div className="mt-1 text-[19px] font-semibold text-zinc-100">{stats.avgRounds || company.interviewProcess?.rounds?.length || '—'}</div></div>
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-3" title={stats.offerRateCI ? `95% CI ${stats.offerRateCI.low}–${stats.offerRateCI.high}% (n=${stats.offerKnown})` : ''}><Label className="text-zinc-600">Offer rate</Label><div className="mt-1 text-[19px] font-semibold text-zinc-100">{stats.offerRate != null ? `${stats.offerRate}%` : '—'}</div>{stats.offerRateCI && <div className="font-mono text-[9.5px] text-zinc-600">{stats.offerRateCI.low}–{stats.offerRateCI.high}% CI</div>}</div>
+            </div>
           </div>
+        </div>
 
-          {/* Controls */}
-          {experiences.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 mb-3">
-              <div className="flex items-center gap-1 border border-white/[0.06] bg-white/[0.01] p-[2px]">
-                {['All', 'Yes', 'No', 'Pending'].map(o => (
-                  <button
-                    key={o}
-                    onClick={() => setFilterOffer(o)}
-                    className={`press ease-signature px-3 py-1 font-mono text-[10px] tracking-[0.12em] uppercase transition-all duration-300 ${
-                      filterOffer === o ? 'bg-white/[0.06] text-zinc-100' : 'text-zinc-600 hover:text-zinc-300'
-                    }`}
-                  >
-                    {o === 'All' ? 'All' : `Offer: ${o}`}
-                  </button>
+        {/* Tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-white/[0.06] bg-white/[0.02] p-1">
+          {TABS.map(([k, l, I]) => <button key={k} onClick={() => setTab(k)} className={cn('flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-[12.5px] font-medium transition-colors', tab === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}><I className="h-3.5 w-3.5" />{l}{k === 'experiences' && <span className="rounded bg-white/[0.08] px-1.5 font-mono text-[10px] text-zinc-400">{experiences.length}</span>}</button>)}
+        </div>
+
+        {/* ═══ OVERVIEW ═══ */}
+        {tab === 'overview' && (
+          <div className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <Card>
+                <SectionTitle icon={Gauge} title="Difficulty distribution" sub={pieTotal ? `How ${pieTotal} candidates rated it` : 'No ratings yet'} />
+                {pieTotal ? (
+                  <div className="flex items-center gap-4"><div className="h-44 w-44 shrink-0"><ResponsiveContainer><PieChart><Pie data={pieData} dataKey="count" nameKey="label" innerRadius="58%" outerRadius="92%" paddingAngle={3} stroke="none" isAnimationActive animationDuration={1000}>{pieData.map((b) => <Cell key={b.label} fill={BUCKET_COLOR[b.label]} />)}</Pie><Tooltip {...chartTooltipStyle} formatter={(v, n) => [`${v} reports`, n]} /></PieChart></ResponsiveContainer></div>
+                    <div className="space-y-2.5">{pieData.map((b) => <div key={b.label} className="flex items-center gap-2 text-[12.5px]"><span className="h-2.5 w-2.5 rounded-full" style={{ background: BUCKET_COLOR[b.label] }} /><span className="text-zinc-300">{b.label}</span><span className="font-mono text-zinc-500">{b.pct}%</span></div>)}
+                      {stats.difficultyDistribution.length > 0 && <div className="pt-1 font-mono text-[9.5px] leading-relaxed text-zinc-600">{stats.difficultyDistribution.map((d) => `${d.label} ${d.count}`).join(' · ')}</div>}</div></div>
+                ) : <EmptyState icon={Gauge} title="No difficulty ratings" className="py-8" />}
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <SectionTitle icon={Trophy} title="Reports & offer rate by year" sub="Bars: number of reports. Line: % of decided candidates who received an offer." />
+                {stats.yearTrend.length ? (
+                  <div className="h-48"><ResponsiveContainer><ComposedChart data={stats.yearTrend} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}><CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} /><XAxis dataKey="year" tick={{ fill: '#71717a', fontSize: 11 }} tickLine={false} axisLine={false} /><YAxis yAxisId="l" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} /><YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} /><Tooltip {...chartTooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><RBar yAxisId="l" dataKey="reports" name="Reports" fill="#38bdf8" radius={[6, 6, 0, 0]} barSize={26} /><Line yAxisId="r" dataKey="offerRate" name="Offer rate %" stroke="#34d399" strokeWidth={2.2} dot={{ r: 4, fill: '#34d399' }} connectNulls /></ComposedChart></ResponsiveContainer></div>
+                ) : <EmptyState icon={Trophy} title="Not enough data" className="py-8" />}
+              </Card>
+            </div>
+
+            {stats.offerRateCI && (
+              <Card><div className="flex items-start gap-3"><Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" /><div className="text-[12.5px] leading-relaxed text-zinc-400"><b className="text-zinc-200">How to read the offer rate:</b> {stats.offerYes} of {stats.offerKnown} candidates with a known outcome got an offer ({stats.offerRate}%). With this sample size the true rate is likely between <b className="text-zinc-200">{stats.offerRateCI.low}%</b> and <b className="text-zinc-200">{stats.offerRateCI.high}%</b> (95% Wilson confidence interval). More reports narrow the range. Reports are self-selected, so treat rates as directional.</div></div></Card>
+            )}
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card>
+                <SectionTitle icon={BookOpen} title="Practise these" sub={related.matchedTopics?.length ? `Matched to ${company.name}'s most-reported topics` : 'Popular problems'} action={<Link to="/problems" className="font-mono text-[10px] uppercase tracking-wider text-zinc-500 hover:text-[var(--signal)]">All problems →</Link>} />
+                <div className="space-y-2">{related.data.slice(0, 8).map((p) => <Link key={p._id} to={`/problems/${p._id}`} className="group flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3.5 py-2.5 transition-colors hover:bg-white/[0.05]"><div className="flex min-w-0 items-center gap-2.5">{p.solved ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" /> : <span className="h-4 w-4 shrink-0 rounded-full border border-white/15" />}<span className="truncate text-[13px] text-zinc-200 group-hover:text-[var(--signal)]">{p.title}</span>{p.askedHere && <Pill tone="violet">Asked here</Pill>}</div><div className="flex shrink-0 items-center gap-2"><span className="hidden font-mono text-[10px] text-zinc-600 sm:inline">{p.skillId?.name}</span><DiffPill difficulty={p.difficulty} /></div></Link>)}{!related.data.length && <p className="py-6 text-center text-[12.5px] text-zinc-600">No matching problems yet.</p>}</div>
+              </Card>
+              <Card>
+                <SectionTitle icon={BookOpen} title="What candidates used to prepare" />
+                {stats.topResources.length ? <div className="space-y-3">{stats.topResources.map((r) => <div key={r.resource}><div className="mb-1 flex justify-between text-[12.5px]"><span className="text-zinc-300">{r.resource}</span><span className="font-mono text-zinc-500">{r.pct}%</span></div><Bar value={r.pct} max={100} height={4} color="#38bdf8" /></div>)}</div> : <p className="py-6 text-center text-[12.5px] text-zinc-600">No resources reported yet.</p>}
+                {company.interviewProcess?.tipsSummary && <div className="mt-5 rounded-xl border border-emerald-400/15 bg-emerald-400/[0.04] p-4 text-[12.5px] leading-relaxed text-emerald-100/80"><b className="text-emerald-300">Editorial tip · </b>{company.interviewProcess.tipsSummary}</div>}
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ PROCESS ═══ */}
+        {tab === 'process' && (
+          <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+            <Card>
+              <SectionTitle icon={Layers} title="Official interview process" sub={`Typical ${company.interviewProcess?.rounds?.length || 0}-stage pipeline · overall difficulty ${company.interviewProcess?.difficulty || 'Medium'}`} />
+              <div className="relative space-y-5 pl-2">
+                <span className="absolute bottom-3 left-[19px] top-3 w-px bg-gradient-to-b from-[var(--signal)]/50 via-white/10 to-transparent" />
+                {(company.interviewProcess?.rounds || []).map((r, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }} className="relative flex gap-4">
+                    <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--signal)]/40 bg-[#0b0f15] font-mono text-[12px] text-[var(--signal)]">{i + 1}</span>
+                    <div className="flex-1 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5"><div className="flex items-center justify-between gap-2"><b className="text-[13.5px] text-zinc-100">{r.name}</b>{r.duration && <span className="flex items-center gap-1 font-mono text-[10.5px] text-zinc-500"><Clock className="h-3 w-3" />{r.duration}</span>}</div><p className="mt-1 text-[12.5px] leading-relaxed text-zinc-500">{r.description}</p></div>
+                  </motion.div>
                 ))}
               </div>
-              <div className="relative">
-                <select
-                  value={sortExp}
-                  onChange={e => setSortExp(e.target.value)}
-                  className="appearance-none rounded border border-white/[0.06] bg-white/[0.02] pl-3 pr-6 py-1.5 font-mono text-[10px] tracking-widest text-zinc-500 outline-none cursor-pointer"
-                >
-                  <option value="newest"  className="bg-[#0d1117]">NEWEST</option>
-                  <option value="upvotes" className="bg-[#0d1117]">MOST HELPFUL</option>
-                </select>
-              </div>
+            </Card>
+            <div className="space-y-6">
+              <Card>
+                <SectionTitle icon={Users} title="Round types reported" sub="Share of all reported rounds" />
+                {stats.roundTypeDistribution.length ? <div className="h-52"><ResponsiveContainer><BarChart data={stats.roundTypeDistribution} layout="vertical" margin={{ left: 8, right: 16 }}><XAxis type="number" hide /><YAxis type="category" dataKey="label" tick={{ fill: '#a1a1aa', fontSize: 11 }} tickLine={false} axisLine={false} width={80} /><Tooltip {...chartTooltipStyle} formatter={(v, n, p) => [`${v} (${p.payload.pct}%)`, 'Rounds']} /><RBar dataKey="count" radius={[0, 6, 6, 0]} barSize={16}>{stats.roundTypeDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</RBar></BarChart></ResponsiveContainer></div> : <EmptyState icon={Users} title="No round data yet" className="py-8" />}
+              </Card>
+              <Card>
+                <SectionTitle icon={FileText} title="Roles reported" />
+                <div className="space-y-2.5">{stats.roleDistribution.map((r) => <div key={r.label}><div className="mb-1 flex justify-between text-[12.5px]"><span className="text-zinc-300">{r.label}</span><span className="font-mono text-zinc-500">{r.count} · {r.pct}%</span></div><Bar value={r.pct} max={100} height={4} color="#a78bfa" /></div>)}{!stats.roleDistribution.length && <p className="text-[12.5px] text-zinc-600">No reports yet.</p>}</div>
+              </Card>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Experience list */}
-          {filteredExp.length === 0 ? (
-            <EmptyState
-              label={experiences.length === 0 ? 'No reports yet' : 'No matches for this filter'}
-              cta={experiences.length === 0 ? { label: 'Be the First', onClick: () => setShowSubmit(true) } : null}
-            />
-          ) : (
-            <ul>
-              {filteredExp.map((exp, i) => (
-                <li
-                  key={exp._id}
-                  className="stagger-in border-b border-white/[0.04]"
-                  style={{ animationDelay: `${Math.min(i * 25, 200)}ms` }}
-                >
-                  {/* Row */}
-                  <div
-                    className="ease-signature flex items-center justify-between py-4 cursor-pointer hover:bg-white/[0.01] transition-colors duration-200"
-                    onClick={() => setExpandedExp(expandedExp === exp._id ? null : exp._id)}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-1">
-                        <span className="font-sans text-[14px] font-medium text-zinc-100">{exp.role}</span>
-                        <span className={`h-1.5 w-1.5 rounded-full ${
-                          exp.offerReceived === 'Yes' ? 'bg-[var(--signal)]' :
-                          exp.offerReceived === 'No'  ? 'bg-rose-500' : 'bg-amber-500'
-                        }`} />
-                        <span className="font-mono text-[10px] text-zinc-600">
-                          {exp.offerReceived === 'Yes' ? 'Offer received' :
-                           exp.offerReceived === 'No'  ? 'Rejected' : 'Awaiting'}
-                        </span>
-                        {exp.isVerified && (
-                          <span className="flex items-center gap-1 rounded border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-1.5 py-0.5 font-mono text-[9px] text-[var(--signal)]">
-                            <BadgeCheck className="h-3 w-3" strokeWidth={1.6} /> Verified
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-4 font-mono text-[10px] text-zinc-700">
-                        <span>{exp.month} {exp.year}</span>
-                        {exp.difficulty && <span>{exp.difficulty}</span>}
-                        {exp.college   && <span>{exp.college}</span>}
-                        <span>{exp.isAnonymous ? 'Anonymous' : (exp.userId?.name || 'Anonymous')}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 ml-4 shrink-0">
-                      <button
-                        onClick={e => { e.stopPropagation(); handleUpvote(exp._id); }}
-                        className="flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-1.5 font-mono text-[10px] text-zinc-600 hover:text-[var(--signal)] hover:border-[var(--signal)]/20 transition-all duration-200"
-                      >
-                        <ThumbsUp className="h-3 w-3" strokeWidth={1.6} />
-                        <span>{exp.upvotes || 0}</span>
-                      </button>
-                      {expandedExp === exp._id
-                        ? <ChevronUp   className="h-4 w-4 text-zinc-600" strokeWidth={1.6} />
-                        : <ChevronDown className="h-4 w-4 text-zinc-600" strokeWidth={1.6} />}
-                    </div>
-                  </div>
-
-                  {/* Expanded detail */}
-                  {expandedExp === exp._id && (
-                    <div className="pb-6 animate-in fade-in space-y-5">
-                      {/* Comp table */}
-                      {(exp.compensation?.base || exp.compensation?.bonus || exp.compensation?.stock) && (
-                        <div className="grid grid-cols-3 gap-4 border-t border-b border-white/[0.04] py-4">
-                          {exp.compensation?.base  && <CompStat label="Base"  value={exp.compensation.base}  />}
-                          {exp.compensation?.bonus && <CompStat label="Bonus" value={exp.compensation.bonus} />}
-                          {exp.compensation?.stock && <CompStat label="Stock" value={exp.compensation.stock} />}
-                        </div>
-                      )}
-
-                      {/* Round details */}
-                      {exp.rounds?.map((round, rIdx) => (
-                        <div key={rIdx} className="grid grid-cols-[40px_1fr] gap-4">
-                          <span className="font-mono text-[10px] text-zinc-700 pt-2.5 tabular-nums">R{rIdx + 1}</span>
-                          <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="font-sans text-[13px] font-medium text-zinc-200">{round.type}</span>
-                              {round.duration && (
-                                <span className="rounded border border-white/[0.06] px-2 py-0.5 font-mono text-[9px] text-zinc-600">
-                                  {round.duration}
-                                </span>
-                              )}
-                              {round.vibe && (
-                                <span className={`rounded px-2 py-0.5 font-mono text-[9px] ${
-                                  round.vibe === 'Friendly' ? 'text-[var(--signal)] bg-[var(--signal)]/10' :
-                                  round.vibe === 'Grilling' ? 'text-amber-400 bg-amber-500/10'             :
-                                  round.vibe === 'Hostile'  ? 'text-rose-400 bg-rose-500/10'               :
-                                                              'text-zinc-500 bg-zinc-500/10'
-                                }`}>
-                                  {round.vibe}
-                                </span>
-                              )}
-                            </div>
-
-                            {round.topics?.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {round.topics.map(t => (
-                                  <span key={t} className="rounded border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-2 py-0.5 font-mono text-[9px] text-[var(--signal)]">
-                                    {t}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {round.questions?.map((q, qIdx) => (
-                              <div key={qIdx} className="flex gap-3 py-2.5 border-t border-white/[0.04] first:border-t-0">
-                                <span className="font-mono text-[9px] text-zinc-700 shrink-0 pt-0.5 tabular-nums">
-                                  {String(qIdx + 1).padStart(2, '0')}
-                                </span>
-                                <p className="font-sans text-[13px] text-zinc-300 leading-snug">{q.text}</p>
-                              </div>
-                            ))}
-
-                            {round.tips && (
-                              <p className="mt-3 border-t border-white/[0.04] pt-3 font-sans text-[11px] text-zinc-600 italic">
-                                "{round.tips}"
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Overall advice */}
-                      {exp.overallTips && (
-                        <div className="flex gap-3">
-                          <div className="mt-1 w-0.5 shrink-0 rounded-full bg-[var(--signal)]/20 self-stretch min-h-[20px]" />
-                          <div>
-                            <div className="font-mono text-[9px] tracking-[0.2em] text-zinc-700 uppercase mb-1.5">
-                              Overall Advice
-                            </div>
-                            <p className="font-sans text-[13px] text-zinc-400 leading-relaxed">{exp.overallTips}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* ── § 3: Question Bank ─────────────────────────────────────────── */}
-        <section ref={sectionRefs.questions} id="questions" className="border-b border-white/[0.04] px-8 py-8">
-          <SectionLabel>Question Bank · {allQuestions.length} question{allQuestions.length !== 1 ? 's' : ''}</SectionLabel>
-
-          {allQuestions.length > 0 && (
-            <div className="mt-5 flex flex-wrap items-center gap-3 mb-1">
-              {/* Inline search */}
-              <div className="relative flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-1.5 min-w-[200px] focus-within:border-[var(--signal)]/30 transition-colors duration-200">
-                <Search className="h-3.5 w-3.5 text-zinc-600 shrink-0" strokeWidth={1.6} />
-                <input
-                  type="text"
-                  placeholder="Search questions..."
-                  value={qSearch}
-                  onChange={e => setQSearch(e.target.value)}
-                  className="flex-1 bg-transparent font-sans text-[12px] text-zinc-300 outline-none placeholder:text-zinc-700"
-                />
-                {qSearch && (
-                  <button onClick={() => setQSearch('')} className="text-zinc-600 hover:text-zinc-400 transition-colors">
-                    <X className="h-3 w-3" strokeWidth={1.6} />
-                  </button>
-                )}
-              </div>
-              {/* Type filters */}
-              <div className="flex items-center gap-1 border border-white/[0.06] bg-white/[0.01] p-[2px]">
-                {qTypes.map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setQType(t)}
-                    className={`press ease-signature px-3 py-1 font-mono text-[10px] tracking-[0.12em] uppercase transition-all duration-300 ${
-                      qType === t ? 'bg-white/[0.06] text-zinc-100' : 'text-zinc-600 hover:text-zinc-300'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {filteredQ.length === 0 ? (
-            <EmptyState label={allQuestions.length === 0 ? 'No questions documented yet' : 'No matches'} />
-          ) : (
-            <>
-              <div className="grid grid-cols-[40px_1fr_120px_120px] items-center gap-4 py-2.5 font-mono text-[9px] tracking-[0.24em] text-zinc-700 uppercase border-b border-white/[0.06]">
-                <span>No.</span>
-                <span>Question</span>
-                <span>Type</span>
-                <span>Round · Date</span>
-              </div>
-              <ul>
-                {filteredQ.map((q, idx) => (
-                  <li
-                    key={idx}
-                    className="stagger-in ease-signature grid grid-cols-[40px_1fr_120px_120px] items-start gap-4 border-b border-white/[0.04] py-3.5 hover:bg-white/[0.01] transition-colors duration-200"
-                    style={{ animationDelay: `${Math.min(idx * 20, 160)}ms` }}
-                  >
-                    <span className="font-mono text-[10px] tabular-nums text-zinc-700 pt-0.5">
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
-                    <div>
-                      <p className="font-sans text-[13px] text-zinc-200 leading-snug mb-1.5">{q.text}</p>
-                      {q.topicTags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {q.topicTags.slice(0, 3).map(t => (
-                            <span key={t} className="rounded border border-white/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-zinc-600">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <span className="font-mono text-[10px] text-zinc-500">{q.questionType || '—'}</span>
-                    <div className="font-mono text-[9px] text-zinc-700 space-y-0.5">
-                      <div>{q.roundType}</div>
-                      <div>{q.date}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-
-        {/* ── § 4: Prep Kit ──────────────────────────────────────────────── */}
-        <section ref={sectionRefs.prep} id="prep" className="border-b border-white/[0.04] px-8 py-8">
-          <SectionLabel>Prep Kit</SectionLabel>
-
-          {/* Community resources */}
-          {resourceFreq.length > 0 && (
-            <div className="mt-5 mb-8">
-              <div className="font-mono text-[10px] tracking-[0.18em] text-zinc-600 uppercase mb-3">
-                Used by this community
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {resourceFreq.map(([resource, count]) => (
-                  <div
-                    key={resource}
-                    className="flex items-center gap-1.5 rounded border border-white/[0.06] bg-white/[0.02] px-3 py-1.5 hover:border-white/[0.10] transition-colors duration-200"
-                  >
-                    <span className="font-sans text-[12px] text-zinc-300">{resource}</span>
-                    {count > 1 && (
-                      <span className="font-mono text-[9px] text-zinc-700">×{count}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* AI Prep plan */}
-          {!prepPlan ? (
-            <div className="flex flex-col items-center justify-center gap-5 rounded-xl border border-white/[0.06] bg-white/[0.01] py-14">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={2} />
-                <span className="font-mono text-[10px] tracking-[0.22em] text-zinc-600 uppercase">AI-Powered</span>
-              </div>
-              <h3 className="font-sans text-[22px] font-light tracking-tight text-zinc-100 text-center">
-                30-day{' '}
-                <span className="font-serif italic" style={{ color: 'var(--signal)' }}>
-                  {company.name}
-                </span>
-                {' '}prep plan
-              </h3>
-              <p className="font-sans text-[13px] text-zinc-600 max-w-sm text-center leading-relaxed">
-                Built from {company.name}'s exact interview patterns
-                {experiences.length > 0 ? ` + ${experiences.length} community reports` : ''}.
-              </p>
-              {planError && (
-                <div className="flex items-center gap-2 rounded bg-rose-500/10 px-3 py-2 text-[11px] text-rose-400">
-                  <Shield className="h-3 w-3" />
-                  {planError}
-                </div>
-              )}
-              <button
-                onClick={async () => {
-                  setGeneratingPlan(true);
-                  setPlanError(null);
-                  try {
-                    const res = await companiesService.generatePrepPlan(slug, 30);
-                    if (res.data.success) {
-                      // Handle both string fallback or object from new API
-                      if (typeof res.data.data === 'string') {
-                        setPrepPlan(res.data.data);
-                        setPrepWeaknesses([]);
-                      } else {
-                        setPrepPlan(res.data.data.plan);
-                        setPrepWeaknesses(res.data.data.weaknesses || []);
-                      }
-                    } else {
-                      setPlanError("Failed to generate plan. Please try again.");
-                    }
-                  } catch (e) {
-                    console.error(e);
-                    if (e.response?.status === 429) {
-                      setPlanError("Rate limit exceeded. Please wait a moment.");
-                    } else {
-                      setPlanError("AI generation failed or timed out.");
-                    }
-                  }
-                  setGeneratingPlan(false);
-                }}
-                disabled={generatingPlan}
-                className="group flex items-center gap-3 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 px-8 py-3.5 text-[12px] font-bold tracking-[0.18em] text-white uppercase border border-[var(--signal)]/20 transition-all duration-500 hover:from-emerald-500/25 hover:to-teal-500/25 hover:shadow-[0_0_40px_-5px_rgba(52,211,153,0.35)] hover:-translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {generatingPlan
-                  ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.6} />
-                  : <Sparkles className="h-4 w-4 text-[var(--signal)]" strokeWidth={1.6} />}
-                {generatingPlan ? 'Generating...' : 'Generate Plan'}
-              </button>
-            </div>
-          ) : generatingPlan ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-[var(--signal)]/10 bg-[var(--signal)]/5 py-14 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--signal)]/5 to-transparent animate-[shimmer_2s_infinite] -translate-x-full" />
-              <Loader2 className="h-6 w-6 animate-spin text-[var(--signal)]" strokeWidth={1.5} />
-              <span className="font-mono text-[11px] tracking-[0.2em] text-[var(--signal)] uppercase animate-pulse">
-                Synthesizing BKT Profile & Community Data...
-              </span>
-              <p className="text-[12px] text-zinc-500 font-sans text-center max-w-xs mt-2">
-                Our AI is building a hyper-personalized plan tailored to your exact weaknesses. This usually takes 5-10 seconds.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-white/[0.06] bg-[#090b0e] p-6 relative overflow-hidden">
-              {/* Optional: Add a subtle background glow */}
-              <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-[var(--signal)]/10 blur-[60px]" />
-              
-              <div className="flex items-center justify-between mb-5 relative z-10">
-                <div className="font-mono text-[10px] tracking-[0.22em] text-zinc-600 uppercase">
-                  Your 30-Day Strategy
-                </div>
-                <button
-                  onClick={() => { setPrepPlan(null); setPrepWeaknesses([]); }}
-                  className="press rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-1.5 font-mono text-[10px] tracking-widest text-zinc-600 hover:text-[var(--signal)] uppercase transition-all duration-200"
-                >
-                  Reset
-                </button>
-              </div>
-
-              {/* BKT Weaknesses Display */}
-              {prepWeaknesses.length > 0 && (
-                <div className="mb-6 rounded-lg border border-rose-500/10 bg-rose-500/5 p-4 relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="h-4 w-4 text-rose-400" />
-                    <span className="font-mono text-[10px] tracking-[0.1em] text-rose-400 uppercase font-semibold">
-                      Identified Weaknesses Target
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {prepWeaknesses.map(w => (
-                      <span key={w.name} className="flex items-center gap-1.5 rounded bg-[#060608] border border-rose-500/20 px-2.5 py-1 text-[11px] text-zinc-300">
-                        {w.name}
-                        <span className="text-rose-500 font-mono">{Math.round(w.masteryP * 100)}%</span>
-                      </span>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-[11px] text-zinc-500">
-                    The AI has automatically allocated extra time for these topics based on your BKT radar.
-                  </p>
-                </div>
-              )}
-
-              <div className="font-sans text-[14px] text-zinc-300 leading-[1.7] whitespace-pre-wrap relative z-10 markdown-body">
-                {prepPlan}
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* ── § 5: Practice These ─────────────────────────────────────────── */}
-        <section ref={sectionRefs.practice} id="practice" className="px-8 py-8 pb-16">
-          <SectionLabel>
-            Practice These · {relatedProblems.length} problem{relatedProblems.length !== 1 ? 's' : ''}
-          </SectionLabel>
-
-          {relatedTopics.length > 0 && (
-            <div className="mt-4 mb-5">
-              <div className="font-mono text-[9px] tracking-[0.22em] text-zinc-700 uppercase mb-2">Matched from community topics</div>
-              <div className="flex flex-wrap gap-1.5">
-                {relatedTopics.slice(0, 8).map(t => (
-                  <span key={t} className="flex items-center gap-1 rounded border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-2 py-0.5 font-mono text-[9px] text-[var(--signal)]">
-                    <Tag className="h-2 w-2" strokeWidth={1.8} />
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {relatedProblems.length === 0 ? (
-            <div className="mt-6 flex flex-col items-center justify-center gap-2 py-14 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-              <span className="h-1.5 w-1.5 rounded-full bg-zinc-700" />
-              <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-700 uppercase">No problems matched yet</span>
-              <Link
-                to="/problems"
-                className="mt-2 font-mono text-[10px] text-zinc-600 hover:text-[var(--signal)] underline underline-offset-2 transition-colors"
-              >
-                Browse all problems →
-              </Link>
-            </div>
-          ) : (
-            <>
-              {/* Table header */}
-              <div className="grid grid-cols-[1fr_80px_120px_80px] items-center gap-4 border-b border-white/[0.06] py-2.5 font-mono text-[9px] tracking-[0.24em] text-zinc-700 uppercase">
-                <span>Problem</span>
-                <span>Difficulty</span>
-                <span>Topics</span>
-                <span className="text-right">Action</span>
-              </div>
-              <ul>
-                {relatedProblems.map((prob, idx) => {
-                  const diffClass = {
-                    Hard: 'text-rose-400', Medium: 'text-amber-400', Easy: 'text-[var(--signal)]'
-                  }[prob.difficulty] || 'text-zinc-500';
+        {/* ═══ TOPICS ═══ */}
+        {tab === 'topics' && (
+          <div className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+              <Card>
+                <SectionTitle icon={Target} title="Topic frequency" sub="% of reports in which the topic appeared — with your current mastery for tracked DSA skills." />
+                {topics.length ? <div className="space-y-3">{topics.map((t, i) => {
+                  const m = t.skill ? mastery[t.skill] : undefined;
                   return (
-                    <li
-                      key={prob._id}
-                      className="stagger-in grid grid-cols-[1fr_80px_120px_80px] items-center gap-4 border-b border-white/[0.04] py-3.5 hover:bg-white/[0.01] transition-colors duration-200"
-                      style={{ animationDelay: `${Math.min(idx * 20, 200)}ms` }}
-                    >
-                      <span className="font-sans text-[13px] font-medium text-zinc-200 truncate">
-                        {idx + 1}. {prob.title}
-                      </span>
-                      <span className={`font-mono text-[10px] capitalize ${diffClass}`}>
-                        {prob.difficulty || '—'}
-                      </span>
-                      <span className="font-mono text-[9px] text-zinc-700 truncate">
-                        {prob.tags?.slice(0, 2).join(', ') || '—'}
-                      </span>
-                      <div className="flex justify-end">
-                        <Link
-                          to={`/problems/${prob._id}`}
-                          className="flex items-center gap-1.5 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-2.5 py-1 font-mono text-[9px] tracking-widest text-[var(--signal)] hover:bg-[var(--signal)]/10 transition-all duration-200 uppercase"
-                        >
-                          <Play className="h-2.5 w-2.5 fill-current" />
-                          Solve
-                        </Link>
-                      </div>
-                    </li>
+                    <motion.div key={t.topic} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
+                      <div className="mb-1 flex items-center justify-between text-[12.5px]"><span className="flex items-center gap-2 text-zinc-200">{t.topic}{t.skill && m !== undefined && <span className={cn('font-mono text-[10px]', m >= 0.6 ? 'text-emerald-400' : m >= 0.35 ? 'text-amber-400' : 'text-rose-400')}>you {Math.round(m * 100)}%</span>}{t.skill && m !== undefined && m < 0.5 && t.pct >= 30 && <Pill tone="red">gap</Pill>}</span><span className="font-mono text-[11px] text-zinc-500">{t.pct}% · {t.count} reports</span></div>
+                      <Bar value={t.pct} max={100} height={6} color={t.pct >= 60 ? 'linear-gradient(90deg,#34d399,#38bdf8)' : '#a78bfa'} />
+                    </motion.div>
                   );
-                })}
-              </ul>
-              <div className="mt-4 flex items-center justify-between">
-                <p className="font-mono text-[9px] tracking-[0.2em] text-zinc-700 uppercase">
-                  Based on {experiences.length} community report{experiences.length !== 1 ? 's' : ''}
-                </p>
-                <Link
-                  to="/problems"
-                  className="flex items-center gap-1.5 font-mono text-[9px] tracking-[0.18em] text-zinc-600 hover:text-[var(--signal)] transition-colors uppercase"
-                >
-                  <ExternalLink className="h-2.5 w-2.5" strokeWidth={1.6} />
-                  Browse all problems
-                </Link>
+                })}</div> : <EmptyState icon={Target} title="No topic data yet" text="Be the first to add a detailed report." className="py-8" />}
+              </Card>
+              <Card>
+                <SectionTitle icon={Layers} title="Question types" />
+                {stats.questionTypeDistribution.length ? <div className="h-52"><ResponsiveContainer><PieChart><Pie data={stats.questionTypeDistribution} dataKey="count" nameKey="label" innerRadius="52%" outerRadius="88%" paddingAngle={2} stroke="none">{stats.questionTypeDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip {...chartTooltipStyle} formatter={(v, n, p) => [`${v} (${p.payload.pct}%)`, n]} /><Legend wrapperStyle={{ fontSize: 11 }} /></PieChart></ResponsiveContainer></div> : <EmptyState icon={Layers} title="No questions yet" className="py-8" />}
+              </Card>
+            </div>
+
+            <Card>
+              <SectionTitle icon={Search} title="Real questions asked" sub={`${allQuestions.length} questions from candidates`} action={
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-lg border border-white/[0.07] px-2.5 py-1.5"><Search className="h-3 w-3 text-zinc-600" /><input value={qFilter.q} onChange={(e) => setQFilter({ ...qFilter, q: e.target.value })} placeholder="Search…" className="w-32 bg-transparent text-[12px] text-zinc-200 outline-none placeholder:text-zinc-700" /></div>
+                  <select value={qFilter.type} onChange={(e) => setQFilter({ ...qFilter, type: e.target.value })} className="rounded-lg border border-white/[0.07] bg-[#0b0f15] px-2.5 py-1.5 text-[12px] text-zinc-300 outline-none">{['All', 'DSA', 'System Design', 'CS Fundamentals', 'Behavioral', 'Role-specific'].map((t) => <option key={t}>{t}</option>)}</select>
+                </div>} />
+              <div className="grid gap-2.5 md:grid-cols-2">
+                {filteredQs.slice(0, 40).map((q, i) => <div key={i} className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-3.5"><p className="text-[12.5px] leading-relaxed text-zinc-300">{q.text}</p><div className="mt-2 flex flex-wrap items-center gap-1.5"><Pill tone="zinc">{q.questionType || 'DSA'}</Pill><span className="font-mono text-[10px] text-zinc-600">{q.round} · {q.year}</span>{(q.topicTags || []).slice(0, 3).map((t) => <span key={t} className="rounded bg-[var(--signal)]/10 px-1.5 py-0.5 text-[10px] text-[var(--signal)]">{t}</span>)}</div></div>)}
               </div>
-            </>
-          )}
-        </section>
+              {!filteredQs.length && <p className="py-8 text-center text-[12.5px] text-zinc-600">No questions match.</p>}
+            </Card>
+          </div>
+        )}
+
+        {/* ═══ EXPERIENCES ═══ */}
+        {tab === 'experiences' && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1 rounded-lg border border-white/[0.07] p-[3px]">{['All', 'Yes', 'No', 'Pending'].map((o) => <button key={o} onClick={() => setExpFilter({ ...expFilter, offer: o })} className={cn('rounded-md px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', expFilter.offer === o ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{o === 'Yes' ? 'Offer' : o === 'No' ? 'No offer' : o}</button>)}</div>
+              <select value={expFilter.sort} onChange={(e) => setExpFilter({ ...expFilter, sort: e.target.value })} className="rounded-lg border border-white/[0.07] bg-[#0b0f15] px-3 py-2 font-mono text-[10.5px] uppercase tracking-wider text-zinc-300 outline-none"><option value="recent">Most recent</option><option value="top">Top voted</option><option value="quality">Highest quality</option></select>
+              <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-lg border border-white/[0.07] px-3 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={expFilter.q} onChange={(e) => setExpFilter({ ...expFilter, q: e.target.value })} placeholder="Search questions, roles, tips…" className="w-full bg-transparent text-[12.5px] text-zinc-200 outline-none placeholder:text-zinc-700" /></div>
+            </div>
+            {filteredExps.length ? filteredExps.map((e) => <ExperienceCard key={e._id} exp={e} onVote={vote} />) : <EmptyState icon={FileText} title="No experiences match" text="Be the first to share how your interview went." action={<button onClick={() => setShowSubmit(true)} className="rounded-lg bg-[var(--signal)]/15 px-4 py-2 text-[12px] text-[var(--signal)] hover:bg-[var(--signal)]/25">Submit experience</button>} />}
+          </div>
+        )}
+
+        {tab === 'prep' && <PrepPlan slug={slug} companyName={company.name} />}
       </div>
 
-      {/* ── Toast ─────────────────────────────────────────────────────────── */}
-      {successMsg && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-[var(--signal)]/20 bg-background/90 px-5 py-3 font-mono text-[11px] text-[var(--signal)] shadow-xl backdrop-blur-xl stagger-in">
-          <BadgeCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
-          <span>Intel published · Thank you</span>
-          <button onClick={() => setSuccessMsg(false)} className="ml-2 opacity-50 hover:opacity-100 transition-opacity">
-            <X className="h-3.5 w-3.5" strokeWidth={1.6} />
-          </button>
-        </div>
-      )}
-
-      {/* ── Modal ──────────────────────────────────────────────────────────── */}
-      {showSubmit && (
-        <SubmitExperienceModal
-          company={company}
-          companies={[company]}
-          onClose={() => setShowSubmit(false)}
-          onSuccess={() => {
-            setShowSubmit(false);
-            setSuccessMsg(true);
-            companiesService.getCompanyExperiences(slug).then(r => {
-              if (r.data.success) setExperiences(r.data.data);
-            });
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-// ── Micro-components ────────────────────────────────────────────────────────
-function SectionLabel({ children }) {
-  return (
-    <div className="font-mono text-[9px] tracking-[0.28em] text-zinc-600 uppercase">{children}</div>
-  );
-}
-
-function StatCell({ label, value, accent }) {
-  return (
-    <div className="bg-background/40 flex flex-col items-center justify-center gap-0.5 py-3">
-      <span className={`font-mono text-[18px] font-semibold tabular-nums leading-none ${accent ? 'text-[var(--signal)]' : 'text-zinc-200'}`}>
-        {value}
-      </span>
-      <span className="font-mono text-[8px] tracking-[0.2em] text-zinc-700 uppercase">{label}</span>
-    </div>
-  );
-}
-
-function CompStat({ label, value }) {
-  return (
-    <div>
-      <div className="font-mono text-[9px] tracking-[0.18em] text-zinc-700 mb-1 uppercase">{label}</div>
-      <div className="font-mono text-[15px] font-semibold text-[var(--signal)]">{value}</div>
-    </div>
-  );
-}
-
-function EmptyState({ label, cta }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16">
-      <span className="h-1.5 w-1.5 rounded-full bg-zinc-700" />
-      <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-700 uppercase">{label}</span>
-      {cta && (
-        <button
-          onClick={cta.onClick}
-          className="mt-2 flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 px-6 py-2.5 text-[11px] font-bold tracking-[0.15em] text-white uppercase border border-[var(--signal)]/20 transition-all duration-500 hover:from-emerald-500/25 hover:to-teal-500/25"
-        >
-          <Shield className="h-3 w-3 text-[var(--signal)]" strokeWidth={1.6} />
-          {cta.label}
-        </button>
-      )}
+      {showSubmit && <SubmitExperienceModal company={company} companies={[company]} onClose={() => setShowSubmit(false)} onSuccess={() => { loadExperiences(); loadStats(); }} />}
     </div>
   );
 }
