@@ -39,9 +39,10 @@ function Voice({ exp, onVote }) {
             <span className="display text-[34px] leading-none text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{exp.role}</span>
             <span className={cn('text-[13px] font-medium', tone)}>{label}</span>
             {exp.isVerified && <span className="inline-flex items-center gap-1 text-[12px] text-sky-300"><ShieldCheck className="h-3.5 w-3.5" />verified</span>}
+            {exp.source === 'curated' && <span title="Written for the demo dataset, not reported by a real student" className="rounded-full border border-[var(--line-strong)] px-2.5 py-0.5 text-[11.5px] text-zinc-500">sample report</span>}
           </div>
           <div className="mt-2 text-[13px] text-zinc-500">
-            {exp.month} {exp.year}{(exp.collegeId?.shortName || exp.college) ? ` · ${exp.collegeId?.shortName || exp.college}` : ''} · {exp.rounds?.length || 0} rounds, {qCount} questions{exp.difficulty ? ` · felt ${exp.difficulty.toLowerCase()}` : ''} · {exp.author ? exp.author : 'anonymous'}
+            {exp.month} {exp.year}{(exp.collegeId?.shortName || exp.college) ? ` · ${exp.collegeId?.shortName || exp.college}` : ''} · {exp.rounds?.length || 0} rounds, {qCount} questions{exp.difficulty ? ` · felt ${exp.difficulty.toLowerCase()}` : ''} · {exp.source === 'curated' ? 'illustrative' : exp.author ? exp.author : 'anonymous'}
           </div>
           {!open && exp.overallTips && <p className="mt-4 max-w-3xl text-[17px] leading-[1.6] text-zinc-400">&ldquo;{exp.overallTips.length > 260 ? `${exp.overallTips.slice(0, 260)}…` : exp.overallTips}&rdquo;</p>}
         </div>
@@ -234,7 +235,7 @@ export default function CompanyDetailPage() {
         <Link to="/intel" className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-zinc-100"><ArrowLeft className="h-4 w-4" /> Atlas</Link>
         <div className="mt-10 grid gap-14 lg:grid-cols-[1.35fr_1fr] lg:items-end">
           <div>
-            <div className="flex items-center gap-4"><CompanyLogo company={company} size={52} /><div className="text-[13.5px] text-zinc-500">{company.tier}{company.headquarters ? ` · ${company.headquarters}` : ''} · {CONF[stats.dataConfidence]}</div></div>
+            <div className="flex items-center gap-4"><CompanyLogo company={company} size={52} /><div className="text-[13.5px] text-zinc-500">{company.tier}{company.headquarters ? ` · ${company.headquarters}` : ''}{company.founded ? ` · founded ${company.founded}` : ''} · {CONF[stats.dataConfidence]}</div></div>
             <h1 className="display mt-6 text-[clamp(64px,11vw,168px)] leading-[0.9] text-zinc-50">{company.name}</h1>
             {company.description && <p className="mt-8 max-w-xl text-[18px] leading-relaxed text-zinc-400">{company.description}</p>}
             <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -244,12 +245,13 @@ export default function CompanyDetailPage() {
           </div>
           <div className="grid grid-cols-2 gap-x-10 gap-y-10">
             <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{stats.offerRate != null ? <CountUp value={stats.offerRate} /> : '—'}{stats.offerRate != null && <span className="text-[30px] text-zinc-500">%</span>}</div><div className="mt-3 text-[13px] text-zinc-500">offer rate{stats.offerRateCI && <><br /><span className="text-zinc-600">likely {stats.offerRateCI.low}–{stats.offerRateCI.high}%</span></>}</div></div>
-            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50"><CountUp value={stats.totalReports} /></div><div className="mt-3 text-[13px] text-zinc-500">firsthand reports</div></div>
+            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50"><CountUp value={stats.totalReports} /></div><div className="mt-3 text-[13px] text-zinc-500">reports</div></div>
             <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{stats.avgRounds || rounds.length || '—'}</div><div className="mt-3 text-[13px] text-zinc-500">rounds, on average</div></div>
             <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{company.ctcMin != null ? (company.ctcMin === company.ctcMax ? company.ctcMin : `${company.ctcMin}–${company.ctcMax}`) : '—'}</div><div className="mt-3 text-[13px] text-zinc-500">LPA package</div></div>
           </div>
         </div>
-        {company.roles?.length > 0 && <div className="mt-12 text-[14px] text-zinc-500">Hires for <span className="text-zinc-300">{company.roles.join(' · ')}</span></div>}
+        {company.website && <a href={company.website} target="_blank" rel="noreferrer" className="mt-12 mr-8 inline-block text-[14px] text-zinc-500 transition-colors hover:text-[var(--ember)]">{company.website.replace(/^https?:\/\/(www\.)?/, '')} ↗</a>}
+        {company.roles?.length > 0 && <div className="mt-12 inline-block text-[14px] text-zinc-500">Hires for <span className="text-zinc-300">{company.roles.join(' · ')}</span></div>}
       </header>
 
       {/* sticky section nav */}

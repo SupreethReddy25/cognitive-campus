@@ -34,6 +34,7 @@ function Voice({ exp }) {
             <span className="display text-[30px] leading-none text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{exp.role}</span>
             <span className={cn('text-[13px] font-medium', outcome[1])}>{outcome[0]}</span>
             {exp.isVerified && <span className="inline-flex items-center gap-1 text-[12px] text-sky-300"><ShieldCheck className="h-3.5 w-3.5" />verified</span>}
+            {exp.source === 'curated' && <span className="rounded-full border border-[var(--line-strong)] px-2.5 py-0.5 text-[11.5px] text-zinc-500">sample report</span>}
           </div>
           <div className="mt-1.5 text-[13px] text-zinc-500">{exp.month} {exp.year}{exp.difficulty ? ` · felt ${String(exp.difficulty).toLowerCase()}` : ''}{exp.roundCount > 0 ? ` · ${exp.roundCount} round${exp.roundCount !== 1 ? 's' : ''}` : ''}{exp.upvotes > 0 ? ` · ${exp.upvotes} helpful` : ''}</div>
         </div>
@@ -176,14 +177,14 @@ export default function PlacementCompanyPage() {
       </Section>
 
       {placementRecords?.length > 0 && (
-        <Section title={<>On the <em>record</em></>} kicker="Verified placement records for your college.">
+        <Section title={<>On the <em>record</em></>} kicker="Placement records for your college. Rows marked “modelled” are estimates until your placement cell uploads real ones.">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left">
               <thead><tr>{['Year', 'Season', 'Roles', 'Package', 'Eligibility', 'Hired'].map((h) => <th key={h} className="pb-3 text-[12.5px] font-normal text-zinc-600">{h}</th>)}</tr></thead>
               <tbody>{placementRecords.map((rec, i) => (
                 <tr key={i} className="border-t border-[var(--line)]">
                   <td className="py-3.5 pr-6 display text-[24px] tnum text-zinc-100">{rec.hiringYear}</td>
-                  <td className="py-3.5 pr-6 text-[14px] text-zinc-500">{rec.hiringSeason}</td>
+                  <td className="py-3.5 pr-6 text-[14px] text-zinc-500">{rec.hiringSeason}{rec.source === 'modelled' && <span className="ml-2 text-[11.5px] text-amber-400/80">modelled</span>}</td>
                   <td className="py-3.5 pr-6 text-[14px] text-zinc-300">{rec.roles?.join(', ') || '—'}</td>
                   <td className="py-3.5 pr-6 text-[14px] text-zinc-300">{rec.packageOffered?.ctc || '—'}</td>
                   <td className="py-3.5 pr-6 text-[14px] text-zinc-500">{rec.eligibility?.minCGPA ? `≥ ${rec.eligibility.minCGPA} CGPA` : '—'}</td>

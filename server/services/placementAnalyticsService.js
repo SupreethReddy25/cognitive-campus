@@ -226,7 +226,7 @@ const getCollegeInsights = async (slug, userId) => {
   }
 
   return {
-    college: { _id: college._id, name: college.name, shortName: college.shortName, slug: college.slug, tier: college.tier, location: college.location },
+    college: { _id: college._id, name: college.name, shortName: college.shortName, slug: college.slug, tier: college.tier, location: college.location, website: college.website, nirfRank: college.nirfRank, nirfYear: college.nirfYear, placementSummary: college.placementSummary || null },
     hiringTrends,
     topRecruiters,
     skillDemand: demand,

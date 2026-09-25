@@ -8,6 +8,7 @@
  * Yjs mirrored text types with manual socket bridge for sync.
  */
 
+import { defineObservatory } from '../../lib/monacoTheme';
 import { useRef, useEffect, useCallback, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import * as Y from 'yjs';
@@ -161,7 +162,7 @@ export function SplitEditor({ language = 'javascript', starterCodeMap = null, on
             <Editor
               height="100%"
               language={language}
-              theme="vs-dark"
+              theme="observatory" beforeMount={defineObservatory}
               onMount={handleLocalMount}
               options={{
                 fontSize: 13,
@@ -214,7 +215,7 @@ export function SplitEditor({ language = 'javascript', starterCodeMap = null, on
             <Editor
               height="100%"
               language={partnerLanguage || language}
-              theme="vs-dark"
+              theme="observatory" beforeMount={defineObservatory}
               onMount={handleRemoteMount}
               options={{
                 fontSize: 13,

@@ -6,6 +6,7 @@
  * Language selection is handled by parent ArenaWorkspace.
  */
 
+import { defineObservatory } from '../../lib/monacoTheme';
 import { useRef, useEffect, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import * as Y from 'yjs';
@@ -144,7 +145,7 @@ export function SharedEditor({ language = 'javascript', starterCodeMap = null, o
     <Editor
       height="100%"
       language={language}
-      theme="vs-dark"
+      theme="observatory" beforeMount={defineObservatory}
       onMount={handleEditorMount}
       options={{
         fontSize: 13,

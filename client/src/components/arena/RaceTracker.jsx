@@ -1,134 +1,57 @@
 /**
- * RaceTracker — Ultra-thin Glowing Race Lines
- *
- * Versus mode progress visualization.
- * 1px glowing lines with spring-physics easing and ambient glow.
+ * RaceTracker — two stars racing to the finish.
+ * Versus mode progress: each player is a star travelling along a hairline toward a finish marker.
  * Real-time updates via arena:progress_update events.
  */
 
 import { useArena } from '../../context/ArenaContext';
 import { useAuth } from '../../context/AuthContext';
-import { Crown, Swords, Zap } from 'lucide-react';
+import { Crown } from 'lucide-react';
 
 export function RaceTracker() {
   const { user } = useAuth();
   const { progressMap, players, winner, matchStatus } = useArena();
 
   const myUserId = user?._id;
-  const opponent = players.find(p => p.userId !== myUserId);
-  const me = players.find(p => p.userId === myUserId);
+  const opponent = players.find((p) => p.userId !== myUserId);
 
-  const myProgress = progressMap[myUserId] || { progress: 0, total: 1 };
-  const oppProgress = opponent ? (progressMap[opponent.userId] || { progress: 0, total: 1 }) : { progress: 0, total: 1 };
-
-  const myPct = myProgress.total > 0 ? (myProgress.progress / myProgress.total) * 100 : 0;
-  const oppPct = oppProgress.total > 0 ? (oppProgress.progress / oppProgress.total) * 100 : 0;
+  const mine = progressMap[myUserId] || { progress: 0, total: 1 };
+  const theirs = opponent ? (progressMap[opponent.userId] || { progress: 0, total: 1 }) : { progress: 0, total: 1 };
+  const pct = (p) => (p.total > 0 ? (p.progress / p.total) * 100 : 0);
 
   const isFinished = matchStatus === 'finished';
   const iWon = winner?.userId === myUserId;
   const isActive = matchStatus === 'active';
 
-  return <div className="border-b border-white/[0.04] bg-white/[0.01] px-5 py-3">
-    {/* Header */}
-    <div className="flex items-center gap-2 mb-4">
-      <Swords className="h-3 w-3 text-zinc-600" strokeWidth={1.5} />
-      <span className="text-[12px] text-zinc-600 font-medium">
-        Versus · Race
-      </span>
-      {isActive && <span className="ml-auto flex items-center gap-1.5">
-        <span className="status-dot h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[var(--signal)]">LIVE</span>
-      </span>}
-      {isFinished && <span className="ml-auto flex items-center gap-1.5 text-[12px] font-medium text-amber-400">
-        <Crown className="h-3 w-3" strokeWidth={2} />
-        {iWon ? 'Victory' : `${winner?.name?.split(' ')[0]} wins`}
-      </span>}
+  return (
+    <div className="border-b border-[var(--line)] px-6 py-4">
+      <div className="mb-3 flex items-center justify-between text-[12.5px]">
+        <span className="text-zinc-500">Versus · first to pass every test</span>
+        {isActive && <span className="flex items-center gap-2 text-[var(--ember)]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--ember)]" />live</span>}
+        {isFinished && <span className="flex items-center gap-1.5 font-medium text-[var(--star)]"><Crown className="h-3.5 w-3.5" />{iWon ? 'Victory' : `${winner?.name?.split(' ')[0]} wins`}</span>}
+      </div>
+      <Lane label="You" p={mine} pct={pct(mine)} color="#ff7a4d" me />
+      <Lane label={opponent?.name?.split(' ')[0] || 'Opponent'} p={theirs} pct={pct(theirs)} color="#8fbcda" />
     </div>
-
-    {/* My race line */}
-    <RaceLine
-      label="YOU"
-      progress={myProgress.progress}
-      total={myProgress.total}
-      pct={myPct}
-      color="var(--signal)"
-      glowColor="rgba(74, 124, 89, 0.6)"
-      isMe={true}
-      finished={myProgress.finished}
-    />
-
-    {/* Separator */}
-    <div className="my-2.5 flex items-center gap-2">
-      <div className="flex-1 h-px bg-white/[0.03]" />
-      <Zap className="h-2.5 w-2.5 text-zinc-800" strokeWidth={1.5} />
-      <div className="flex-1 h-px bg-white/[0.03]" />
-    </div>
-
-    {/* Opponent race line */}
-    <RaceLine
-      label={opponent?.name?.split(' ')[0] || 'OPP'}
-      progress={oppProgress.progress}
-      total={oppProgress.total}
-      pct={oppPct}
-      color="#e11d48"
-      glowColor="rgba(225, 29, 72, 0.5)"
-      isMe={false}
-      finished={oppProgress.finished}
-    />
-  </div>;
+  );
 }
 
-function RaceLine({ label, progress, total, pct, color, glowColor, isMe, finished }) {
-  return <div className="flex items-center gap-3">
-    {/* Label */}
-    <span
-      className="w-10 text-right text-[12px] truncate font-medium"
-      style={{ color: isMe ? 'var(--signal)' : '#f0728a' }}
-    >
-      {label}
-    </span>
-
-    {/* Track */}
-    <div className="relative flex-1 h-[1px] bg-white/[0.06] overflow-visible">
-      {/* Glow line */}
-      <div
-        className="absolute inset-y-0 left-0"
-        style={{
-          width: `${pct}%`,
-          height: '1px',
-          background: color,
-          boxShadow: `0 0 8px ${glowColor}, 0 0 20px ${glowColor}`,
-          transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        }}
-      />
-      {/* Leading dot — spring-physics overshoot */}
-      <div
-        className="absolute top-1/2 -translate-y-1/2"
-        style={{
-          left: `${pct}%`,
-          width: '4px',
-          height: '4px',
-          borderRadius: '9999px',
-          background: color,
-          boxShadow: `0 0 6px ${glowColor}, 0 0 12px ${glowColor}`,
-          transition: 'left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
+function Lane({ label, p, pct, color, me = false }) {
+  const done = p.finished;
+  const ticks = Math.max(1, p.total);
+  return (
+    <div className="flex items-center gap-4 py-1.5">
+      <span className={`w-16 truncate text-right text-[13px] ${me ? 'font-medium text-zinc-100' : 'text-zinc-400'}`}>{label}</span>
+      <div className="relative h-px flex-1 bg-[var(--line-strong)]">
+        {Array.from({ length: ticks + 1 }).map((_, i) => <span key={i} className="absolute top-1/2 h-[7px] w-px -translate-y-1/2 bg-[var(--line-strong)]" style={{ left: `${(i / ticks) * 100}%` }} />)}
+        <span className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, height: 1, background: color, transition: 'width .7s cubic-bezier(.34,1.56,.64,1)' }} />
+        <span className="absolute top-1/2" style={{ left: `${pct}%`, transition: 'left .7s cubic-bezier(.34,1.56,.64,1)', transform: 'translate(-50%,-50%)' }}>
+          <span className="absolute -inset-3 rounded-full" style={{ background: `radial-gradient(circle, ${color}66, transparent 70%)` }} />
+          <span className="relative block h-2.5 w-2.5 rounded-full" style={{ background: done ? '#fff1cf' : color }} />
+        </span>
+        <span className="absolute -right-1 top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border border-[var(--line-strong)]" />
+      </div>
+      <span className="w-14 text-[12.5px] tnum text-zinc-500"><span className="text-zinc-200">{p.progress}</span>/{p.total}</span>
     </div>
-
-    {/* Counter */}
-    <span className="w-14 font-mono text-[10px] tabular-nums text-zinc-500">
-      <span className="text-zinc-300">{progress}</span>
-      <span className="text-zinc-700">/{total}</span>
-    </span>
-
-    {/* Finished indicator */}
-    {finished && <span
-      className="text-[12px] font-medium"
-      style={{ color }}
-    >
-      ✓
-    </span>}
-  </div>;
+  );
 }

@@ -75,6 +75,12 @@ const seedColleges = async () => {
   for (const c of COLLEGES) {
     await College.updateOne({ slug: c.slug }, { $set: { ...c, verified: true } }, { upsert: true });
   }
+  // real, sourced facts: NIRF rank + headline placement figures (see seeds/data/collegeFacts.js)
+  const facts = require('./data/collegeFacts');
+  for (const [slug, f] of Object.entries(facts)) {
+    if (!f || typeof f !== 'object' || !f.placementSummary) continue;
+    await College.updateOne({ slug }, { $set: { website: f.website, nirfRank: f.nirfRank, nirfYear: facts.NIRF_YEAR, placementSummary: { ...f.placementSummary, retrievedAt: new Date('2026-09-25') } } });
+  }
   const all = await College.find({});
   say(`colleges: ${all.length}`);
   return new Map(all.map((c) => [c.slug, c]));
@@ -143,6 +149,8 @@ const seedSheets = async (problems) => {
 // ─── 6. Placement records ────────────────────────────────────────────────────
 const seedPlacementRecords = async (collegeBySlug, companyBySlug) => {
   const rows = buildPlacementRecords();
+  // clear earlier *modelled* rows (incl. the legacy seed format) so re-seeds stay consistent; admin-entered records are never touched
+  await CollegePlacementRecord.deleteMany({ $or: [{ source: 'modelled' }, { source: 'placement-cell', notes: /on-campus drive$/ }] });
   let n = 0;
   for (const r of rows) {
     const college = collegeBySlug.get(r.collegeSlug);

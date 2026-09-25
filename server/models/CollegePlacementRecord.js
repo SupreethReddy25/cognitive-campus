@@ -82,7 +82,7 @@ const collegePlacementRecordSchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      enum: ['admin', 'placement-cell', 'alumni-report'],
+      enum: ['admin', 'placement-cell', 'alumni-report', 'modelled'],
       default: 'admin'
     },
     notes: {

@@ -87,8 +87,12 @@ const buildPlacementRecords = () => {
   const rows = [];
   for (const [college, specs] of Object.entries(TABLE)) {
     for (const [company, hires, base, roles] of specs) {
+      // deterministic, sporadic gaps so visit histories look like real campuses (not every recruiter every year)
+      const gap = (i) => { let x = 2166136261; for (const ch of `${college}:${company}:${i}`) { x ^= ch.charCodeAt(0); x = Math.imul(x, 16777619); } return ((x >>> 0) % 100) < (['tcs', 'infosys'].includes(company) ? 3 : 22); };
+      let visits = hires.filter((h) => h != null).length;
       hires.forEach((h, i) => {
         if (h === null || h === undefined) return;
+        if (visits > 3 && i < hires.length - 1 && gap(i)) { visits -= 1; return; }
         const year = YEARS[i];
         const ctc = Math.round(base * (1 + 0.04 * i) * 10) / 10;
         const isMass = ['tcs', 'infosys'].includes(company);
@@ -102,9 +106,9 @@ const buildPlacementRecords = () => {
           packageOffered: { ctc: `${ctc} LPA`, breakdown: isMass ? 'Fixed CTC' : `${Math.round(ctc * 0.72 * 10) / 10} base + ${Math.round(ctc * 0.12 * 10) / 10} bonus + ${Math.round(ctc * 0.16 * 10) / 10} stock/variable` },
           eligibility: { minCGPA: isMass ? '6.0' : ctc >= 30 ? '7.5' : '7.0', branches: ['CSE', 'IT', 'ECE', 'EE'] },
           assessmentStages: isMass ? ['Online Test', 'Technical Interview', 'HR Interview'] : ['Online Assessment', 'Technical Interviews', 'HR / Managerial'],
-          verified: true,
-          source: 'placement-cell',
-          notes: `${year} on-campus drive`
+          verified: false,
+          source: 'modelled',
+          notes: `Modelled estimate from typical recruiter patterns — replace with placement-cell data (Admin → Add data).`
         });
       });
     }

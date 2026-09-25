@@ -76,6 +76,19 @@ export default function PlacementDashboardPage() {
   const pred = insights?.predictions;
   const topPercentile = useMemo(() => (insights?.peers?.perSkill || []).filter((p) => p.percentile != null).sort((a, b) => b.percentile - a.percentile)[0], [insights]);
 
+  const official = insights?.college?.placementSummary;
+  const officialFigures = [];
+  if (official) {
+    if (official.placed) officialFigures.push({ label: 'students placed', value: official.placed.toLocaleString('en-IN') });
+    if (official.placedPct) officialFigures.push({ label: 'placement rate', value: official.placedPct, unit: '%' });
+    if (official.medianLpa) officialFigures.push({ label: 'median package (LPA)', value: official.medianLpa });
+    if (official.avgLpa) officialFigures.push({ label: 'average package (LPA)', value: official.avgLpa });
+    if (official.highestLpa) officialFigures.push({ label: 'highest package (LPA)', value: official.highestLpa });
+    if (official.offers && officialFigures.length < 4) officialFigures.push({ label: 'offers made', value: official.offers.toLocaleString('en-IN') });
+    if (official.companies && officialFigures.length < 4) officialFigures.push({ label: 'companies', value: official.companies });
+    officialFigures.length = Math.min(officialFigures.length, 4);
+  }
+
   if (!college) return <Page><CollegeGate onSelected={refreshUser} /></Page>;
 
   return (
@@ -87,22 +100,36 @@ export default function PlacementDashboardPage() {
         <>
           <header className="pt-14 md:pt-20">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="text-[13px] text-zinc-500">Placement · {insights.college.tier} · {insights.college.location} · {CONF[dash.dataConfidence]} <button onClick={changeCollege} className="ml-2 text-zinc-600 underline-offset-2 hover:text-zinc-300 hover:underline">change</button></div>
+              <div className="text-[13px] text-zinc-500">Placement · {insights.college.tier} · {insights.college.location}{insights.college.nirfRank ? ` · NIRF ${insights.college.nirfYear} engineering #${insights.college.nirfRank}` : ''} · {CONF[dash.dataConfidence]} <button onClick={changeCollege} className="ml-2 text-zinc-600 underline-offset-2 hover:text-zinc-300 hover:underline">change</button></div>
               <PrimaryButton onClick={() => setShowSubmit(true)} icon={Plus}>Add your experience</PrimaryButton>
             </div>
             <h1 className="display mt-6 text-[clamp(44px,7.4vw,112px)] leading-[0.95] text-zinc-50">{insights.college.name}</h1>
             {insights.skillGap && <p className="mt-8 max-w-3xl text-[clamp(20px,2.2vw,28px)] leading-[1.4] text-zinc-400">{insights.skillGap.headline}</p>}
 
+            {official ? (
+              <div className="mt-14">
+                <div className="grid grid-cols-2 gap-x-10 gap-y-10 lg:grid-cols-4">
+                  {officialFigures.map((f) => (
+                    <div key={f.label} className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50">{f.value}{f.unit && <span className="text-[28px] text-zinc-500">{f.unit}</span>}</div><div className="mt-3 text-[13px] text-zinc-500">{f.label}</div></div>
+                  ))}
+                </div>
+                <p className="mt-6 max-w-3xl text-[12.5px] leading-relaxed text-zinc-600">
+                  {official.season} · {official.scope}. {official.note ? `${official.note} ` : ''}Source:{' '}
+                  {official.source?.url ? <a href={official.source.url} target="_blank" rel="noreferrer" className="text-zinc-400 underline-offset-2 hover:text-[var(--ember)] hover:underline">{official.source.name}</a> : official.source?.name}. Figures are as published and rounded; check the institute&apos;s own report before quoting them.
+                </p>
+              </div>
+            ) : (
             <div className="mt-14 grid grid-cols-2 gap-x-10 gap-y-10 lg:grid-cols-4">
               <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={latest?.hires || 0} /></div><div className="mt-3 text-[13px] text-zinc-500">hired in {latest?.year}{prev && <span className={cn('ml-1.5', latest.hires >= prev.hires ? 'text-emerald-400' : 'text-rose-400')}>{latest.hires >= prev.hires ? '+' : ''}{latest.hires - prev.hires} vs {prev.year}</span>}</div></div>
               <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50">{latest?.avgPackage ? <CountUp value={latest.avgPackage} decimals={1} /> : '—'}</div><div className="mt-3 text-[13px] text-zinc-500">avg LPA{latest?.topPackage ? ` · top ${latest.topPackage} at ${latest.topPackageCompany}` : ''}</div></div>
               <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={insights.topRecruiters.length} /></div><div className="mt-3 text-[13px] text-zinc-500">regular recruiters</div></div>
               <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={dash.stats.totalExperiences} /></div><div className="mt-3 text-[13px] text-zinc-500">interview reports{dash.stats.overallOfferRate != null ? ` · ${dash.stats.overallOfferRate}% offers` : ''}</div></div>
             </div>
+            )}
           </header>
 
           {/* trajectory */}
-          <Section title={<>The <em>trajectory</em></>} kicker="Students hired each season (bars) against the average package in LPA (line).">
+          <Section title={<>The <em>trajectory</em></>} kicker="Modelled from typical recruiter patterns — an illustration until your placement cell uploads real records. Bars: students hired; line: average package (LPA).">
             <div className="grid gap-16 lg:grid-cols-[1.6fr_1fr]">
               <div className="h-72"><ResponsiveContainer><ComposedChart data={insights.hiringTrends} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                 <CartesianGrid stroke="rgba(236,230,216,0.06)" vertical={false} />
@@ -128,7 +155,7 @@ export default function PlacementDashboardPage() {
 
           {/* who visits next */}
           {pred?.companies?.length > 0 && (
-            <Section title={<>Who&apos;s coming in <em>{pred.year}</em></>} kicker={<>Recency-weighted visit history with a Bayesian prior — so one visit never reads as certainty. It predicts campus visits, not offers.{pred.hiresTrendPct != null && <> Hiring is <span className={pred.hiresTrendPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}>{pred.hiresTrendPct >= 0 ? '+' : ''}{pred.hiresTrendPct}%</span> over three years.</>}</>}>
+            <Section title={<>Who&apos;s coming in <em>{pred.year}</em></>} kicker={<>Illustrative: computed from modelled visit history (recency-weighted, Bayesian prior). It predicts campus visits, not offers.{pred.hiresTrendPct != null && <> Hiring is <span className={pred.hiresTrendPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}>{pred.hiresTrendPct >= 0 ? '+' : ''}{pred.hiresTrendPct}%</span> over three years.</>}</>}>
               <ol className="grid gap-x-16 md:grid-cols-2">
                 {pred.companies.slice(0, 8).map((c, i) => (
                   <motion.li key={c.company._id} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}>

@@ -143,7 +143,7 @@ export default function IntelHubPage() {
             <div className="text-[13px] text-zinc-500">Intel · the interview atlas</div>
             <h1 className="display mt-5 text-[clamp(48px,7.4vw,104px)] text-zinc-50">Know the interview <em className="text-[var(--ember)]">before</em> you walk in.</h1>
             <p className="mt-7 max-w-xl text-[18px] leading-relaxed text-zinc-400">
-              <span className="text-zinc-100"><CountUp value={totalReports} /></span> firsthand reports across <span className="text-zinc-100"><CountUp value={companies.length} /></span> companies{recent > 0 && <>, <span className="text-[var(--ember)]">{recent} added this month</span></>}. Every percentage carries a confidence interval, so you know how far to trust it.
+              <span className="text-zinc-100"><CountUp value={totalReports} /></span> reports across <span className="text-zinc-100"><CountUp value={companies.length} /></span> companies{recent > 0 && <>, <span className="text-[var(--ember)]">{recent} added this month</span></>}. Reports marked “sample” are illustrative until real students add theirs. Every percentage carries a confidence interval, so you know how far to trust it.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-6">
               <button onClick={() => setSubmitTarget({})} className="group flex items-center gap-3 rounded-full bg-[var(--ember)] py-3 pl-7 pr-3 text-[#1a0d07] transition-[filter,transform] hover:brightness-110 active:scale-[0.98]">

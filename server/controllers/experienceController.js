@@ -23,7 +23,7 @@ const present = (exp, viewerId) => {
   const { upvotedBy, downvotedBy, userId, ...rest } = exp;
   return {
     ...rest,
-    author: exp.isAnonymous ? null : userId?.name || null,
+    author: exp.isAnonymous || exp.source === 'curated' ? null : userId?.name || null,
     upvotes: exp.upvotes || 0,
     downvotes: exp.downvotes || 0,
     userVote: up ? 'up' : down ? 'down' : null,

@@ -3,6 +3,13 @@
  * for new-grad software roles in India, compiled from public offer reports — indicative, not official.
  */
 
+// Founding years (public record). Left out where the "founding" is ambiguous after mergers.
+const FOUNDED = {
+  google: 1998, amazon: 1994, microsoft: 1975, meta: 2004, apple: 1976, netflix: 1997, flipkart: 2007, razorpay: 2014, zerodha: 2010,
+  atlassian: 2002, adobe: 1982, 'goldman-sachs': 1869, 'morgan-stanley': 1935, uber: 2009, oracle: 1977, salesforce: 1999, intuit: 1983,
+  paypal: 1998, 'walmart-labs': 2011, tcs: 1968, infosys: 1981, swiggy: 2014
+};
+
 const round = (name, description, duration) => ({ name, description, duration });
 
 module.exports = [
@@ -350,4 +357,10 @@ module.exports = [
       tipsSummary: 'Think in terms of real-time assignment problems: heaps, geo-indexing and queues.'
     }
   }
-].map((c) => ({ ...c, logo: `https://logo.clearbit.com/${c.domain}` }));
+].map((c) => ({
+  ...c,
+  // Clearbit's free logo API was retired; Google's favicon service is stable and needs no key
+  logo: `https://www.google.com/s2/favicons?domain=${c.domain}&sz=128`,
+  website: `https://www.${c.domain}`,
+  founded: FOUNDED[c.slug] || null
+}));

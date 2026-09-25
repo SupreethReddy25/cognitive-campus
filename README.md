@@ -148,6 +148,18 @@ npm run verify:problems   # runs every reference solution (JS + Python) against 
 
 Demo logins (password `Demo@12345`): `demo@cognitivecampus.dev` (student), `admin@cognitivecampus.dev` (placement-cell admin).
 
+### What is real data and what is illustrative
+
+| Data | Status |
+|---|---|
+| NIRF 2025 engineering ranks, college websites | **Real** — read from nirfindia.org (`server/seeds/data/collegeFacts.js`) |
+| Headline placement figures per college (placed, median/avg/highest CTC, season) | **Real, sourced** — each carries its source link; verify against the institute's report before quoting |
+| Company names, HQ, domains, founding years, logos (Google favicon service) | **Real** |
+| Typical fresher CTC ranges | Indicative, compiled from public offer reports |
+| Company-level placement history (`source: modelled`) | **Illustrative** — replace via Admin → Add data |
+| Interview experiences (`source: curated`) | **Sample reports**, marked as such in the UI — real submissions replace them |
+| Demo cohort (students, submissions) | Synthetic |
+
 ### AI features
 
 Optional. Provider order: the user's own Gemini key (Profile → AI settings, stored AES-256 encrypted) → platform `GEMINI_API_KEY` → `GROQ_API_KEY`. With no key configured every AI feature (hints, experience parser, prep plan, dashboard tip) degrades to a deterministic offline fallback.

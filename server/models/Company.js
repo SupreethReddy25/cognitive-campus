@@ -15,6 +15,8 @@ const companySchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+    founded: { type: Number, default: null },
+    website: { type: String, default: '' },
     logo: {
       type: String, // URL to logo
       default: ''

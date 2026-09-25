@@ -54,6 +54,27 @@ const collegeSchema = new mongoose.Schema(
     verified: {
       type: Boolean,
       default: false
+    },
+    /** NIRF Engineering rank (year in nirfYear); null when outside the published top 100. */
+    nirfRank: { type: Number, default: null },
+    nirfYear: { type: Number, default: null },
+    /**
+     * Headline placement figures for one season, with the source they came from.
+     * Package figures are in LPA. Every field is optional — a figure is stored only when a source stated it.
+     */
+    placementSummary: {
+      season: String,
+      scope: String,
+      placed: Number,
+      placedPct: Number,
+      offers: Number,
+      companies: Number,
+      avgLpa: Number,
+      medianLpa: Number,
+      highestLpa: Number,
+      note: String,
+      source: { name: String, url: String },
+      retrievedAt: Date
     }
   },
   { timestamps: true }

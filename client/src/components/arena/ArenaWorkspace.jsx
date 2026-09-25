@@ -15,6 +15,7 @@ import { useArena } from '../../context/ArenaContext';
 import { useAuth } from '../../context/AuthContext';
 import { problemsService, submissionsService } from '../../services/api';
 import { RaceTracker } from './RaceTracker';
+import { defineObservatory } from '../../lib/monacoTheme';
 import { SharedEditor } from './SharedEditor';
 import { SplitEditor } from './SplitEditor';
 import {
@@ -232,7 +233,7 @@ export function ArenaWorkspace() {
   const langMeta = LANGUAGES.find(l => l.key === language) || LANGUAGES[0];
   const modeIcon = mode === 'versus' ? Swords : mode === 'coop-shared' ? Users : SplitSquareHorizontal;
   const ModeIcon = modeIcon;
-  const modeLabel = mode === 'versus' ? 'VERSUS · RACE' : mode === 'coop-shared' ? 'CO-OP · SHARED' : 'CO-OP · SPLIT';
+  const modeLabel = mode === 'versus' ? 'Versus' : mode === 'coop-shared' ? 'Together' : 'Side by side';
   const modeColor = mode === 'versus' ? 'text-rose-400' : mode === 'coop-shared' ? 'text-[var(--signal)]' : 'text-amber-400';
 
   // ─── Test case data ───
@@ -264,59 +265,51 @@ export function ArenaWorkspace() {
   // ─── Match finished overlay ───
   if (matchStatus === 'finished') {
     const iWon = winner?.userId === user?._id;
-    return <div className="flex h-full flex-col items-center justify-center bg-background gap-6 px-10">
-      <Trophy className={`h-16 w-16 ${iWon ? 'text-amber-400' : 'text-zinc-600'}`} strokeWidth={1.5} />
-      <h1 className="text-[36px] font-semibold text-zinc-100">{iWon ? 'Victory!' : 'Match Complete'}</h1>
-      <p className="text-[14px] text-zinc-400 text-center max-w-md">
-        {iWon ? `You passed all tests first!` : winner ? `${winner.name} finished first.` : 'The match has ended.'}
+    return <div className="flex h-full flex-col items-center justify-center gap-5 px-10 text-center">
+      <div className="text-[14px] text-zinc-500">{iWon ? 'You passed every test first' : 'The match is over'}</div>
+      <h1 className="display text-[clamp(64px,11vw,150px)] text-zinc-50">{iWon ? <>Victor<em className="text-[var(--ember)]">y</em>.</> : <>Match <em className="text-[var(--ember)]">over</em>.</>}</h1>
+      <p className="max-w-md text-[17px] leading-relaxed text-zinc-400">
+        {iWon ? 'Your rating just moved. Enjoy it.' : winner ? `${winner.name} finished first. Read the editorial and come back for a rematch.` : 'The match has ended.'}
       </p>
-      <div className="flex items-center gap-4 mt-4">
-        <Link to="/arena" className="rounded-lg border border-white/[0.08] px-6 py-2.5 text-[13px] font-medium text-zinc-300 hover:bg-white/[0.03]">Back to Lobby</Link>
-        <Link to={`/problems/${room?.problemId}`} className="rounded-lg bg-[var(--signal)] px-6 py-2.5 text-[13px] font-semibold text-[#1a0d07] hover:brightness-110">Practice Solo</Link>
+      <div className="mt-6 flex items-center gap-5">
+        <Link to="/arena" className="rounded-full bg-[var(--ember)] px-8 py-3 text-[15px] font-semibold text-[#1a0d07] transition-[filter] hover:brightness-110">Back to the arena</Link>
+        <Link to={`/problems/${room?.problemId}`} className="text-[15px] text-zinc-400 transition-colors hover:text-[var(--ember)]">Practise it solo →</Link>
       </div>
     </div>;
   }
 
   return <div className="flex h-full flex-col overflow-hidden bg-background">
     {/* ─── Top bar ─── */}
-    <header className="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.04] px-4">
-      <div className="flex items-center gap-3">
-        <button onClick={handleLeave} className="flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">
-          <ArrowLeft className="h-3 w-3" strokeWidth={1.5} /> EXIT
+    <header className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--line)] px-4">
+      <div className="flex items-center gap-4">
+        <button onClick={handleLeave} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-100">
+          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.7} /> Leave
         </button>
-        <span className="h-3 w-px bg-white/[0.06]" />
-        <div className="flex items-center gap-1.5">
-          <ModeIcon className={`h-3.5 w-3.5 ${modeColor}`} strokeWidth={1.5} />
-          <span className={`font-mono text-[10px] tracking-[0.18em] ${modeColor}`}>{modeLabel}</span>
-        </div>
-        <span className="h-3 w-px bg-white/[0.06]" />
-        <button onClick={copyCode} className="flex items-center gap-1 font-mono text-[10px] text-zinc-500 hover:text-zinc-300">
-          {copied ? <Check className="h-3 w-3 text-[var(--signal)]" /> : <Copy className="h-3 w-3" />}
+        <span className="display text-[24px] leading-none text-zinc-100">{modeLabel}</span>
+        <button onClick={copyCode} title="Copy room code" className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3 py-1 text-[12.5px] tracking-[0.12em] text-zinc-500 transition-colors hover:text-zinc-200">
+          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
           {roomId}
         </button>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          {players.map(p => <div key={p.userId} className="flex items-center gap-1.5">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2a3441] text-[8px] font-bold text-zinc-200">
-              {p.name?.[0]?.toUpperCase() || '?'}
-            </div>
-            <span className="text-[11px] text-zinc-400">{p.name?.split(' ')[0]}</span>
+      <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3">
+          {players.map((p) => <div key={p.userId} className="flex items-center gap-2">
+            <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${p.userId === user?._id ? 'bg-[var(--ember)] text-[#1a0d07]' : 'border border-[var(--line-strong)] text-zinc-300'}`}>{p.name?.[0]?.toUpperCase() || '?'}</span>
+            <span className="text-[13px] text-zinc-400">{p.name?.split(' ')[0]}</span>
           </div>)}
         </div>
-        <span className="h-3 w-px bg-white/[0.06]" />
-        <div className="flex items-center gap-1.5 font-mono text-[11px] tabular-nums text-zinc-400">
-          <Clock className="h-3 w-3" strokeWidth={1.5} /> {timeStr}
+        <div className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3 py-1 text-[13px] tnum text-zinc-300">
+          <Clock className="h-3.5 w-3.5 text-[var(--ember)]" strokeWidth={1.7} /> {timeStr}
         </div>
       </div>
     </header>
 
     {/* ─── Partner Offline Banner ─── */}
     {partnerOffline && (
-      <div className="flex items-center justify-center gap-2 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-[12px] text-amber-300">
+      <div className="flex items-center justify-center gap-2 border-b border-[var(--line)] px-4 py-2.5 text-[13px] text-amber-300">
         <WifiOff className="h-3.5 w-3.5" />
         <span className="font-medium">{partnerOffline.name} disconnected.</span>
-        <span className="text-amber-400/60">Waiting 30s for reconnection…</span>
+        <span className="text-zinc-500">Waiting 30s for reconnection…</span>
         <RefreshCw className="h-3 w-3 animate-spin text-amber-400/40" />
       </div>
     )}
@@ -330,7 +323,7 @@ export function ArenaWorkspace() {
       <div className="w-[360px] shrink-0 overflow-y-auto border-r border-white/[0.04] scrollbar-surgical">
         <div className="p-6">
           {problem ? <>
-            <h2 className="text-[22px] font-semibold text-zinc-100 mb-3">{problem.title}</h2>
+            <h2 className="display mb-3 text-[40px] leading-[1] text-zinc-50">{problem.title}</h2>
             <div className="flex items-center gap-3 mb-4">
               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
                 problem.difficulty === 'Easy' ? 'bg-[var(--signal)]/20 text-[var(--signal)]' :
@@ -338,10 +331,10 @@ export function ArenaWorkspace() {
               }`}>{problem.difficulty}</span>
               <span className="font-mono text-[10px] text-zinc-600">{problem.skillId?.name || 'General'}</span>
             </div>
-            <div className="prose prose-invert prose-sm text-[13px] leading-relaxed text-zinc-400">{problem.description}</div>
+            <div className="text-[15px] leading-[1.7] text-zinc-400">{problem.description}</div>
             {problem.examples?.length > 0 && <div className="mt-6 space-y-4">
-              {problem.examples.map((ex, i) => <div key={i} className="rounded-lg border border-white/[0.04] bg-white/[0.01] p-4">
-                <div className="font-mono text-[10px] tracking-widest text-zinc-500 mb-2">EXAMPLE {i + 1}</div>
+              {problem.examples.map((ex, i) => <div key={i} className="border-l-2 border-[var(--line-strong)] pl-4">
+                <div className="mb-2 text-[13px] text-zinc-500">Example {i + 1}</div>
                 <div className="font-mono text-[12px] text-zinc-300 space-y-1">
                   <div><span className="text-zinc-500">Input: </span>{ex.input}</div>
                   <div><span className="text-zinc-500">Output: </span>{ex.output}</div>
@@ -398,7 +391,7 @@ export function ArenaWorkspace() {
             <Editor
               height="100%"
               language={langMeta.monaco}
-              theme="vs-dark"
+              theme="observatory" beforeMount={defineObservatory}
               defaultValue={problem?.starterCodeMap?.[language] || problem?.starterCode || '// Start coding...\n'}
               onMount={handleVersusEditorMount}
               options={{
@@ -413,7 +406,7 @@ export function ArenaWorkspace() {
         </div>
 
         {/* ─── Action Bar — exact V4 parity ─── */}
-        <div className="flex shrink-0 items-center justify-center gap-2 border-t border-white/[0.04] bg-[#0a0a0a]/80 px-4 py-2 backdrop-blur-sm">
+        <div className="flex shrink-0 items-center justify-center gap-2 border-t border-[var(--line)] bg-[var(--background)] px-4 py-2.5">
           <GhostBtn label="Format" onClick={handleFormat}><AlignLeft className="h-3.5 w-3.5" strokeWidth={1.5} /><span>Format</span></GhostBtn>
           <GhostBtn label="Clear" onClick={handleClear}><Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} /><span>Clear</span></GhostBtn>
           <GhostBtn label="Reset" onClick={handleReset}><RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} /><span>Reset</span></GhostBtn>
@@ -421,18 +414,18 @@ export function ArenaWorkspace() {
           <span className="mx-2 h-5 w-px bg-white/[0.08]" />
 
           <button onClick={handleRun} disabled={running || submitting}
-            className={`press flex items-center gap-2 px-4 py-1.5 font-mono text-[11px] tracking-widest transition-colors duration-300 border border-white/[0.08] ${running ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-200 hover:bg-white/[0.04] hover:border-white/[0.15]'}`}>
+            className={`press flex items-center gap-2 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13.5px] font-medium transition-colors duration-300 ${running ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-200 hover:bg-white/[0.04] hover:border-white/[0.15]'}`}>
             {running ? <span className="flex h-3 w-3 items-center justify-center"><span className="h-1.5 w-1.5 animate-ping rounded-full bg-[var(--signal)]" /></span> : <Play className="h-3.5 w-3.5" strokeWidth={1.5} />}
-            <span>RUN</span>
+            <span>Run</span>
             <span className="flex items-center gap-0.5 border border-white/[0.08] px-1 py-0 text-[9px] text-zinc-600">
               <Command className="h-2 w-2" strokeWidth={1.5} /><span>'</span>
             </span>
           </button>
 
           <button onClick={handleSubmit} disabled={running || submitting}
-            className={`press flex items-center gap-2 px-5 py-1.5 font-mono text-[11px] tracking-widest transition-colors duration-300 ${submitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[var(--signal)] text-[#1a0d07] hover:brightness-110'}`}>
+            className={`press flex items-center gap-2 rounded-full px-6 py-2 text-[13.5px] font-semibold transition-[filter] duration-300 ${submitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[var(--ember)] text-[#1a0d07] hover:brightness-110'}`}>
             {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
-            <span>SUBMIT</span>
+            <span>Submit</span>
           </button>
         </div>
 
