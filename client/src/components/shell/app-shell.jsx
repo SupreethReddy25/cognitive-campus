@@ -27,7 +27,7 @@ export function AppShell() {
     <div className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
       <div className="ambient-mesh" />
       {/* content clears the floating dock on scrolling pages; editors stay full-bleed */}
-      <main className={`relative z-10 flex h-full min-w-0 flex-col overflow-hidden ${focus ? '' : '[&>div]:pb-28'}`}>
+      <main className={`relative flex h-full min-w-0 flex-col overflow-hidden ${focus ? '' : '[&>div]:pb-28'}`}>
         <Outlet />
       </main>
       <GlobalNav />

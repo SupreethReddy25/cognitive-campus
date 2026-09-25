@@ -104,10 +104,10 @@ export function GlobalNav() {
         onMouseEnter={() => focus && setNear(true)} onMouseLeave={() => setNear(false)}
         animate={{ y: hidden ? 'calc(100% - 6px)' : 0, opacity: hidden ? 0.5 : 1 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="fixed bottom-5 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-1 rounded-full border border-[var(--line-strong)] bg-[#141418]/95 p-1.5 pl-5 shadow-[0_24px_70px_-18px_rgba(0,0,0,0.85)] backdrop-blur-md"
+        className="fixed bottom-4 left-1/2 z-[60] flex max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-0 rounded-full sm:bottom-5 sm:gap-1 border border-[var(--line-strong)] bg-[#141418]/95 p-1 shadow sm:p-1.5 sm:pl-5-[0_24px_70px_-18px_rgba(0,0,0,0.85)] backdrop-blur-md"
         aria-label="Primary"
       >
-        <Link to="/dashboard" className="mr-2 flex items-baseline gap-[1px] pr-2 text-zinc-50" aria-label="Cogni home">
+        <Link to="/dashboard" className="mr-2 hidden items-baseline gap-[1px] pr-2 text-zinc-50 sm:flex" aria-label="Cogni home">
           <span className="display text-[24px] italic leading-none">cogni</span><span className="text-[26px] leading-none text-[var(--ember)]">.</span>
         </Link>
 
@@ -115,7 +115,7 @@ export function GlobalNav() {
           const active = item.match(pathname);
           const Icon = item.icon;
           return (
-            <Link key={item.href} to={item.href} title={`${item.label}  ·  ${i + 1}`} className={`group relative flex items-center gap-2 rounded-full px-3.5 py-2.5 text-[13.5px] font-medium transition-colors ${active ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-100'}`}>
+            <Link key={item.href} to={item.href} title={`${item.label}  ·  ${i + 1}`} className={`group relative flex items-center gap-2 rounded-full px-2 py-2.5 text-[13.5px] font-medium transition-colors sm:px-3.5 ${active ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-100'}`}>
               {active && <motion.span layoutId="dock-active" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
               <Icon className={`relative h-[17px] w-[17px] transition-colors ${active ? 'text-[var(--ember)]' : ''}`} strokeWidth={1.7} />
               <span className={`relative ${active ? '' : 'hidden xl:inline'}`}>{item.label}</span>
@@ -123,20 +123,20 @@ export function GlobalNav() {
           );
         })}
 
-        <span className="mx-1.5 h-6 w-px bg-[var(--line-strong)]" />
+        <span className="mx-0.5 h-6 w-px bg-[var(--line-strong)] sm:mx-1.5" />
 
-        <button onClick={openPalette} title="Jump to anything  ·  Ctrl K" className="flex h-10 items-center gap-2 rounded-full px-3 text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-100">
+        <button onClick={openPalette} title="Jump to anything  ·  Ctrl K" className="hidden h-10 items-center gap-2 rounded-full px-3 text-zinc-500 sm:flex transition-colors hover:bg-white/[0.06] hover:text-zinc-100">
           <Search className="h-4 w-4" strokeWidth={1.7} />
           <span className="hidden whitespace-nowrap text-[11px] text-zinc-600 lg:inline">Ctrl K</span>
         </button>
 
-        <Link to="/dashboard" title={`${streak}-day streak`} className="flex h-10 items-center gap-1.5 rounded-full px-3 transition-colors hover:bg-white/[0.06]">
+        <Link to="/dashboard" title={`${streak}-day streak`} className="flex h-10 items-center gap-1 rounded-full px-2 transition-colors hover:bg-white/[0.06] sm:gap-1.5 sm:px-3">
           <Flame className={`h-[17px] w-[17px] ${streak ? 'text-[var(--ember)]' : 'text-zinc-600'}`} strokeWidth={1.8} fill={streak ? 'currentColor' : 'none'} fillOpacity={0.25} />
           <span className="text-[13px] font-semibold tnum text-zinc-200">{streak}</span>
         </Link>
 
         <div className="relative" ref={menuRef}>
-          <button onClick={() => setMenu((m) => !m)} aria-label="Account" className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ember)] text-[12px] font-bold text-[#1a0d07] transition-transform hover:scale-105">{initials}</button>
+          <button onClick={() => setMenu((m) => !m)} aria-label="Account" className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--ember)] text-[12px] sm:h-10 sm:w-10 font-bold text-[#1a0d07] transition-transform hover:scale-105">{initials}</button>
           <AnimatePresence>{menu && <AccountMenu user={user} onClose={() => setMenu(false)} onLogout={logout} />}</AnimatePresence>
         </div>
       </motion.nav>

@@ -66,7 +66,7 @@ export function SuccessOverlay({ show, onDismiss, result, problem, onOpenEditori
   return (
     <AnimatePresence>
       {show && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 z-50 flex items-center justify-center p-4" onClick={onDismiss}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={onDismiss}>
           <div className="absolute inset-0 bg-[#0c0c10]/[0.93] backdrop-blur-md" />
 
           <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }} onClick={(e) => e.stopPropagation()} className="relative z-10 w-full max-w-[560px] text-center">

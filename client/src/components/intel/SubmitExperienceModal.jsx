@@ -23,7 +23,7 @@ const TOPIC_SUGGESTIONS = ['Arrays', 'Strings', 'Hashing', 'Recursion', 'Sorting
 const emptyRound = () => ({ type: 'Technical', duration: '', vibe: '', topics: [], questions: [{ text: '', questionType: 'DSA', topicTags: [] }], tips: '' });
 
 // ─── primitives ──────────────────────────────────────────────────────────────
-const inputCls = 'w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-[13px] text-zinc-200 outline-none transition-all placeholder:text-zinc-700 hover:border-white/[0.14] focus:border-[var(--signal)]/50 focus:bg-[var(--signal)]/[0.04]';
+const inputCls = 'w-full border-b border-[var(--line-strong)] bg-transparent px-0.5 py-2 text-[14.5px] text-zinc-100 outline-none transition-colors placeholder:text-zinc-700 focus:border-[var(--ember)]';
 const Field = ({ label, required, hint, children, className }) => (
   <div className={cn('space-y-1.5', className)}>
     <div className="flex items-center gap-1.5 text-[12px] text-zinc-500 font-medium">{label}{required && <span className="text-[var(--signal)]">*</span>}{hint && <span className="normal-case tracking-normal text-zinc-700">— {hint}</span>}</div>
@@ -152,7 +152,7 @@ function Impact({ impact, onClose, onAnother }) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-xl py-4 text-center">
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10"><CheckCircle2 className="h-8 w-8 text-emerald-300" /></motion.div>
-      <h3 className="text-[24px] font-semibold text-zinc-100">{impact.status === 'Published' ? 'Intel published' : 'Submitted for review'}</h3>
+      <h3 className="display text-[clamp(38px,4vw,56px)] text-zinc-50">{impact.status === 'Published' ? 'Intel published' : 'Submitted for review'}</h3>
       <p className="mt-1 text-[13px] text-zinc-500">{impact.status === 'Published' ? 'Thank you — you just made the next candidate\'s prep easier.' : 'Your submission is short on detail, so a moderator will review it before it goes live. Add more next time to publish instantly.'}</p>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
@@ -173,7 +173,7 @@ function Impact({ impact, onClose, onAnother }) {
       {impact.achievements?.map((a) => <div key={a.key} className="mt-3 flex items-center gap-3 rounded-xl border border-violet-400/25 bg-violet-400/[0.07] px-4 py-2.5 text-left"><Award className="h-4 w-4 text-violet-300" /><div><div className="text-[12.5px] font-semibold text-violet-200">Badge: {a.title}</div><div className="text-[11px] text-violet-300/60">{a.desc} · +{a.xp} XP</div></div></div>)}
 
       <div className="mt-6 flex justify-center gap-3">
-        <Link to={`/companies/${impact.company.slug}`} onClick={onClose} className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-[12.5px] font-semibold text-black hover:brightness-110">View {impact.company.name} dossier</Link>
+        <Link to={`/companies/${impact.company.slug}`} onClick={onClose} className="rounded-full bg-[var(--ember)] px-5 py-2.5 text-[12.5px] font-semibold text-[#1a0d07] hover:brightness-110">View {impact.company.name} dossier</Link>
         <button onClick={onAnother} className="rounded-xl border border-white/[0.1] px-5 py-2.5 text-[12.5px] text-zinc-300 hover:bg-white/[0.05]">Submit another</button>
       </div>
     </motion.div>
@@ -263,8 +263,8 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
   const stepIdx = STEPS.findIndex(([k]) => k === step);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-6" onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.97, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-[#090c11] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-6" onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.97, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-[32px] border border-[var(--line-strong)] bg-[#121216] shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* header */}
         <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-6 py-4">
           <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--signal)]/10"><Sparkles className="h-4 w-4 text-[var(--signal)]" /></span><div><div className="text-[14px] font-semibold text-zinc-100">Share your interview experience</div><div className="text-[11px] text-zinc-600">{companyName ? `${companyName} · ` : ''}Helps every student after you</div></div></div>
@@ -281,7 +281,7 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
                 <AnimatePresence mode="wait">
                   {step === 'start' && (
                     <motion.div key="start" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mx-auto max-w-2xl py-4">
-                      <h2 className="text-center text-[22px] font-semibold text-zinc-100">How would you like to share it?</h2>
+                      <h2 className="display text-center text-[clamp(34px,4vw,52px)] text-zinc-50">How would you like to <em className="text-[var(--ember)]">share</em> it?</h2>
                       {!company?._id && <Field label="Company" required className="mx-auto mt-5 max-w-sm"><Select value={form.companyId} onChange={(e) => set('companyId', e.target.value)}><option value="">Select the company…</option>{companies.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</Select></Field>}
                       <div className="mt-6 grid gap-4 sm:grid-cols-2">
                         <button onClick={() => setStep('paste')} className="group rounded-2xl border border-[var(--signal)]/25 bg-[var(--signal)]/[0.05] p-5 text-left transition-all hover:border-[var(--signal)]/50 hover:bg-[var(--signal)]/[0.09]"><Wand2 className="mb-3 h-6 w-6 text-[var(--signal)]" /><div className="text-[15px] font-semibold text-zinc-100">Paste it — AI structures it</div><p className="mt-1.5 text-[12.5px] leading-relaxed text-zinc-500">Dump your notes or a Telegram/WhatsApp message. We extract rounds, questions, topics and outcome, then you review.</p><Pill tone="green" className="mt-3">Fastest · ~1 min</Pill></button>
@@ -293,7 +293,7 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
                   {step === 'paste' && (
                     <motion.div key="paste" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mx-auto max-w-2xl">
                       <button onClick={() => setStep('start')} className="mb-3 flex items-center gap-1 text-[12px] text-zinc-500 hover:text-zinc-200"><ArrowLeft className="h-3.5 w-3.5" /> Back</button>
-                      <h2 className="text-[20px] font-semibold text-zinc-100">Paste your experience</h2>
+                      <h2 className="display text-[clamp(32px,3.6vw,46px)] text-zinc-50">Paste your <em className="text-[var(--ember)]">experience</em></h2>
                       <p className="mt-1 text-[12.5px] text-zinc-500">Include the company, when it was, each round, and the questions you remember. Messy is fine.</p>
                       {!company?._id && <Field label="Company (optional — we'll detect it)" className="mt-4"><Select value={form.companyId} onChange={(e) => set('companyId', e.target.value)}><option value="">Detect from text</option>{companies.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</Select></Field>}
                       <textarea rows={12} value={raw} onChange={(e) => setRaw(e.target.value)} className={cn(inputCls, 'mt-4 resize-none font-mono text-[12.5px] leading-relaxed')} placeholder={'I had my Google interview in August 2024 for SDE-1 (on campus).\n\nRound 1 — Online assessment, 90 minutes. Two problems: one shortest-path grid problem, one DP on strings…\n\nRound 2 — Technical, 45 minutes. Asked to find the minimum window…\n\nGot the offer. Tip: practise graphs with extra state.'} />
@@ -301,7 +301,7 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
                       {error && <div className="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-4 py-2.5 text-[12.5px] text-rose-300">{error}</div>}
                       <div className="mt-4 flex items-center justify-end gap-3">
                         <button onClick={() => setStep('details')} className="text-[12px] text-zinc-500 hover:text-zinc-300">Skip — fill manually</button>
-                        <button onClick={parse} disabled={parsing} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-[12.5px] font-semibold text-black transition-all hover:brightness-110 disabled:opacity-60">{parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}{parsing ? 'Structuring…' : 'Structure with AI'}</button>
+                        <button onClick={parse} disabled={parsing} className="flex items-center gap-2 rounded-full bg-[var(--ember)] px-5 py-2.5 text-[12.5px] font-semibold text-[#1a0d07] transition-all hover:brightness-110 disabled:opacity-60">{parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}{parsing ? 'Structuring…' : 'Structure with AI'}</button>
                       </div>
                     </motion.div>
                   )}
@@ -337,7 +337,7 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
                         <div className="grid gap-4 sm:grid-cols-3"><Field label="Base"><input className={inputCls} value={form.base} onChange={(e) => set('base', e.target.value)} placeholder="24 LPA" /></Field><Field label="Bonus"><input className={inputCls} value={form.bonus} onChange={(e) => set('bonus', e.target.value)} placeholder="3 LPA" /></Field><Field label="Stock / ESOP"><input className={inputCls} value={form.stock} onChange={(e) => set('stock', e.target.value)} placeholder="$50k RSUs" /></Field></div>
                       )}
                       <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3"><input type="checkbox" checked={form.isAnonymous} onChange={(e) => set('isAnonymous', e.target.checked)} className="h-4 w-4 accent-emerald-400" /><span className="text-[12.5px] text-zinc-300">Post anonymously <span className="text-zinc-600">— your name is never shown to other students</span></span></label>
-                      <div className="flex justify-end"><button disabled={!canDetails} onClick={() => setStep('rounds')} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-[12.5px] font-semibold text-black transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Continue to rounds <ArrowRight className="h-4 w-4" /></button></div>
+                      <div className="flex justify-end"><button disabled={!canDetails} onClick={() => setStep('rounds')} className="flex items-center gap-2 rounded-full bg-[var(--ember)] px-5 py-2.5 text-[12.5px] font-semibold text-[#1a0d07] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Continue to rounds <ArrowRight className="h-4 w-4" /></button></div>
                     </motion.div>
                   )}
 
@@ -347,7 +347,7 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
                       {form.rounds.length < 8 && <button onClick={() => set('rounds', [...form.rounds, emptyRound()])} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/[0.12] py-3 text-[12.5px] text-zinc-500 transition-colors hover:border-[var(--signal)]/40 hover:text-[var(--signal)]"><Plus className="h-4 w-4" /> Add round</button>}
                       <Field label="Overall advice"><textarea rows={3} className={cn(inputCls, 'resize-none')} value={form.overallTips} onChange={(e) => set('overallTips', e.target.value)} placeholder="If you could tell the next candidate three things, what would they be?" /></Field>
                       <Field label="Resources you used" hint="comma separated"><input className={inputCls} value={form.resourcesUsed} onChange={(e) => set('resourcesUsed', e.target.value)} placeholder="LeetCode, NeetCode 150, Striver sheet, Grokking System Design" /></Field>
-                      <div className="flex justify-between"><button onClick={() => setStep('details')} className="flex items-center gap-1.5 text-[12.5px] text-zinc-500 hover:text-zinc-200"><ArrowLeft className="h-4 w-4" /> Back</button><button onClick={() => setStep('review')} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-[12.5px] font-semibold text-black hover:brightness-110">Preview <ArrowRight className="h-4 w-4" /></button></div>
+                      <div className="flex justify-between"><button onClick={() => setStep('details')} className="flex items-center gap-1.5 text-[12.5px] text-zinc-500 hover:text-zinc-200"><ArrowLeft className="h-4 w-4" /> Back</button><button onClick={() => setStep('review')} className="flex items-center gap-2 rounded-full bg-[var(--ember)] px-5 py-2.5 text-[12.5px] font-semibold text-[#1a0d07] hover:brightness-110">Preview <ArrowRight className="h-4 w-4" /></button></div>
                     </motion.div>
                   )}
 
@@ -357,7 +357,7 @@ export function SubmitExperienceModal({ company, companies: companiesProp, onClo
                       <Preview form={form} companyName={companyName} />
                       {quality.score < 25 && <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-4 py-3 text-[12.5px] text-amber-200">Heads up: very short submissions go to a moderator first. Add a few concrete questions to publish instantly.</div>}
                       {error && <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-4 py-2.5 text-[12.5px] text-rose-300">{error}</div>}
-                      <div className="flex justify-between"><button onClick={() => setStep('rounds')} className="flex items-center gap-1.5 text-[12.5px] text-zinc-500 hover:text-zinc-200"><ArrowLeft className="h-4 w-4" /> Edit</button><button onClick={submit} disabled={submitting} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-[12.5px] font-semibold text-black shadow-lg shadow-emerald-500/20 hover:brightness-110 disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}Publish · +{xp} XP</button></div>
+                      <div className="flex justify-between"><button onClick={() => setStep('rounds')} className="flex items-center gap-1.5 text-[12.5px] text-zinc-500 hover:text-zinc-200"><ArrowLeft className="h-4 w-4" /> Edit</button><button onClick={submit} disabled={submitting} className="flex items-center gap-2 rounded-full bg-[var(--ember)] px-6 py-2.5 text-[12.5px] font-semibold text-[#1a0d07] shadow-lg shadow-emerald-500/20 hover:brightness-110 disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}Publish · +{xp} XP</button></div>
                     </motion.div>
                   )}
                 </AnimatePresence>
