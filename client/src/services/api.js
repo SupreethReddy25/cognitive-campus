@@ -49,6 +49,25 @@ export const skillsService = {
   getMySkillStates: () => api.get('/skills/my-states')
 };
 
+// ─── Analytics & engagement (BKT-powered) ───
+export const analyticsService = {
+  getDashboard: () => api.get('/analytics/dashboard'),
+  getLearningProfile: () => api.get('/analytics/profile'),
+  getPeers: () => api.get('/analytics/peers'),
+  getModel: () => api.get('/analytics/model'),
+  refitModel: () => api.post('/analytics/model/refit'),
+};
+
+export const engagementService = {
+  getDaily: () => api.get('/engagement/daily'),
+  getAchievements: () => api.get('/engagement/achievements'),
+  getStreak: () => api.get('/engagement/streak'),
+  getBookmarks: () => api.get('/engagement/bookmarks'),
+  toggleBookmark: (problemId) => api.post(`/engagement/bookmarks/${problemId}`),
+  getEditorial: (problemId) => api.get(`/engagement/editorial/${problemId}`),
+  getAiStatus: () => api.get('/engagement/ai-status'),
+};
+
 export const problemsService = {
   getProblems: (params = {}) => api.get('/problems', { params }),
   getReviewQueue: (params = {}) => api.get('/problems/review-queue', { params }),
@@ -63,12 +82,13 @@ export const submissionsService = {
   createSubmission: (data) => api.post('/submissions', data),
   getHistory: (params = {}) => api.get('/submissions/history', { params }),
   runCode: (data) => api.post('/submissions/run', data),
-  getRecentSubmissions: (problemId) => api.get(`/submissions/recent/${problemId}`)
+  getRecentSubmissions: (problemId, limit) => api.get(`/submissions/recent/${problemId}`, { params: limit ? { limit } : {} }),
+  getRuntimes: () => api.get('/submissions/runtimes'),
 };
 
 // ─── Leaderboard ───
 export const leaderboardService = {
-  getLeaderboard: () => api.get('/leaderboard')
+  getLeaderboard: (params = {}) => api.get('/leaderboard', { params })
 };
 
 export const arenaService = {
@@ -81,13 +101,14 @@ export const usersService = {
   configGeminiKey: (apiKey) => api.post('/users/config-key', { apiKey }),
   getDashboardQuote: (context) => api.post('/users/dashboard-quote', { context }),
   updateProfile: (data) => api.patch('/users/profile', data),
+  getAttempted: () => api.get('/users/attempted'),
 };
 
 // ─── Companies ───
 export const companiesService = {
   getCompanies: (params = {}) => api.get('/companies', { params }),
   getCompany: (slug) => api.get(`/companies/${slug}`),
-  getCompanyExperiences: (slug) => api.get(`/companies/${slug}/experiences`),
+  getCompanyExperiences: (slug, params = {}) => api.get(`/companies/${slug}/experiences`, { params }),
   getCompanyStats: (slug) => api.get(`/companies/${slug}/stats`),
   getRelatedProblems: (slug) => api.get(`/companies/${slug}/related-problems`),
   generatePrepPlan: (slug, days = 30) => api.post(`/companies/${slug}/prep-plan`, { days })
@@ -96,8 +117,10 @@ export const companiesService = {
 // ─── Experiences ───
 export const experiencesService = {
   createExperience: (data) => api.post('/experiences', data),
-  parseRawDump: (rawText) => api.post('/experiences/ai-parse', { rawText }),
-  upvoteExperience: (id) => api.post(`/experiences/${id}/upvote`)
+  parseRawDump: (rawText, companyHint) => api.post('/experiences/ai-parse', { rawText, companyHint }),
+  upvoteExperience: (id) => api.post(`/experiences/${id}/upvote`),
+  vote: (id, vote) => api.post(`/experiences/${id}/vote`, { vote }),
+  scoreDraft: (draft) => api.post('/experiences/score', draft),
 };
 
 // ─── Sheets ───
@@ -112,6 +135,7 @@ export const collegesService = {
   getColleges: (params = {}) => api.get('/colleges', { params }),
   getCollege: (slug) => api.get(`/colleges/${slug}`),
   getCollegeDashboard: (slug) => api.get(`/colleges/${slug}/dashboard`),
+  getCollegeInsights: (slug) => api.get(`/colleges/${slug}/insights`),
   getCollegeCompanyIntel: (collegeSlug, companySlug) =>
     api.get(`/colleges/${collegeSlug}/companies/${companySlug}`),
 };
@@ -119,15 +143,19 @@ export const collegesService = {
 
 export const adminService = {
   getStats:          ()              => api.get('/admin/stats'),
-  getStudents:       ()              => api.get('/admin/students'),
-  getHeatmap:        ()              => api.get('/admin/heatmap'),
+  getStudents:       (params = {})   => api.get('/admin/students', { params }),
+  getStudent:        (id)            => api.get(`/admin/students/${id}`),
+  getHeatmap:        (params = {})   => api.get('/admin/heatmap', { params }),
   getExperiences:    (params = {})   => api.get('/admin/experiences', { params }),
   verifyExperience:  (id, action)    => api.patch(`/admin/experiences/${id}/verify`, { action }),
   getProblems:       (params = {})   => api.get('/admin/problems', { params }),
   updateProblemStatus: (id, status)  => api.patch(`/admin/problems/${id}/status`, { status }),
   updateUserRole:    (id, role)      => api.patch(`/admin/users/${id}/role`, { role }),
   createCollege:     (data)          => api.post('/admin/colleges', data),
+  createCompany:     (data)          => api.post('/admin/companies', data),
   createPlacementRecord: (data)      => api.post('/admin/placement-records', data),
+  getPlacementRecords: (params = {}) => api.get('/admin/placement-records', { params }),
+  deletePlacementRecord: (id)        => api.delete(`/admin/placement-records/${id}`),
 };
 
 export default api;

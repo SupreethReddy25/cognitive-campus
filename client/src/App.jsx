@@ -1,33 +1,34 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { TransitionProvider } from './context/TransitionContext';
 import { AppShell } from './components/shell/app-shell';
 import ProtectedRoute from './components/ProtectedRoute';
-import LandingPage from './pages/LandingPage';
-import AuthPage from './pages/AuthPage';
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/ui/loading-screen';
 
-import { DashboardView } from './components/dashboard/dashboard-view';
-import { ProfileView } from './components/profile/profile-view';
-import ProblemsPage from './pages/ProblemsPage';
-import { WorkspaceShell } from './components/workspace/workspace-shell';
-import { ArenaLobby } from './components/arena/ArenaLobby';
-import { ArenaWorkspace } from './components/arena/ArenaWorkspace';
+const DashboardView = lazy(() => import('./components/dashboard/dashboard-view').then((m) => ({ default: m.DashboardView })));
+const ProfileView = lazy(() => import('./components/profile/profile-view').then((m) => ({ default: m.ProfileView })));
+const ProblemsPage = lazy(() => import('./pages/ProblemsPage'));
+const WorkspaceShell = lazy(() => import('./components/workspace/workspace-shell').then((m) => ({ default: m.WorkspaceShell })));
+const ArenaLobby = lazy(() => import('./components/arena/ArenaLobby').then((m) => ({ default: m.ArenaLobby })));
+const ArenaWorkspace = lazy(() => import('./components/arena/ArenaWorkspace').then((m) => ({ default: m.ArenaWorkspace })));
 import { ArenaProvider } from './context/ArenaContext';
 
 // Intel Hub — unified Companies + Experience submission
-import IntelHubPage from './pages/IntelHubPage';
-import CompanyDetailPage from './pages/CompanyDetailPage';
+const IntelHubPage = lazy(() => import('./pages/IntelHubPage'));
+const CompanyDetailPage = lazy(() => import('./pages/CompanyDetailPage'));
 
 // Placement Intelligence
-import PlacementDashboardPage from './pages/PlacementDashboardPage';
-import PlacementCompanyPage from './pages/PlacementCompanyPage';
+const PlacementDashboardPage = lazy(() => import('./pages/PlacementDashboardPage'));
+const PlacementCompanyPage = lazy(() => import('./pages/PlacementCompanyPage'));
 
 // Sheets
-import SheetsPage from './pages/SheetsPage';
-import SheetDetailPage from './pages/SheetDetailPage';
-import AdminPage from './pages/AdminPage';
+const SheetsPage = lazy(() => import('./pages/SheetsPage'));
+const SheetDetailPage = lazy(() => import('./pages/SheetDetailPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -41,6 +42,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <TransitionProvider>
+        <Suspense fallback={<LoadingScreen />}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={
@@ -83,6 +85,7 @@ const App = () => {
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </TransitionProvider>
     </BrowserRouter>
   );
