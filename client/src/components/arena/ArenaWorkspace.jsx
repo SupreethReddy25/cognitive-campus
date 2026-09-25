@@ -267,12 +267,12 @@ export function ArenaWorkspace() {
     const iWon = winner?.userId === user?._id;
     return <div className="flex h-full flex-col items-center justify-center gap-5 px-10 text-center">
       <div className="text-[14px] text-zinc-500">{iWon ? 'You passed every test first' : 'The match is over'}</div>
-      <h1 className="display text-[clamp(64px,11vw,150px)] text-zinc-50">{iWon ? <>Victor<em className="text-[var(--ember)]">y</em>.</> : <>Match <em className="text-[var(--ember)]">over</em>.</>}</h1>
+      <h1 className="display text-[clamp(51px,9.3vw,120px)] text-zinc-50">{iWon ? <>Victor<em className="text-[var(--ember)]">y</em>.</> : <>Match <em className="text-[var(--ember)]">over</em>.</>}</h1>
       <p className="max-w-md text-[17px] leading-relaxed text-zinc-400">
         {iWon ? 'Your rating just moved. Enjoy it.' : winner ? `${winner.name} finished first. Read the editorial and come back for a rematch.` : 'The match has ended.'}
       </p>
       <div className="mt-6 flex items-center gap-5">
-        <Link to="/arena" className="rounded-full bg-[var(--ember)] px-8 py-3 text-[15px] font-semibold text-[#1a0d07] transition-[filter] hover:brightness-110">Back to the arena</Link>
+        <Link to="/arena" className="btn-line group">Back to the arena</Link>
         <Link to={`/problems/${room?.problemId}`} className="text-[15px] text-zinc-400 transition-colors hover:text-[var(--ember)]">Practise it solo →</Link>
       </div>
     </div>;
@@ -282,11 +282,11 @@ export function ArenaWorkspace() {
     {/* ─── Top bar ─── */}
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--line)] px-4">
       <div className="flex items-center gap-4">
-        <button onClick={handleLeave} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-100">
+        <button onClick={handleLeave} className="flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[13px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-100">
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.7} /> Leave
         </button>
-        <span className="display text-[24px] leading-none text-zinc-100">{modeLabel}</span>
-        <button onClick={copyCode} title="Copy room code" className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3 py-1 text-[12.5px] tracking-[0.12em] text-zinc-500 transition-colors hover:text-zinc-200">
+        <span className="display text-[19.2px] leading-none text-zinc-100">{modeLabel}</span>
+        <button onClick={copyCode} title="Copy room code" className="flex items-center gap-1.5 rounded-sm border border-[var(--line)] px-3 py-1 text-[12.5px] tracking-[0.12em] text-zinc-500 transition-colors hover:text-zinc-200">
           {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
           {roomId}
         </button>
@@ -294,11 +294,11 @@ export function ArenaWorkspace() {
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-3">
           {players.map((p) => <div key={p.userId} className="flex items-center gap-2">
-            <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${p.userId === user?._id ? 'bg-[var(--ember)] text-[#1a0d07]' : 'border border-[var(--line-strong)] text-zinc-300'}`}>{p.name?.[0]?.toUpperCase() || '?'}</span>
+            <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${p.userId === user?._id ? 'bg-[var(--ember)] text-[#04130d]' : 'border border-[var(--line-strong)] text-zinc-300'}`}>{p.name?.[0]?.toUpperCase() || '?'}</span>
             <span className="text-[13px] text-zinc-400">{p.name?.split(' ')[0]}</span>
           </div>)}
         </div>
-        <div className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3 py-1 text-[13px] tnum text-zinc-300">
+        <div className="flex items-center gap-1.5 rounded-sm border border-[var(--line)] px-3 py-1 font-mono text-[10.5px] uppercase tracking-[0.16em] tnum text-zinc-300">
           <Clock className="h-3.5 w-3.5 text-[var(--ember)]" strokeWidth={1.7} /> {timeStr}
         </div>
       </div>
@@ -323,9 +323,9 @@ export function ArenaWorkspace() {
       <div className="w-[360px] shrink-0 overflow-y-auto border-r border-white/[0.04] scrollbar-surgical">
         <div className="p-6">
           {problem ? <>
-            <h2 className="display mb-3 text-[40px] leading-[1] text-zinc-50">{problem.title}</h2>
+            <h2 className="display mb-3 text-[32px] leading-[1] text-zinc-50">{problem.title}</h2>
             <div className="flex items-center gap-3 mb-4">
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+              <span className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-[10px] font-semibold ${
                 problem.difficulty === 'Easy' ? 'bg-[var(--signal)]/20 text-[var(--signal)]' :
                 problem.difficulty === 'Hard' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
               }`}>{problem.difficulty}</span>
@@ -414,7 +414,7 @@ export function ArenaWorkspace() {
           <span className="mx-2 h-5 w-px bg-white/[0.08]" />
 
           <button onClick={handleRun} disabled={running || submitting}
-            className={`press flex items-center gap-2 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13.5px] font-medium transition-colors duration-300 ${running ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-200 hover:bg-white/[0.04] hover:border-white/[0.15]'}`}>
+            className={`press flex items-center gap-2 rounded-sm border border-[var(--line-strong)] px-5 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors duration-300 ${running ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-200 hover:bg-white/[0.04] hover:border-white/[0.15]'}`}>
             {running ? <span className="flex h-3 w-3 items-center justify-center"><span className="h-1.5 w-1.5 animate-ping rounded-full bg-[var(--signal)]" /></span> : <Play className="h-3.5 w-3.5" strokeWidth={1.5} />}
             <span>Run</span>
             <span className="flex items-center gap-0.5 border border-white/[0.08] px-1 py-0 text-[9px] text-zinc-600">
@@ -423,7 +423,7 @@ export function ArenaWorkspace() {
           </button>
 
           <button onClick={handleSubmit} disabled={running || submitting}
-            className={`press flex items-center gap-2 rounded-full px-6 py-2 text-[13.5px] font-semibold transition-[filter] duration-300 ${submitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[var(--ember)] text-[#1a0d07] hover:brightness-110'}`}>
+            className={`press flex items-center gap-2 rounded-sm px-6 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] transition-[filter] duration-300 ${submitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[var(--ember)] text-[#04130d] hover:brightness-110'}`}>
             {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
             <span>Submit</span>
           </button>

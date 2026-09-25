@@ -16,7 +16,7 @@ function Section({ title, kicker, children, className = '' }) {
   return (
     <section className={cn('pt-24', className)}>
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
-        <h2 className="display text-[clamp(36px,4.6vw,60px)] text-zinc-50">{title}</h2>
+        <h2 className="display text-[clamp(29px,3.9vw,48px)] text-zinc-50">{title}</h2>
         {kicker && <div className="hidden max-w-sm pb-1.5 text-right text-[13px] leading-snug text-zinc-500 md:block">{kicker}</div>}
       </div>
       {children}
@@ -39,8 +39,8 @@ function CollegeGate({ onSelected }) {
   };
   return (
     <div className="mx-auto max-w-2xl pt-28 text-center">
-      <div className="text-[13px] text-zinc-500">Placement · college intelligence</div>
-      <h1 className="display mt-5 text-[clamp(46px,7vw,88px)] text-zinc-50">Where do you <em className="text-[var(--ember)]">study</em>?</h1>
+      <div className="tag">Placement · college intelligence</div>
+      <h1 className="display mt-5 text-[clamp(37px,6vw,70px)] text-zinc-50">Where do you <em className="text-[var(--ember)]">study</em>?</h1>
       <p className="mx-auto mt-6 max-w-md text-[17px] leading-relaxed text-zinc-400">Pick your college and this page becomes yours: who recruits there, how hiring is moving, what they test, and where your mastery falls short.</p>
       <div className="mx-auto mt-10 max-w-md text-left"><CollegeSelector value={null} onChange={pick} placeholder="Search — NIT Trichy, VIT, IIIT Hyderabad…" disabled={saving} /></div>
     </div>
@@ -98,19 +98,19 @@ export default function PlacementDashboardPage() {
 
       {insights && dash && (
         <>
-          <header className="pt-14 md:pt-20">
+          <header className="pt-2 md:pt-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="text-[13px] text-zinc-500">Placement · {insights.college.tier} · {insights.college.location}{insights.college.nirfRank ? ` · NIRF ${insights.college.nirfYear} engineering #${insights.college.nirfRank}` : ''} · {CONF[dash.dataConfidence]} <button onClick={changeCollege} className="ml-2 text-zinc-600 underline-offset-2 hover:text-zinc-300 hover:underline">change</button></div>
+              <div className="tag">Placement · {insights.college.tier} · {insights.college.location}{insights.college.nirfRank ? ` · NIRF ${insights.college.nirfYear} engineering #${insights.college.nirfRank}` : ''} · {CONF[dash.dataConfidence]} <button onClick={changeCollege} className="ml-2 text-zinc-600 underline-offset-2 hover:text-zinc-300 hover:underline">change</button></div>
               <PrimaryButton onClick={() => setShowSubmit(true)} icon={Plus}>Add your experience</PrimaryButton>
             </div>
-            <h1 className="display mt-6 text-[clamp(44px,7.4vw,112px)] leading-[0.95] text-zinc-50">{insights.college.name}</h1>
+            <h1 className="display mt-6 text-[clamp(35px,6.3vw,90px)] leading-[0.95] text-zinc-50">{insights.college.name}</h1>
             {insights.skillGap && <p className="mt-8 max-w-3xl text-[clamp(20px,2.2vw,28px)] leading-[1.4] text-zinc-400">{insights.skillGap.headline}</p>}
 
             {official ? (
               <div className="mt-14">
                 <div className="grid grid-cols-2 gap-x-10 gap-y-10 lg:grid-cols-4">
                   {officialFigures.map((f) => (
-                    <div key={f.label} className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50">{f.value}{f.unit && <span className="text-[28px] text-zinc-500">{f.unit}</span>}</div><div className="mt-3 text-[13px] text-zinc-500">{f.label}</div></div>
+                    <div key={f.label} className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50">{f.value}{f.unit && <span className="text-[28px] text-zinc-500">{f.unit}</span>}</div><div className="tag mt-3">{f.label}</div></div>
                   ))}
                 </div>
                 <p className="mt-6 max-w-3xl text-[12.5px] leading-relaxed text-zinc-600">
@@ -120,10 +120,10 @@ export default function PlacementDashboardPage() {
               </div>
             ) : (
             <div className="mt-14 grid grid-cols-2 gap-x-10 gap-y-10 lg:grid-cols-4">
-              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={latest?.hires || 0} /></div><div className="mt-3 text-[13px] text-zinc-500">hired in {latest?.year}{prev && <span className={cn('ml-1.5', latest.hires >= prev.hires ? 'text-emerald-400' : 'text-rose-400')}>{latest.hires >= prev.hires ? '+' : ''}{latest.hires - prev.hires} vs {prev.year}</span>}</div></div>
-              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50">{latest?.avgPackage ? <CountUp value={latest.avgPackage} decimals={1} /> : '—'}</div><div className="mt-3 text-[13px] text-zinc-500">avg LPA{latest?.topPackage ? ` · top ${latest.topPackage} at ${latest.topPackageCompany}` : ''}</div></div>
-              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={insights.topRecruiters.length} /></div><div className="mt-3 text-[13px] text-zinc-500">regular recruiters</div></div>
-              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={dash.stats.totalExperiences} /></div><div className="mt-3 text-[13px] text-zinc-500">interview reports{dash.stats.overallOfferRate != null ? ` · ${dash.stats.overallOfferRate}% offers` : ''}</div></div>
+              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50"><CountUp value={latest?.hires || 0} /></div><div className="tag mt-3">hired in {latest?.year}{prev && <span className={cn('ml-1.5', latest.hires >= prev.hires ? 'text-emerald-400' : 'text-rose-400')}>{latest.hires >= prev.hires ? '+' : ''}{latest.hires - prev.hires} vs {prev.year}</span>}</div></div>
+              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50">{latest?.avgPackage ? <CountUp value={latest.avgPackage} decimals={1} /> : '—'}</div><div className="tag mt-3">avg LPA{latest?.topPackage ? ` · top ${latest.topPackage} at ${latest.topPackageCompany}` : ''}</div></div>
+              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50"><CountUp value={insights.topRecruiters.length} /></div><div className="tag mt-3">regular recruiters</div></div>
+              <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50"><CountUp value={dash.stats.totalExperiences} /></div><div className="tag mt-3">interview reports{dash.stats.overallOfferRate != null ? ` · ${dash.stats.overallOfferRate}% offers` : ''}</div></div>
             </div>
             )}
           </header>
@@ -137,8 +137,8 @@ export default function PlacementDashboardPage() {
                 <YAxis yAxisId="l" tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <YAxis yAxisId="r" orientation="right" tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip {...chartTooltipStyle} />
-                <RBar yAxisId="l" dataKey="hires" name="Students hired" fill="#f2c66d" fillOpacity={0.28} radius={[8, 8, 0, 0]} barSize={40} />
-                <Line yAxisId="r" dataKey="avgPackage" name="Avg package (LPA)" stroke="#ff7a4d" strokeWidth={2.4} dot={{ r: 4.5, fill: '#0c0c10', stroke: '#ff7a4d', strokeWidth: 2 }} connectNulls />
+                <RBar yAxisId="l" dataKey="hires" name="Students hired" fill="#fbbf24" fillOpacity={0.28} radius={[8, 8, 0, 0]} barSize={40} />
+                <Line yAxisId="r" dataKey="avgPackage" name="Avg package (LPA)" stroke="#34d399" strokeWidth={2.4} dot={{ r: 4.5, fill: '#0a0a0a', stroke: '#34d399', strokeWidth: 2 }} connectNulls />
               </ComposedChart></ResponsiveContainer></div>
               <div>
                 <div className="mb-4 text-[13px] text-zinc-500">Most reliable recruiters</div>
@@ -160,9 +160,9 @@ export default function PlacementDashboardPage() {
                 {pred.companies.slice(0, 8).map((c, i) => (
                   <motion.li key={c.company._id} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}>
                     <Link to={`/placement/companies/${c.company.slug}`} className="group flex items-center gap-5 border-b border-[var(--line)] py-5">
-                      <span className="display w-[92px] shrink-0 text-[52px] leading-none tnum" style={{ color: c.probability >= 75 ? '#fff1cf' : c.probability >= 50 ? '#f2c66d' : '#c9683f' }}>{c.probability}<span className="text-[20px] opacity-60">%</span></span>
+                      <span className="display w-[92px] shrink-0 text-[41.6px] leading-none tnum" style={{ color: c.probability >= 75 ? '#ecfdf5' : c.probability >= 50 ? '#fbbf24' : '#fb7185' }}>{c.probability}<span className="text-[20px] opacity-60">%</span></span>
                       <span className="min-w-0 flex-1">
-                        <span className="display block truncate text-[30px] leading-tight text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{c.company.name}</span>
+                        <span className="display block truncate text-[24px] leading-tight text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{c.company.name}</span>
                         <span className="mt-0.5 block truncate text-[12.5px] text-zinc-500">{c.label}{c.expectedHires ? ` · ~${c.expectedHires} hires` : ''}{c.lastPackageLpa ? ` · ${c.lastPackageLpa} LPA` : ''}</span>
                       </span>
                     </Link>
@@ -202,12 +202,12 @@ export default function PlacementDashboardPage() {
               <div>
                 {insights.skillGap.items.slice(0, 5).map((g) => (
                   <div key={g.skill} className="grid items-center gap-x-12 gap-y-3 border-b border-[var(--line)] py-6 md:grid-cols-[1fr_1.2fr_auto]">
-                    <div><div className="display text-[36px] leading-none text-zinc-100">{g.skill}</div><div className={cn('mt-2 text-[12.5px]', g.severity === 'critical' ? 'text-rose-400' : g.severity === 'moderate' ? 'text-amber-400' : 'text-emerald-400')}>{g.severity} gap{g.practiceTarget > 0 ? <span className="text-zinc-500"> · ~{g.practiceTarget} more solid problems</span> : ''}</div></div>
+                    <div><div className="display text-[28.8px] leading-none text-zinc-100">{g.skill}</div><div className={cn('mt-2 text-[12.5px]', g.severity === 'critical' ? 'text-rose-400' : g.severity === 'moderate' ? 'text-amber-400' : 'text-emerald-400')}>{g.severity} gap{g.practiceTarget > 0 ? <span className="text-zinc-500"> · ~{g.practiceTarget} more solid problems</span> : ''}</div></div>
                     <div className="space-y-3">
                       <div><div className="mb-1 flex justify-between text-[12px] text-zinc-500"><span>asked in</span><span className="tnum">{g.demandPct}% of reports</span></div><div className="h-[3px] rounded-full bg-white/[0.06]"><motion.div className="h-full rounded-full bg-[var(--ember)]" initial={{ width: 0 }} whileInView={{ width: `${g.demandPct}%` }} viewport={{ once: true }} transition={{ duration: 1 }} /></div></div>
                       <div><div className="mb-1 flex justify-between text-[12px] text-zinc-500"><span>your mastery</span><span className="tnum">{Math.round(g.mastery * 100)}%</span></div><div className="h-[3px] rounded-full bg-white/[0.06]"><motion.div className="h-full rounded-full bg-[var(--star)]" initial={{ width: 0 }} whileInView={{ width: `${g.mastery * 100}%` }} viewport={{ once: true }} transition={{ duration: 1 }} /></div></div>
                     </div>
-                    <Link to={`/problems?skill=${encodeURIComponent(g.skill)}`} className="flex items-center gap-1.5 rounded-full border border-[var(--line-strong)] px-5 py-2.5 text-[13.5px] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Practise <ArrowUpRight className="h-4 w-4" /></Link>
+                    <Link to={`/problems?skill=${encodeURIComponent(g.skill)}`} className="flex items-center gap-1.5 rounded-sm border border-[var(--line-strong)] px-5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Practise <ArrowUpRight className="h-4 w-4" /></Link>
                   </div>
                 ))}
               </div>
@@ -223,16 +223,16 @@ export default function PlacementDashboardPage() {
                     <Link to={`/placement/companies/${c.company.slug}`} className="group flex items-center gap-4 border-b border-[var(--line)] py-5">
                       <CompanyLogo company={c.company} size={40} />
                       <span className="min-w-0 flex-1">
-                        <span className="display block truncate text-[28px] leading-tight text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{c.company.name}</span>
+                        <span className="display block truncate text-[22.4px] leading-tight text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{c.company.name}</span>
                         <span className="block truncate text-[12.5px] text-zinc-500">{c.experienceCount} report{c.experienceCount !== 1 ? 's' : ''}{c.topTopics?.length ? ` · ${c.topTopics.slice(0, 3).map((t) => t.topic).join(', ')}` : ''}</span>
                       </span>
-                      {c.latestOfferRate != null && <span className="text-right"><span className="display block text-[30px] leading-none tnum text-zinc-200">{c.latestOfferRate}%</span><span className="text-[11px] text-zinc-600">offers</span></span>}
+                      {c.latestOfferRate != null && <span className="text-right"><span className="display block text-[24px] leading-none tnum text-zinc-200">{c.latestOfferRate}%</span><span className="text-[11px] text-zinc-600">offers</span></span>}
                     </Link>
                   </li>
                 ))}
               </ol>
             ) : <div className="py-6 text-[16px] text-zinc-500">Nobody from your college has shared yet. <button onClick={() => setShowSubmit(true)} className="text-[var(--ember)] hover:underline">Be the first — help your juniors.</button></div>}
-            {dash.topTopics.length > 0 && <div className="mt-12"><div className="mb-3 text-[13px] text-zinc-500">Topics that keep coming up here</div><div className="flex flex-wrap gap-2">{dash.topTopics.slice(0, 12).map((t) => <span key={t.topic} className="rounded-full border border-[var(--line-strong)] px-4 py-1.5 text-[14px] text-zinc-300">{t.topic} <span className="tnum text-zinc-600">{t.count}</span></span>)}</div></div>}
+            {dash.topTopics.length > 0 && <div className="mt-12"><div className="mb-3 text-[13px] text-zinc-500">Topics that keep coming up here</div><div className="flex flex-wrap gap-2">{dash.topTopics.slice(0, 12).map((t) => <span key={t.topic} className="rounded-sm border border-[var(--line-strong)] px-4 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300">{t.topic} <span className="tnum text-zinc-600">{t.count}</span></span>)}</div></div>}
           </Section>
         </>
       )}

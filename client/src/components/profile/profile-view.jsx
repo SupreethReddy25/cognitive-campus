@@ -12,14 +12,14 @@ import { ActivityHeatmap } from '../ui/activity-heatmap';
 import { CountUp, Page, Skeleton, cn } from '../ui/kit';
 
 const line = 'w-full border-b border-[var(--line-strong)] bg-transparent pb-1 text-zinc-100 outline-none transition-colors placeholder:text-zinc-700 focus:border-[var(--ember)]';
-const chip = (on) => cn('rounded-full border px-3.5 py-1.5 text-[13px] capitalize transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
+const chip = (on) => cn('rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
 const DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400' };
 
 function Section({ id, title, kicker, children }) {
   return (
     <section id={id} className="scroll-mt-10 pt-24">
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
-        <h2 className="display text-[clamp(36px,4.6vw,60px)] text-zinc-50">{title}</h2>
+        <h2 className="display text-[clamp(29px,3.9vw,48px)] text-zinc-50">{title}</h2>
         {kicker && <div className="hidden max-w-sm pb-1.5 text-right text-[13px] leading-snug text-zinc-500 md:block">{kicker}</div>}
       </div>
       {children}
@@ -62,7 +62,7 @@ function AiSettings({ status, onChange }) {
         <label className="text-[13px] text-zinc-500">Gemini API key</label>
         <div className="mt-2 flex items-end gap-4">
           <div className="relative flex-1"><input type={show ? 'text' : 'password'} value={key} onChange={(e) => setKey(e.target.value)} placeholder={status?.byok ? 'saved — paste to replace' : 'AIza…'} className={cn(line, 'pr-8 font-mono text-[15px]')} autoComplete="off" /><button onClick={() => setShow((s) => !s)} className="absolute bottom-1.5 right-0 text-zinc-600 hover:text-zinc-300">{show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>
-          <button onClick={save} disabled={busy || !key.trim()} className="flex items-center gap-2 rounded-full bg-[var(--ember)] px-6 py-2.5 text-[14px] font-semibold text-[#1a0d07] transition-[filter] hover:brightness-110 disabled:opacity-40">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Verify &amp; save</button>
+          <button onClick={save} disabled={busy || !key.trim()} className="btn-line group">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Verify &amp; save</button>
         </div>
         <p className="mt-3 text-[12.5px] text-zinc-600">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-zinc-400 underline underline-offset-2 hover:text-zinc-100">aistudio.google.com/apikey</a> — we verify it with Google before saving.</p>
         {status?.byok && <button onClick={() => { usersService.configGeminiKey('').then(() => { toast.info('Key removed'); onChange(); }); }} className="mt-4 flex items-center gap-1.5 text-[13px] text-rose-400/80 hover:text-rose-300"><Trash2 className="h-3.5 w-3.5" /> Remove saved key</button>}
@@ -138,15 +138,15 @@ export function ProfileView() {
   return (
     <Page>
       {/* ═══ Identity ═══ */}
-      <header className="pt-14 md:pt-20">
+      <header className="pt-2 md:pt-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="text-[13px] text-zinc-500">Profile</div>
-          <button onClick={logout} className="flex items-center gap-2 rounded-full border border-[var(--line-strong)] px-4 py-2 text-[13px] text-zinc-500 transition-colors hover:border-rose-400/40 hover:text-rose-300"><LogOut className="h-3.5 w-3.5" /> Sign out</button>
+          <div className="tag">Profile</div>
+          <button onClick={logout} className="flex items-center gap-2 rounded-sm border border-[var(--line-strong)] px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-500 transition-colors hover:border-rose-400/40 hover:text-rose-300"><LogOut className="h-3.5 w-3.5" /> Sign out</button>
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-x-10 gap-y-6">
-          <span className="flex h-[132px] w-[132px] shrink-0 items-center justify-center rounded-full bg-[var(--ember)] text-[48px] font-semibold text-[#1a0d07]"><span className="display text-[64px] not-italic">{initials}</span></span>
+          <span className="flex h-[132px] w-[132px] shrink-0 items-center justify-center rounded-full bg-[var(--ember)] text-[48px] font-semibold text-[#04130d]"><span className="display text-[51.2px] not-italic">{initials}</span></span>
           <div className="min-w-0">
-            <h1 className="display text-[clamp(52px,8vw,120px)] text-zinc-50">{u?.name}</h1>
+            <h1 className="display text-[clamp(42px,6.8vw,96px)] text-zinc-50">{u?.name}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] text-zinc-500">
               <span>Level {level} · {tierFor(level)}</span>
               {college && <span>{college.shortName || college.name}</span>}
@@ -157,10 +157,10 @@ export function ProfileView() {
         </div>
 
         <div className="mt-14 grid grid-cols-2 gap-x-10 gap-y-10 lg:grid-cols-4">
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50"><CountUp value={u?.xp || 0} /></div><div className="mt-3 text-[13px] text-zinc-500">experience points</div></div>
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display flex items-center gap-2 text-[72px] leading-none tnum text-zinc-50"><CountUp value={streak} /><Flame className="h-9 w-9 text-[var(--ember)]" fill="currentColor" fillOpacity={0.25} /></div><div className="mt-3 text-[13px] text-zinc-500">day streak · best {Math.max(u?.longestStreak || 0, streak)}</div></div>
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50">{arena?.elo ?? 1000}</div><div className="mt-3 text-[13px] text-zinc-500">arena rating · {arena?.rank || 'Silver'}</div></div>
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[72px] leading-none tnum text-zinc-50">{achievements?.unlocked ?? '—'}<span className="text-[28px] text-zinc-600">/{achievements?.total ?? 35}</span></div><div className="mt-3 text-[13px] text-zinc-500">badges earned</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50"><CountUp value={u?.xp || 0} /></div><div className="tag mt-3">experience points</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display flex items-center gap-2 text-[57.6px] leading-none tnum text-zinc-50"><CountUp value={streak} /><Flame className="h-9 w-9 text-[var(--ember)]" fill="currentColor" fillOpacity={0.25} /></div><div className="tag mt-3">day streak · best {Math.max(u?.longestStreak || 0, streak)}</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50">{arena?.elo ?? 1000}</div><div className="tag mt-3">arena rating · {arena?.rank || 'Silver'}</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[57.6px] leading-none tnum text-zinc-50">{achievements?.unlocked ?? '—'}<span className="text-[28px] text-zinc-600">/{achievements?.total ?? 35}</span></div><div className="tag mt-3">badges earned</div></div>
         </div>
       </header>
 
@@ -173,8 +173,8 @@ export function ProfileView() {
                 Your average mastery is moving <span className={cn('display text-[1.3em] italic', v.masteryPerWeek >= 0 ? 'text-emerald-400' : 'text-rose-400')}>{v.masteryPerWeek >= 0 ? '+' : ''}{(v.masteryPerWeek * 100).toFixed(1)} points</span> a week. You practised on <span className="text-zinc-50">{v.activeDaysLast14} of the last 14 days</span> and solved {v.solvedThisWeek} this week{v.fastestGrowing && <>; <span className="text-zinc-50">{v.fastestGrowing.name}</span> is your fastest riser</>}.
               </p>
               <div className="mt-12 grid gap-10 sm:grid-cols-2">
-                <div><div className="mb-4 text-[13px] text-emerald-400/90">Strongest</div>{profile.strengths.map((s) => <div key={s.name} className="flex items-baseline justify-between border-b border-[var(--line)] py-3"><span className="display text-[26px] text-zinc-100">{s.name}</span><span className="text-[15px] tnum text-zinc-400">{Math.round(s.masteryP * 100)}%</span></div>)}</div>
-                <div><div className="mb-4 text-[13px] text-rose-400/90">Needs work</div>{profile.weaknesses.map((s) => <div key={s.name} className="flex items-baseline justify-between border-b border-[var(--line)] py-3"><span className="display text-[26px] text-zinc-100">{s.name}</span><span className="text-[15px] tnum text-zinc-400">{Math.round(s.masteryP * 100)}%</span></div>)}</div>
+                <div><div className="mb-4 text-[13px] text-emerald-400/90">Strongest</div>{profile.strengths.map((s) => <div key={s.name} className="flex items-baseline justify-between border-b border-[var(--line)] py-3"><span className="display text-[20.8px] text-zinc-100">{s.name}</span><span className="text-[15px] tnum text-zinc-400">{Math.round(s.masteryP * 100)}%</span></div>)}</div>
+                <div><div className="mb-4 text-[13px] text-rose-400/90">Needs work</div>{profile.weaknesses.map((s) => <div key={s.name} className="flex items-baseline justify-between border-b border-[var(--line)] py-3"><span className="display text-[20.8px] text-zinc-100">{s.name}</span><span className="text-[15px] tnum text-zinc-400">{Math.round(s.masteryP * 100)}%</span></div>)}</div>
               </div>
             </div>
             <div><div className="mb-3 text-[13px] text-zinc-500">What the model noticed</div><InsightsPanel insights={profile.insights} /></div>
@@ -235,7 +235,7 @@ export function ProfileView() {
       <Section id="placement" title={<>In a <em>sentence</em></>} kicker="Your college scopes Placement and peer comparisons; your target sharpens recommendations.">
         <div className="max-w-4xl text-[clamp(22px,2.6vw,34px)] leading-[2] text-zinc-400">
           I study at <span className="inline-block min-w-[280px] align-middle"><CollegeSelector value={college} onChange={(c) => savePlacement({ collegeId: c ? c._id : null })} disabled={saving} /></span>, and I&apos;m aiming for a job at{' '}
-          <select value={company} onChange={(e) => { setCompany(e.target.value); savePlacement({ targetCompanyId: e.target.value || null }); }} className="display cursor-pointer border-b border-dashed border-[var(--ember)] bg-transparent px-1 text-[1em] text-[var(--ember-soft)] outline-none"><option value="" className="bg-[#141418] text-zinc-300">any company</option>{companies.map((c) => <option key={c._id} value={c._id} className="bg-[#141418] text-zinc-200">{c.name}</option>)}</select>
+          <select value={company} onChange={(e) => { setCompany(e.target.value); savePlacement({ targetCompanyId: e.target.value || null }); }} className="display cursor-pointer border-b border-dashed border-[var(--ember)] bg-transparent px-1 text-[1em] text-[var(--ember-soft)] outline-none"><option value="" className="bg-[#0d0d0d] text-zinc-300">any company</option>{companies.map((c) => <option key={c._id} value={c._id} className="bg-[#0d0d0d] text-zinc-200">{c.name}</option>)}</select>
           {' '}as a{' '}
           <input value={role} onChange={(e) => setRole(e.target.value)} onBlur={() => role !== (u?.targetRole || '') && savePlacement({ targetRole: role })} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} placeholder="SDE-1" className="display w-[190px] border-b border-dashed border-[var(--ember)] bg-transparent px-1 text-[1em] text-[var(--ember-soft)] outline-none placeholder:text-zinc-700" />.
         </div>
@@ -250,14 +250,14 @@ export function ProfileView() {
           <div>
             <label className="flex cursor-pointer items-center justify-between border-b border-[var(--line)] py-4">
               <span><span className="block text-[16px] text-zinc-200">Success sound</span><span className="text-[13px] text-zinc-600">A short chime when a solution is accepted</span></span>
-              <span className={cn('relative h-6 w-11 rounded-full transition-colors', sound ? 'bg-[var(--ember)]' : 'bg-white/[0.12]')}><input type="checkbox" checked={sound} onChange={(e) => { setSound(e.target.checked); localStorage.setItem('cc_sound', e.target.checked ? 'on' : 'off'); }} className="peer sr-only" /><span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-[#14100d] transition-all', sound ? 'left-[22px]' : 'left-0.5 bg-zinc-300')} /></span>
+              <span className={cn('relative h-6 w-11 rounded-full transition-colors', sound ? 'bg-[var(--ember)]' : 'bg-white/[0.12]')}><input type="checkbox" checked={sound} onChange={(e) => { setSound(e.target.checked); localStorage.setItem('cc_sound', e.target.checked ? 'on' : 'off'); }} className="peer sr-only" /><span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-[#04130d] transition-all', sound ? 'left-[22px]' : 'left-0.5 bg-zinc-300')} /></span>
             </label>
             <p className="mt-4 text-[13px] text-zinc-600">Editor language and keybindings are remembered per browser.</p>
           </div>
           <div>
             {u?.role === 'admin'
               ? <div className="flex items-center justify-between border-b border-[var(--line)] py-4"><span className="flex items-center gap-2 text-[16px] text-zinc-200"><ShieldCheck className="h-4 w-4 text-[var(--star)]" /> You&apos;re an admin</span><Link to="/admin" className="flex items-center gap-1.5 text-[14px] text-[var(--ember)] hover:underline">Open the admin room <ArrowUpRight className="h-4 w-4" /></Link></div>
-              : <div className="flex items-center justify-between border-b border-[var(--line)] py-4"><span><span className="block text-[16px] text-zinc-200">Placement-cell access</span><span className="text-[13px] text-zinc-600">In development this promotes your account; in production it only works while no admin exists.</span></span><button onClick={bootstrap} className="shrink-0 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13px] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Become admin</button></div>}
+              : <div className="flex items-center justify-between border-b border-[var(--line)] py-4"><span><span className="block text-[16px] text-zinc-200">Placement-cell access</span><span className="text-[13px] text-zinc-600">In development this promotes your account; in production it only works while no admin exists.</span></span><button onClick={bootstrap} className="shrink-0 rounded-sm border border-[var(--line-strong)] px-5 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Become admin</button></div>}
           </div>
         </div>
       </Section>

@@ -21,11 +21,11 @@ const hash = (str, salt = 0) => {
 };
 
 export const starColor = (p, attempts) => {
-  if (!attempts) return '#8b8578';
-  if (p >= 0.85) return '#fff1cf';
-  if (p >= 0.6) return '#f2c66d';
-  if (p >= 0.35) return '#e0a05a';
-  return '#c9683f';
+  if (!attempts) return '#71717a';
+  if (p >= 0.85) return '#ecfdf5';
+  if (p >= 0.6) return '#34d399';
+  if (p >= 0.35) return '#fbbf24';
+  return '#fb7185';
 };
 
 function layout(skills) {
@@ -67,19 +67,19 @@ function Tip({ skill, p, onGo }) {
     : skill.attempts ? 'Growing'
     : 'Not started';
   return (
-    <div className="w-[248px] rounded-2xl border border-[var(--line-strong)] bg-[#16161b] p-4 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.9)]">
+    <div className="w-[248px] rounded-sm border border-[var(--line-strong)] bg-[#0f0f0f] p-4 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.9)]">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="display text-[24px] text-zinc-50">{skill.name}</div>
-        <div className="display text-[30px] tnum" style={{ color: starColor(p, skill.attempts) }}>{Math.round(p * 100)}<span className="text-[15px]">%</span></div>
+        <div className="display text-[19.2px] text-zinc-50">{skill.name}</div>
+        <div className="display text-[24px] tnum" style={{ color: starColor(p, skill.attempts) }}>{Math.round(p * 100)}<span className="text-[15px]">%</span></div>
       </div>
-      <div className="mt-0.5 text-[12px] text-zinc-500">{status}</div>
+      <div className="tag mt-0.5">{status}</div>
       <dl className="mt-3 space-y-1.5 border-t border-[var(--line)] pt-3 text-[12px]">
         <div className="flex justify-between"><dt className="text-zinc-500">Attempts</dt><dd className="tnum text-zinc-300">{skill.attempts}</dd></div>
         {skill.trend && skill.attempts > 0 && <div className="flex justify-between"><dt className="text-zinc-500">Trend</dt><dd className="text-zinc-300">{skill.trend === 'up' ? 'Rising' : skill.trend === 'down' ? 'Slipping' : 'Steady'}</dd></div>}
         {skill.cohortDelta != null && skill.attempts > 0 && <div className="flex justify-between"><dt className="text-zinc-500">vs your peers</dt><dd className="tnum text-zinc-300">{skill.cohortDelta >= 0 ? '+' : ''}{Math.round(skill.cohortDelta * 100)} pts</dd></div>}
         {skill.predictedAttemptsToMastery > 0 && !skill.isMastered && <div className="flex justify-between"><dt className="text-zinc-500">To mastery</dt><dd className="tnum text-zinc-300">~{skill.predictedAttemptsToMastery} solves</dd></div>}
       </dl>
-      <button onClick={onGo} className="mt-3.5 flex w-full items-center justify-between rounded-xl bg-[var(--ember)] px-3.5 py-2.5 text-[13px] font-semibold text-[#1a0d07] transition-[filter] hover:brightness-110">
+      <button onClick={onGo} className="btn-line group">
         Practice {skill.name}<ArrowRight className="h-4 w-4" />
       </button>
     </div>
@@ -121,15 +121,15 @@ export function Constellation({ skills = [], onGo = null, aspect = null }) {
       {/* deep layer — barely moves */}
       <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full" style={{ transform: 'translate(calc(var(--px) * -10px), calc(var(--py) * -8px))', transition: 'transform .4s ease-out' }} aria-hidden>
         {BG_STARS.map((s, i) => (
-          <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#ece6d8" className="twinkle" style={{ '--o': s.o, animationDelay: `${s.d}s`, animationDuration: `${s.t}s` }} />
+          <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#e4e4e7" className="twinkle" style={{ '--o': s.o, animationDelay: `${s.d}s`, animationDuration: `${s.t}s` }} />
         ))}
       </svg>
 
       {/* skill layer */}
       <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full overflow-visible" style={{ transform: 'translate(calc(var(--px) * 6px), calc(var(--py) * 5px))', transition: 'transform .4s ease-out' }} role="group" aria-label="Skill constellation">
         <defs>
-          <radialGradient id="halo"><stop offset="0%" stopColor="#f2c66d" stopOpacity="0.55" /><stop offset="100%" stopColor="#f2c66d" stopOpacity="0" /></radialGradient>
-          <linearGradient id="lit" x1="0" x2="1"><stop offset="0%" stopColor="#f2c66d" stopOpacity="0.55" /><stop offset="100%" stopColor="#ff8253" stopOpacity="0.55" /></linearGradient>
+          <radialGradient id="halo"><stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.5" /><stop offset="100%" stopColor="#6ee7b7" stopOpacity="0" /></radialGradient>
+          <linearGradient id="lit" x1="0" x2="1"><stop offset="0%" stopColor="#fbbf24" stopOpacity="0.55" /><stop offset="100%" stopColor="#6ee7b7" stopOpacity="0.55" /></linearGradient>
         </defs>
 
         {edges.map((e, i) => {
@@ -137,7 +137,7 @@ export function Constellation({ skills = [], onGo = null, aspect = null }) {
           const hot = active && (active === e.from || active === e.to);
           return (
             <motion.path key={e.id} d={`M${e.a.x},${e.a.y} C${mx},${e.a.y} ${mx},${e.b.y} ${e.b.x},${e.b.y}`} fill="none"
-              stroke={hot ? '#ff8253' : e.lit ? 'url(#lit)' : 'rgba(236,230,216,0.13)'} strokeWidth={hot ? 1.6 : e.lit ? 1.2 : 0.9} strokeDasharray={e.lit || hot ? undefined : '2 5'}
+              stroke={hot ? '#6ee7b7' : e.lit ? 'url(#lit)' : 'rgba(255,255,255,0.12)'} strokeWidth={hot ? 1.6 : e.lit ? 1.2 : 0.9} strokeDasharray={e.lit || hot ? undefined : '2 5'}
               initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.1, delay: 0.25 + i * 0.05, ease: 'easeOut' }} />
           );
         })}
@@ -160,7 +160,7 @@ export function Constellation({ skills = [], onGo = null, aspect = null }) {
               <circle r={44} fill="transparent" />
               {touched && <circle r={core * (isActive ? 4.2 : 3.2)} fill="url(#halo)" opacity={(0.25 + p * 0.75) * (isActive ? 1 : 0.85)} style={{ transition: 'all .3s' }} />}
               {s.reviewDue && (
-                <circle r={core + 4} fill="none" stroke="#ff7a4d" strokeWidth="1.4">
+                <circle r={core + 4} fill="none" stroke="#34d399" strokeWidth="1.4">
                   <animate attributeName="r" values={`${core + 3};${core + 17}`} dur="2.4s" repeatCount="indefinite" />
                   <animate attributeName="opacity" values="0.9;0" dur="2.4s" repeatCount="indefinite" />
                 </circle>
@@ -171,10 +171,10 @@ export function Constellation({ skills = [], onGo = null, aspect = null }) {
                 </g>
               )}
               {locked
-                ? <circle r={core} fill="none" stroke="rgba(236,230,216,0.28)" strokeWidth="1" strokeDasharray="2 3" />
+                ? <circle r={core} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeDasharray="2 3" />
                 : <circle r={isActive ? core + 1.5 : core} fill={col} style={{ transition: 'r .2s' }} />}
-              <text y={core + 22} textAnchor="middle" className="select-none" fontSize="14" fontFamily="var(--font-sans)" fontWeight={isActive ? 600 : 500}
-                fill={isActive ? '#fff7ec' : locked ? 'rgba(236,230,216,0.35)' : 'rgba(236,230,216,0.78)'} style={{ transition: 'fill .2s', paintOrder: 'stroke', stroke: '#0c0c10', strokeWidth: 4, strokeLinejoin: 'round' }}>
+              <text y={core + 22} textAnchor="middle" className="select-none" fontSize="12" fontFamily="var(--font-mono)" letterSpacing="0.04em" fontWeight={isActive ? 600 : 500}
+                fill={isActive ? '#ffffff' : locked ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.72)'} style={{ transition: 'fill .2s', paintOrder: 'stroke', stroke: '#0a0a0a', strokeWidth: 4, strokeLinejoin: 'round' }}>
                 {s.name}{touched ? <tspan fill={col} dx="6" fontFamily="var(--font-mono)" fontSize="12" fontWeight="500">{Math.round(p * 100)}</tspan> : null}
               </text>
             </motion.g>

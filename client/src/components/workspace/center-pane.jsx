@@ -264,7 +264,7 @@ export function CenterPane() {
         <button 
           onClick={handleRun} 
           disabled={running || submitting} 
-          className={`press flex items-center gap-2 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13.5px] font-medium transition-colors duration-300 ${running ? "text-zinc-600 cursor-not-allowed" : "text-zinc-200 hover:border-zinc-400"}`}
+          className={`press flex items-center gap-2 rounded-sm border border-[var(--line-strong)] px-5 py-2 font-mono text-[11px] uppercase tracking-[0.18em] transition-colors duration-300 ${running ? "text-zinc-600 cursor-not-allowed" : "text-zinc-200 hover:border-zinc-400"}`}
         >
           {running ? <span className="flex h-3 w-3 items-center justify-center">
               <span className="h-1.5 w-1.5 animate-ping rounded-full bg-[var(--signal)]" />
@@ -280,7 +280,7 @@ export function CenterPane() {
         <button 
           onClick={handleSubmit} 
           disabled={running || submitting}
-          className={`press flex items-center gap-2 rounded-full px-6 py-2 text-[13.5px] font-semibold transition-[filter] duration-300 ${submitting ? "bg-zinc-800 text-zinc-500 cursor-not-allowed" : "bg-[var(--ember)] text-[#1a0d07] hover:brightness-110"}`}
+          className={`press flex items-center gap-2 rounded-sm px-6 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] transition-[filter] duration-300 ${submitting ? "bg-zinc-800 text-zinc-500 cursor-not-allowed" : "bg-[var(--ember)] text-[#04130d] hover:brightness-110"}`}
         >
           {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
           <span>Submit</span>
@@ -308,7 +308,7 @@ function LangSelector({ lang, displayLang, langs, onSelect, open, setOpen }) {
 }
 
 function GhostBtn({ children, label, onClick }) {
-  return <button aria-label={label} onClick={onClick} className="press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-zinc-500 transition-colors duration-300 hover:bg-white/[0.05] hover:text-zinc-200">
+  return <button aria-label={label} onClick={onClick} className="press flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[13px] text-zinc-500 transition-colors duration-300 hover:bg-white/[0.05] hover:text-zinc-200">
       {children}
     </button>;
 }

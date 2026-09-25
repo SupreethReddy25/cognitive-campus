@@ -28,12 +28,12 @@ const KIND = {
 };
 
 const TONE = {
-  amber: ['#f2c66d', 'text-amber-300'],
-  orange: ['#ff7a4d', 'text-orange-300'],
-  sky: ['#8fbcda', 'text-sky-300'],
-  violet: ['#f2c66d', 'text-amber-300'],
-  emerald: ['#94d6a8', 'text-emerald-300'],
-  rose: ['#f0728a', 'text-rose-300']
+  amber: ['#fbbf24', 'text-amber-300'],
+  orange: ['#34d399', 'text-orange-300'],
+  sky: ['#38bdf8', 'text-sky-300'],
+  violet: ['#fbbf24', 'text-amber-300'],
+  emerald: ['#34d399', 'text-emerald-300'],
+  rose: ['#fb7185', 'text-rose-300']
 };
 
 export const useToast = () => {
@@ -88,7 +88,7 @@ export function ToastProvider({ children }) {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 40, scale: 0.96 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                className="pointer-events-auto relative flex items-start gap-3.5 overflow-hidden rounded-2xl border border-[var(--line-strong)] bg-[#16161b] py-3.5 pl-5 pr-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.85)]"
+                className="pointer-events-auto relative flex items-start gap-3.5 overflow-hidden rounded-sm border border-[var(--line-strong)] bg-[#0f0f0f] py-3.5 pl-5 pr-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.85)]"
               >
                 <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: TONE[kind.tone][0] }} />
                 <Icon className={`mt-0.5 h-[18px] w-[18px] shrink-0 ${TONE[kind.tone][1]}`} strokeWidth={1.7} />

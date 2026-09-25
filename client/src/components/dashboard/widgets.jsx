@@ -39,7 +39,7 @@ export function SkillLedger({ skills = [] }) {
             <div className="flex items-center gap-2.5">
               {locked && <Lock className="h-3.5 w-3.5 text-zinc-600" />}
               <div>
-                <div className={cn('display text-[26px] leading-none', locked ? 'text-zinc-600' : 'text-zinc-100')}>{s.name}</div>
+                <div className={cn('display text-[20.8px] leading-none', locked ? 'text-zinc-600' : 'text-zinc-100')}>{s.name}</div>
                 <div className="mt-1 text-[12px] text-zinc-600">{s.attempts} attempt{s.attempts === 1 ? '' : 's'}{s.reviewDue && <span className="text-[var(--ember)]"> · review due</span>}</div>
               </div>
             </div>
@@ -48,7 +48,7 @@ export function SkillLedger({ skills = [] }) {
                 <motion.div className="h-full rounded-full" style={{ background: starColor(p, s.attempts) }} initial={{ width: 0 }} whileInView={{ width: `${p * 100}%` }} viewport={{ once: true }} transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }} />
                 <span className="absolute -top-[3px] h-[9px] w-px bg-white/25" style={{ left: '85%' }} title="mastery threshold" />
               </div>
-              <span className="display w-14 text-right text-[28px] leading-none tnum text-zinc-100">{Math.round(p * 100)}<span className="text-[14px] text-zinc-500">%</span></span>
+              <span className="display w-14 text-right text-[22.4px] leading-none tnum text-zinc-100">{Math.round(p * 100)}<span className="text-[14px] text-zinc-500">%</span></span>
             </div>
             <div className="hidden text-right text-[13px] md:block">
               {s.cohortDelta != null && s.attempts > 0 ? <span className={cn('tnum', s.cohortDelta >= 0 ? 'text-zinc-300' : 'text-zinc-500')} title={`Cohort average ${Math.round((s.cohortAvg || 0) * 100)}% across ${s.cohortPeers} students`}>{s.cohortDelta >= 0 ? '+' : ''}{Math.round(s.cohortDelta * 100)} vs peers</span> : <span className="text-zinc-700">—</span>}
@@ -89,7 +89,7 @@ export function InsightsPanel({ insights = [] }) {
 
 // ─── Badge shelf ─────────────────────────────────────────────────────────────
 
-const RARITY_RING = { common: '#9a9384', rare: '#8fbcda', epic: '#9aa5dc', legendary: '#f2c66d' };
+const RARITY_RING = { common: '#9a9384', rare: '#38bdf8', epic: '#a78bfa', legendary: '#fbbf24' };
 
 export function Badge({ a, size = 72 }) {
   const Icon = achievementIcon(a.icon);
@@ -111,7 +111,7 @@ export function AchievementStrip({ achievements }) {
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
-        <div className="text-[14px] text-zinc-500"><span className="display text-[40px] tnum text-zinc-50">{achievements.unlocked}</span> <span className="text-zinc-600">of {achievements.total} earned</span></div>
+        <div className="text-[14px] text-zinc-500"><span className="display text-[32px] tnum text-zinc-50">{achievements.unlocked}</span> <span className="text-zinc-600">of {achievements.total} earned</span></div>
         <Link to="/profile#badges" className="flex items-center gap-1.5 text-[13px] text-zinc-400 transition-colors hover:text-[var(--ember)]">The whole shelf <ArrowRight className="h-3.5 w-3.5" /></Link>
       </div>
       {achievements.recent?.length ? (

@@ -234,26 +234,26 @@ export function WorkspaceShell() {
         <div className="flex min-h-0 flex-1 border-t border-white/[0.04]">
           <PanelGroup direction="horizontal" className="h-full">
             <Panel defaultSize="33%" minSize="18%" maxSize="55%">
-              <div className="flex h-full flex-col overflow-hidden border-r border-white/[0.06] bg-[#0c0c10]"><LeftPane /></div>
+              <div className="flex h-full flex-col overflow-hidden border-r border-white/[0.06] bg-[#0a0a0a]"><LeftPane /></div>
             </Panel>
 
-            <PanelResizeHandle className="group relative z-10 flex w-2 flex-shrink-0 cursor-col-resize items-center justify-center bg-[#0e0e12]">
+            <PanelResizeHandle className="group relative z-10 flex w-2 flex-shrink-0 cursor-col-resize items-center justify-center bg-[#0a0a0a]">
               <div className="absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 bg-white/[0.04] transition-colors duration-150 group-hover:bg-[var(--signal)]" />
             </PanelResizeHandle>
 
             <Panel defaultSize="45%" minSize="30%">
-              <div className="flex h-full min-w-0 flex-col overflow-hidden bg-[#0e0e12]">
+              <div className="flex h-full min-w-0 flex-col overflow-hidden bg-[#0a0a0a]">
                 <div className="relative min-h-0 flex-1 overflow-hidden"><CenterPane /></div>
                 <TestTiles running={running || submitting} results={result} onRun={handleRun} selected={selectedTest} onSelect={setSelectedTest} stats={stats} testCasesArray={testCasesArray} />
               </div>
             </Panel>
 
-            <PanelResizeHandle className="group relative z-10 flex w-2 flex-shrink-0 cursor-col-resize items-center justify-center bg-[#0e0e12]">
+            <PanelResizeHandle className="group relative z-10 flex w-2 flex-shrink-0 cursor-col-resize items-center justify-center bg-[#0a0a0a]">
               <div className="absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 bg-white/[0.04] transition-colors duration-150 group-hover:bg-[var(--signal)]" />
             </PanelResizeHandle>
 
             <Panel defaultSize="22%" minSize="14%" maxSize="34%">
-              <div className="h-full overflow-hidden border-l border-white/[0.06] bg-[#0c0c10]"><RightPane /></div>
+              <div className="h-full overflow-hidden border-l border-white/[0.06] bg-[#0a0a0a]"><RightPane /></div>
             </Panel>
           </PanelGroup>
         </div>

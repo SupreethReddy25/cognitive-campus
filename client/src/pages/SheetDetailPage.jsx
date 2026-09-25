@@ -9,7 +9,7 @@ import { Page, Skeleton, ErrorNote, cn } from '../components/ui/kit';
 const DIFFS = ['all', 'easy', 'medium', 'hard'];
 const STATUS = [['all', 'All'], ['todo', 'To do'], ['done', 'Done']];
 const DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400' };
-const chip = (on) => cn('shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] capitalize transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
+const chip = (on) => cn('shrink-0 rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
 
 export default function SheetDetailPage() {
   const { slug } = useParams();
@@ -72,16 +72,16 @@ export default function SheetDetailPage() {
 
   return (
     <Page>
-      <header className="pt-12 md:pt-16">
+      <header className="pt-0 md:pt-4">
         <Link to="/sheets" className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-zinc-100"><ArrowLeft className="h-4 w-4" /> All sheets</Link>
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:items-end">
           <div>
-            <div className="text-[13px] text-zinc-500">{sheet.source || 'Curated'}</div>
-            <h1 className="display mt-4 text-[clamp(44px,6.4vw,88px)] text-zinc-50">{sheet.name}</h1>
+            <div className="tag">{sheet.source || 'Curated'}</div>
+            <h1 className="display mt-4 text-[clamp(35px,5.4vw,70px)] text-zinc-50">{sheet.name}</h1>
             <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-zinc-400">{sheet.description}</p>
           </div>
           <div>
-            <div className="flex items-baseline gap-3"><span className="display text-[110px] leading-[0.9] tnum text-zinc-50">{Math.round(pct * 100)}</span><span className="text-[22px] text-zinc-500">% · {done} of {problems.length}</span></div>
+            <div className="flex items-baseline gap-3"><span className="display text-[88px] leading-[0.9] tnum text-zinc-50">{Math.round(pct * 100)}</span><span className="text-[22px] text-zinc-500">% · {done} of {problems.length}</span></div>
             <div className="mt-5 grid grid-cols-3 gap-5">
               {['easy', 'medium', 'hard'].map((d) => { const s = byDiff(d); return (
                 <div key={d}><div className="h-[2px] overflow-hidden rounded-full bg-white/[0.08]"><motion.div className="h-full bg-[var(--ember)]" initial={{ width: 0 }} animate={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} transition={{ duration: 1 }} /></div><div className="mt-2 flex items-center justify-between text-[12px] capitalize text-zinc-500"><span className="flex items-center gap-1.5"><span className={cn('h-1.5 w-1.5 rounded-full', DOT[d])} />{d}</span><span className="tnum">{s.done}/{s.total}</span></div></div>
@@ -93,7 +93,7 @@ export default function SheetDetailPage() {
 
       <div className="mt-14 flex items-center gap-4 border-b border-[var(--line-strong)] pb-3 focus-within:border-[var(--ember)]">
         <Search className="h-5 w-5 text-zinc-600" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter this sheet…" className="display w-full bg-transparent text-[30px] text-zinc-50 placeholder:text-zinc-700 focus:outline-none" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter this sheet…" className="display w-full bg-transparent text-[24px] text-zinc-50 placeholder:text-zinc-700 focus:outline-none" />
         {q && <button onClick={() => setQ('')}><X className="h-5 w-5 text-zinc-500" /></button>}
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-1.5">
@@ -106,13 +106,13 @@ export default function SheetDetailPage() {
       {topics.length > 0 && <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-surgical">{topics.map((t) => <button key={t} onClick={() => setTopic(topic === t ? '' : t)} className={cn(chip(topic === t), 'normal-case')}>{t}</button>)}</div>}
 
       <div className="mt-8">
-        {list.length === 0 ? <div className="py-20 text-center"><div className="display text-[34px] italic text-zinc-500">Nothing matches.</div></div> : (
+        {list.length === 0 ? <div className="py-20 text-center"><div className="display text-[27.2px] italic text-zinc-500">Nothing matches.</div></div> : (
           <ol>
             {list.map((p, i) => {
               const d = isDone(p);
               const inner = (
                 <>
-                  <button onClick={(e) => toggle(e, p)} title={d ? 'Mark as not done' : 'Mark as done'} className={cn('flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border transition-all', d ? 'border-[var(--ember)] bg-[var(--ember)] text-[#1a0d07]' : 'border-[var(--line-strong)] text-transparent hover:border-[var(--ember)]')}><Check className="h-3.5 w-3.5" strokeWidth={3} /></button>
+                  <button onClick={(e) => toggle(e, p)} title={d ? 'Mark as not done' : 'Mark as done'} className={cn('flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border transition-all', d ? 'border-[var(--ember)] bg-[var(--ember)] text-[#04130d]' : 'border-[var(--line-strong)] text-transparent hover:border-[var(--ember)]')}><Check className="h-3.5 w-3.5" strokeWidth={3} /></button>
                   <span className="w-8 shrink-0 text-[12.5px] tnum text-zinc-700">{String(sheet.problems.indexOf(p) + 1).padStart(2, '0')}</span>
                   <span className="min-w-0 flex-1">
                     <span className={cn('block truncate text-[18px] font-medium transition-colors', d ? 'text-zinc-600 line-through decoration-zinc-700' : 'text-zinc-100 group-hover:text-[var(--ember)]')}>{p.title}</span>

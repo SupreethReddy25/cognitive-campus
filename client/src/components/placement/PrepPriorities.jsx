@@ -30,8 +30,8 @@ export function PrepPriorities({ prepPriorities, companyName, collegeName }) {
           return (
             <motion.div key={item.skillName} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i * 0.04, 0.3) }} className="grid items-center gap-x-10 gap-y-2 border-b border-[var(--line)] py-6 md:grid-cols-[1.1fr_1fr_auto]">
               <div>
-                <div className="display text-[34px] leading-none text-zinc-100">{item.skillName}</div>
-                <div className="mt-2 text-[12.5px] text-zinc-500"><span className={cn('font-medium', cfg.tone)}>{cfg.label}</span>{item.relatedTopics?.length > 0 && <> · via {item.relatedTopics.slice(0, 3).join(', ')}</>} · {item.frequencyLabel}</div>
+                <div className="display text-[27.2px] leading-none text-zinc-100">{item.skillName}</div>
+                <div className="tag mt-2"><span className={cn('font-medium', cfg.tone)}>{cfg.label}</span>{item.relatedTopics?.length > 0 && <> · via {item.relatedTopics.slice(0, 3).join(', ')}</>} · {item.frequencyLabel}</div>
               </div>
               <div>
                 {m !== null ? (
@@ -39,7 +39,7 @@ export function PrepPriorities({ prepPriorities, companyName, collegeName }) {
                 ) : <span className="text-[13px] text-zinc-600">no practice data yet</span>}
                 <p className="mt-2 text-[12.5px] italic leading-snug text-zinc-600">{item.recommendation}</p>
               </div>
-              <Link to={`/problems?skill=${encodeURIComponent(item.skillName)}`} className="flex items-center gap-1.5 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13.5px] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Practise <ArrowUpRight className="h-4 w-4" /></Link>
+              <Link to={`/problems?skill=${encodeURIComponent(item.skillName)}`} className="flex items-center gap-1.5 rounded-sm border border-[var(--line-strong)] px-5 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Practise <ArrowUpRight className="h-4 w-4" /></Link>
             </motion.div>
           );
         })}
@@ -48,7 +48,7 @@ export function PrepPriorities({ prepPriorities, companyName, collegeName }) {
       {untracked.length > 0 && (
         <div className="mt-10">
           <div className="mb-3 text-[13px] text-zinc-500">Self-study topics (not tracked by the model)</div>
-          <div className="flex flex-wrap gap-2">{untracked.map((item) => <span key={item.topic} title={item.frequencyLabel} className="rounded-full border border-[var(--line-strong)] px-4 py-1.5 text-[14px] text-zinc-300">{item.topic}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{untracked.map((item) => <span key={item.topic} title={item.frequencyLabel} className="rounded-sm border border-[var(--line-strong)] px-4 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300">{item.topic}</span>)}</div>
         </div>
       )}
     </div>

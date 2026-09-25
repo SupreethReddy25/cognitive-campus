@@ -18,14 +18,14 @@ export const cn = (...parts) => parts.filter(Boolean).join(' ');
 // ─── Typography / layout ─────────────────────────────────────────────────────
 
 export function Label({ children, className = '' }) {
-  return <span className={cn('text-[11.5px] font-medium tracking-[0.01em] text-zinc-500', className)}>{children}</span>;
+  return <span className={cn('tag', className)}>{children}</span>;
 }
 
 export function Card({ children, className = '', glow = false, padded = true, as: Tag = 'div', ...rest }) {
   return (
     <Tag
       className={cn(
-        'relative rounded-[20px] border border-[var(--line)] bg-[var(--ink-2)]',
+        'relative border border-[var(--line)] bg-[var(--ink-2)]',
         padded && 'p-6',
         glow && 'card-glow',
         className
@@ -41,7 +41,7 @@ export function SectionTitle({ title, sub, action, className = '' }) {
   return (
     <div className={cn('mb-5 flex items-end justify-between gap-4', className)}>
       <div className="min-w-0">
-        <h3 className="display text-[26px] text-zinc-100">{title}</h3>
+        <h3 className="display text-[20.8px] text-zinc-100">{title}</h3>
         {sub && <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-zinc-500">{sub}</p>}
       </div>
       {action}
@@ -111,7 +111,7 @@ export function Stat({ label, value, sub, className = '', children }) {
   return (
     <div className={cn('border-t border-[var(--line-strong)] pt-4', className)}>
       <Label>{label}</Label>
-      <div className="display mt-2 text-[44px] leading-none tnum text-zinc-50">{value}</div>
+      <div className="display mt-2 text-[35.2px] leading-none tnum text-zinc-50">{value}</div>
       {sub && <div className="mt-2.5 text-[12.5px] leading-snug text-zinc-500">{sub}</div>}
       {children}
     </div>
@@ -136,7 +136,7 @@ export function Bar({ value = 0, max = 1, color = 'var(--signal)', height = 6, c
   );
 }
 
-export function Ring({ value = 0, size = 88, stroke = 8, color = 'var(--signal)', track = 'rgba(236,230,216,0.09)', children, className = '' }) {
+export function Ring({ value = 0, size = 88, stroke = 8, color = 'var(--signal)', track = 'rgba(255,255,255,0.08)', children, className = '' }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(1, value));
@@ -194,7 +194,7 @@ const DOT = { zinc: 'bg-zinc-500', green: 'bg-emerald-400', amber: 'bg-amber-400
 
 export function Pill({ children, tone = 'zinc', className = '', icon: Icon }) {
   return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[3px] text-[11px] font-medium capitalize', PILL[tone], className)}>
+    <span className={cn('inline-flex items-center gap-1.5 border px-2 py-[3px] font-mono text-[10px] uppercase tracking-[0.14em]', PILL[tone], className)}>
       {Icon ? <Icon className="h-3 w-3" strokeWidth={2} /> : <span className={cn('h-1.5 w-1.5 rounded-full', DOT[tone])} />}
       {children}
     </span>
@@ -216,7 +216,7 @@ const TIER_STYLE = {
   Other: 'border-[var(--line-strong)] text-zinc-400'
 };
 export function TierBadge({ tier, className }) {
-  return <span className={cn('rounded-full border px-2.5 py-[3px] text-[11px] font-medium', TIER_STYLE[tier] || TIER_STYLE.Other, className)}>{tier || 'Other'}</span>;
+  return <span className={cn('rounded-sm border px-2.5 py-[3px] text-[11px] font-medium', TIER_STYLE[tier] || TIER_STYLE.Other, className)}>{tier || 'Other'}</span>;
 }
 
 /** Logo with a monogram fallback when the image is blocked/missing (Clearbit is unreliable). */
@@ -227,13 +227,13 @@ export function CompanyLogo({ company, size = 40, className = '' }) {
   const showImg = company?.logo && !failed;
   return (
     <div
-      className={cn('flex shrink-0 items-center justify-center overflow-hidden rounded-full', showImg ? 'bg-[#f4efe4]' : 'border border-[var(--line-strong)]', className)}
-      style={{ width: size, height: size, ...(showImg ? {} : { background: `hsl(${hue} 22% 15%)` }) }}
+      className={cn('flex shrink-0 items-center justify-center overflow-hidden', showImg ? 'bg-white/95' : 'border border-[var(--line-strong)]', className)}
+      style={{ width: size, height: size, ...(showImg ? {} : { background: `hsl(${hue} 14% 12%)` }) }}
     >
       {showImg ? (
         <img src={company.logo} alt={name} className="h-full w-full object-contain p-[18%]" onError={() => setFailed(true)} loading="lazy" />
       ) : (
-        <span className="display" style={{ fontSize: size * 0.5, color: `hsl(${hue} 62% 74%)` }}>{name.slice(0, 1).toUpperCase()}</span>
+        <span className="display" style={{ fontSize: size * 0.42, fontWeight: 500, color: `hsl(${hue} 62% 74%)` }}>{name.slice(0, 1).toUpperCase()}</span>
       )}
     </div>
   );
@@ -253,13 +253,13 @@ export const rarityStyle = (r) => RARITY[r] || RARITY.common;
 // ─── Feedback states ─────────────────────────────────────────────────────────
 
 export function Skeleton({ className = '' }) {
-  return <div className={cn('animate-pulse rounded-xl bg-white/[0.045]', className)} />;
+  return <div className={cn('animate-pulse rounded-sm bg-white/[0.045]', className)} />;
 }
 
 export function EmptyState({ title, text, action, className = '' }) {
   return (
     <div className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)}>
-      <div className="display text-[28px] italic text-zinc-400">{title}</div>
+      <div className="display text-[22.4px] italic text-zinc-400">{title}</div>
       {text && <p className="mt-2 max-w-sm text-[13px] leading-relaxed text-zinc-600">{text}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
@@ -267,18 +267,18 @@ export function EmptyState({ title, text, action, className = '' }) {
 }
 
 export function ErrorNote({ children }) {
-  return <div className="rounded-xl border border-rose-400/25 px-4 py-3 text-[13px] text-rose-300">{children}</div>;
+  return <div className="rounded-sm border border-rose-400/25 px-4 py-3 font-mono text-[10.5px] uppercase tracking-[0.16em] text-rose-300">{children}</div>;
 }
 
 /** Shared recharts tooltip look. */
 export const chartTooltipStyle = {
-  contentStyle: { background: 'rgba(18,18,22,0.98)', border: '1px solid rgba(236,230,216,0.14)', borderRadius: 12, fontSize: 12, color: '#ece6d8', boxShadow: '0 12px 40px -12px rgba(0,0,0,.6)' },
-  labelStyle: { color: '#9a9384', fontFamily: 'Geist Mono Variable, monospace', fontSize: 10.5, letterSpacing: '0.04em' },
-  itemStyle: { color: '#ece6d8' },
-  cursor: { stroke: 'rgba(236,230,216,0.12)' }
+  contentStyle: { background: 'rgba(10,10,10,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 0, fontSize: 12, color: '#e4e4e7', boxShadow: '0 12px 40px -12px rgba(0,0,0,.6)' },
+  labelStyle: { color: '#a1a1aa', fontFamily: 'JetBrains Mono Variable, monospace', fontSize: 10.5, letterSpacing: '0.04em' },
+  itemStyle: { color: '#e4e4e7' },
+  cursor: { stroke: 'rgba(255,255,255,0.1)' }
 };
 
-export const CHART_COLORS = ['#ff7a4d', '#f2c66d', '#8fbcda', '#94d6a8', '#f0728a', '#9aa5dc', '#d9a679', '#b4e0bd'];
+export const CHART_COLORS = ['#34d399', '#fbbf24', '#38bdf8', '#34d399', '#fb7185', '#a78bfa', '#fbbf24', '#6ee7b7'];
 
 export const pct = (x, d = 0) => (x === null || x === undefined ? '—' : `${(x * 100).toFixed(d)}%`);
 
@@ -293,26 +293,26 @@ export function Page({ children, className = '', wide = false }) {
   );
 }
 
-/** Editorial page header: a quiet kicker, an oversized serif title, one sentence, optional right-hand slot. */
+/** Page header: a tracked mono kicker with a signal dot, an ultralight Syne title, one sentence, optional right slot. */
 export function PageHead({ kicker, title, lead, right, className = '' }) {
   return (
-    <header className={cn('flex flex-wrap items-end justify-between gap-x-12 gap-y-8 pt-14 md:pt-20', className)}>
+    <header className={cn('flex flex-wrap items-end justify-between gap-x-12 gap-y-8 pt-2 md:pt-6', className)}>
       <div className="max-w-3xl">
-        {kicker && <div className="text-[13px] text-zinc-500">{kicker}</div>}
-        <h1 className="display mt-5 text-[clamp(46px,7vw,96px)] text-zinc-50">{title}</h1>
-        {lead && <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-zinc-400">{lead}</p>}
+        {kicker && <div className="tag flex items-center gap-3"><span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />{kicker}</div>}
+        <h1 className="display mt-7 text-[clamp(38px,6vw,84px)] text-zinc-50">{title}</h1>
+        {lead && <p className="mt-6 max-w-xl text-[15px] leading-[1.65] text-zinc-500">{lead}</p>}
       </div>
       {right}
     </header>
   );
 }
 
-/** Ember pill button with the circular arrow — the one primary action style. */
+/** The one primary action: the landing's outline button that fills white on hover. */
 export function PrimaryButton({ children, icon: Icon, className = '', ...rest }) {
   return (
-    <button className={cn('group flex items-center gap-3 rounded-full bg-[var(--ember)] py-2.5 pl-6 pr-2.5 text-[#1a0d07] transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50', className)} {...rest}>
-      <span className="text-[14.5px] font-semibold">{children}</span>
-      {Icon && <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)] transition-transform group-hover:translate-x-0.5"><Icon className="h-4 w-4" strokeWidth={2.2} /></span>}
+    <button className={cn('btn-line group', className)} {...rest}>
+      {children}
+      {Icon && <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />}
     </button>
   );
 }

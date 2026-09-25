@@ -10,18 +10,18 @@ import { Page, CompanyLogo, CountUp, chartTooltipStyle, cn } from '../components
 
 const TABS = [['overview', 'Overview'], ['curriculum', 'Curriculum'], ['students', 'Students'], ['experiences', 'Experiences'], ['problems', 'Problems'], ['add', 'Add data']];
 const inputCls = 'w-full border-b border-[var(--line-strong)] bg-transparent px-0.5 py-2 text-[15px] text-zinc-100 outline-none transition-colors focus:border-[var(--ember)] placeholder:text-zinc-700';
-const chip = (on) => cn('flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
+const chip = (on) => cn('flex shrink-0 items-center gap-1.5 rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
 const DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400' };
 const ago = (iso) => { if (!iso) return '—'; const d = Math.floor((Date.now() - new Date(iso)) / 86400000); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d}d ago`; };
 
 const Spinner = () => <div className="flex items-center justify-center gap-3 py-20 text-zinc-600"><Loader2 className="h-5 w-5 animate-spin" /><span className="text-[14px]">Loading…</span></div>;
-const Empty = ({ title, text }) => <div className="py-20 text-center"><div className="display text-[34px] italic text-zinc-500">{title}</div>{text && <p className="mt-2 text-[14px] text-zinc-600">{text}</p>}</div>;
+const Empty = ({ title, text }) => <div className="py-20 text-center"><div className="display text-[27.2px] italic text-zinc-500">{title}</div>{text && <p className="mt-2 text-[14px] text-zinc-600">{text}</p>}</div>;
 const Field = ({ label, children }) => <div className="space-y-1"><label className="text-[12.5px] text-zinc-500">{label}</label>{children}</div>;
 function Sec({ title, kicker, action, children, className = '' }) {
   return (
     <section className={cn('pt-16', className)}>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line-strong)] pb-4">
-        <div><h2 className="display text-[clamp(30px,3.6vw,46px)] text-zinc-50">{title}</h2>{kicker && <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-zinc-500">{kicker}</p>}</div>
+        <div><h2 className="display text-[clamp(24px,3.1vw,37px)] text-zinc-50">{title}</h2>{kicker && <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-zinc-500">{kicker}</p>}</div>
         {action}
       </div>
       {children}
@@ -29,10 +29,10 @@ function Sec({ title, kicker, action, children, className = '' }) {
   );
 }
 const Figure = ({ value, label, sub, big = true }) => (
-  <div className="border-t border-[var(--line-strong)] pt-4"><div className={cn('display leading-none tnum text-zinc-50', big ? 'text-[68px]' : 'text-[44px]')}>{value}</div><div className="mt-3 text-[13px] text-zinc-500">{label}</div>{sub && <div className="text-[12px] text-zinc-600">{sub}</div>}</div>
+  <div className="border-t border-[var(--line-strong)] pt-4"><div className={cn('display leading-none tnum text-zinc-50', big ? 'text-[68px]' : 'text-[44px]')}>{value}</div><div className="tag mt-3">{label}</div>{sub && <div className="text-[12px] text-zinc-600">{sub}</div>}</div>
 );
 const Act = ({ tone = 'zinc', busy, children, ...p }) => (
-  <button {...p} className={cn('flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-[13px] transition-colors disabled:opacity-40', tone === 'good' ? 'border-emerald-400/35 text-emerald-300 hover:bg-emerald-400/10' : tone === 'bad' ? 'border-rose-400/35 text-rose-300 hover:bg-rose-400/10' : tone === 'warn' ? 'border-amber-400/35 text-amber-300 hover:bg-amber-400/10' : 'border-[var(--line-strong)] text-zinc-300 hover:border-[var(--ember)] hover:text-[var(--ember)]')}>
+  <button {...p} className={cn('flex items-center gap-1.5 rounded-sm border px-4 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors disabled:opacity-40', tone === 'good' ? 'border-emerald-400/35 text-emerald-300 hover:bg-emerald-400/10' : tone === 'bad' ? 'border-rose-400/35 text-rose-300 hover:bg-rose-400/10' : tone === 'warn' ? 'border-amber-400/35 text-amber-300 hover:bg-amber-400/10' : 'border-[var(--line-strong)] text-zinc-300 hover:border-[var(--ember)] hover:text-[var(--ember)]')}>
     {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}{children}
   </button>
 );
@@ -77,9 +77,9 @@ function OverviewTab({ onGoto }) {
             <XAxis dataKey="label" tick={{ fill: '#7a7466', fontSize: 11 }} tickLine={false} axisLine={false} />
             <YAxis tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} />
             <Tooltip {...chartTooltipStyle} />
-            <RBar dataKey="submissions" name="Submissions" fill="#f2c66d" fillOpacity={0.28} radius={[6, 6, 0, 0]} barSize={20} />
-            <Line dataKey="correct" name="Correct" stroke="#ff7a4d" strokeWidth={2.2} dot={false} />
-            <Line dataKey="activeUsers" name="Active students" stroke="#8fbcda" strokeWidth={2} dot={false} />
+            <RBar dataKey="submissions" name="Submissions" fill="#fbbf24" fillOpacity={0.28} radius={[6, 6, 0, 0]} barSize={20} />
+            <Line dataKey="correct" name="Correct" stroke="#34d399" strokeWidth={2.2} dot={false} />
+            <Line dataKey="activeUsers" name="Active students" stroke="#38bdf8" strokeWidth={2} dot={false} />
           </ComposedChart></ResponsiveContainer></div>
         </Sec>
         <Sec title={<>Most <em>attempted</em></>}>
@@ -89,7 +89,7 @@ function OverviewTab({ onGoto }) {
               <div className="mt-2 h-[2px] rounded-full bg-white/[0.06]"><div className="h-full rounded-full bg-[var(--ember)]" style={{ width: `${p.attempts ? (p.solved / p.attempts) * 100 : 0}%` }} /></div>
             </div>
           ))}
-          <div className="mt-8 text-[13px] text-zinc-500">Students by XP</div>
+          <div className="tag mt-8">Students by XP</div>
           <div className="mt-3 flex h-20 items-end gap-3">{buckets.map((b) => <div key={b.name} className="flex flex-1 flex-col items-center gap-1.5"><span className="text-[11px] tnum text-zinc-500">{b.n}</span><div className="w-full rounded-t-md bg-[var(--star)]/30" style={{ height: `${Math.max(4, (b.n / maxB) * 100)}%` }} /><span className="text-[10.5px] text-zinc-600">{b.name}</span></div>)}</div>
         </Sec>
       </div>
@@ -98,7 +98,7 @@ function OverviewTab({ onGoto }) {
 }
 
 // ─── Curriculum ──────────────────────────────────────────────────────────────
-const BINS = [['under 20%', '#c9683f'], ['20–40', '#d88a52'], ['40–60', '#e0a95a'], ['60–85', '#f2c66d'], ['mastered', '#fff1cf']];
+const BINS = [['under 20%', '#fb7185'], ['20–40', '#fbbf24'], ['40–60', '#e0a95a'], ['60–85', '#fbbf24'], ['mastered', '#ecfdf5']];
 
 function CurriculumTab() {
   const toast = useToast();
@@ -122,16 +122,16 @@ function CurriculumTab() {
   return (
     <div>
       <Sec title={<>Where the cohort <em>struggles</em></>} kicker="Average mastery per skill, weakest first, with the full distribution of students — a direct signal for curriculum planning."
-        action={<select value={college} onChange={(e) => setCollege(e.target.value)} className="cursor-pointer border-b border-[var(--line-strong)] bg-transparent py-1.5 text-[14px] text-zinc-300 outline-none"><option value="" className="bg-[#141418]">All colleges</option>{colleges.map((c) => <option key={c._id} value={c._id} className="bg-[#141418]">{c.shortName}</option>)}</select>}>
+        action={<select value={college} onChange={(e) => setCollege(e.target.value)} className="cursor-pointer border-b border-[var(--line-strong)] bg-transparent py-1.5 text-[14px] text-zinc-300 outline-none"><option value="" className="bg-[#0d0d0d]">All colleges</option>{colleges.map((c) => <option key={c._id} value={c._id} className="bg-[#0d0d0d]">{c.shortName}</option>)}</select>}>
         {h.recommendation && <p className="mb-8 max-w-3xl border-l-2 border-[var(--star)] pl-4 text-[16px] leading-relaxed text-zinc-300">{h.recommendation}</p>}
         {h.heatmap.map((row) => {
           const pct = Math.round(row.avgMastery * 100);
           const tot = row.distribution.reduce((a, b) => a + b, 0) || 1;
           return (
             <div key={row.skillId} className="grid items-center gap-x-8 gap-y-2 border-b border-[var(--line)] py-4 md:grid-cols-[220px_1fr_70px_150px]">
-              <div><div className="display text-[26px] leading-none text-zinc-100">{row.skillName}</div><div className="mt-1 text-[12px] text-zinc-600">{row.totalStudents} students · {row.accuracy != null ? `${Math.round(row.accuracy * 100)}% accuracy` : 'no data'}</div></div>
+              <div><div className="display text-[20.8px] leading-none text-zinc-100">{row.skillName}</div><div className="mt-1 text-[12px] text-zinc-600">{row.totalStudents} students · {row.accuracy != null ? `${Math.round(row.accuracy * 100)}% accuracy` : 'no data'}</div></div>
               <div className="flex h-3 overflow-hidden rounded-full bg-white/[0.05]" title={BINS.map(([l], i) => `${l}: ${row.distribution[i]}`).join(' · ')}>{row.distribution.map((n, i) => <motion.div key={i} initial={{ width: 0 }} animate={{ width: `${(n / tot) * 100}%` }} transition={{ duration: 0.8, delay: i * 0.05 }} style={{ background: BINS[i][1] }} className="h-full" />)}</div>
-              <div className={cn('display text-right text-[30px] leading-none tnum', pct >= 70 ? 'text-zinc-50' : pct >= 45 ? 'text-amber-300' : 'text-rose-300')}>{row.totalStudents ? pct : '—'}{row.totalStudents ? <span className="text-[14px] text-zinc-600">%</span> : null}</div>
+              <div className={cn('display text-right text-[24px] leading-none tnum', pct >= 70 ? 'text-zinc-50' : pct >= 45 ? 'text-amber-300' : 'text-rose-300')}>{row.totalStudents ? pct : '—'}{row.totalStudents ? <span className="text-[14px] text-zinc-600">%</span> : null}</div>
               <div className="text-right text-[12.5px] text-zinc-500">{row.masteredCount} mastered · {Math.round(row.masteryRate * 100)}%</div>
             </div>
           );
@@ -200,7 +200,7 @@ function StudentsTab({ me }) {
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                     {!detail ? <Spinner /> : (
                       <div className="grid gap-14 pb-8 pl-14 pt-2 lg:grid-cols-2">
-                        <div><div className="mb-3 text-[13px] text-zinc-500">Skill mastery</div>{detail.skills.map((k) => <div key={k.name} className="flex items-center gap-4 py-1.5"><span className="w-40 truncate text-[14px] text-zinc-300">{k.name}</span><div className="h-[3px] flex-1 rounded-full bg-white/[0.07]"><div className="h-full rounded-full" style={{ width: `${k.masteryP * 100}%`, background: k.masteryP >= 0.85 ? '#fff1cf' : k.masteryP >= 0.5 ? '#f2c66d' : '#c9683f' }} /></div><span className="w-10 text-right text-[13px] tnum text-zinc-500">{Math.round(k.masteryP * 100)}%</span></div>)}</div>
+                        <div><div className="mb-3 text-[13px] text-zinc-500">Skill mastery</div>{detail.skills.map((k) => <div key={k.name} className="flex items-center gap-4 py-1.5"><span className="w-40 truncate text-[14px] text-zinc-300">{k.name}</span><div className="h-[3px] flex-1 rounded-full bg-white/[0.07]"><div className="h-full rounded-full" style={{ width: `${k.masteryP * 100}%`, background: k.masteryP >= 0.85 ? '#ecfdf5' : k.masteryP >= 0.5 ? '#fbbf24' : '#fb7185' }} /></div><span className="w-10 text-right text-[13px] tnum text-zinc-500">{Math.round(k.masteryP * 100)}%</span></div>)}</div>
                         <div><div className="mb-3 text-[13px] text-zinc-500">Recent submissions · {detail.totals.submissions} total · {detail.totals.passRate ?? '—'}% pass</div>{detail.recentSubmissions.map((x) => <div key={x._id} className="flex items-center justify-between py-1.5 text-[14px]"><span className="flex items-center gap-2.5 truncate"><span className={cn('h-1.5 w-1.5 rounded-full', x.isCorrect ? 'bg-emerald-400' : 'bg-zinc-600')} /><span className="truncate text-zinc-300">{x.problemId?.title}</span></span><span className="text-[12px] text-zinc-600">{ago(x.createdAt)}</span></div>)}{!detail.recentSubmissions.length && <p className="text-[13px] text-zinc-600">No submissions yet.</p>}<p className="mt-4 text-[12.5px] text-zinc-600">{detail.user.collegeId?.name || 'No college'} · target {detail.user.targetCompanyId?.name || '—'} / {detail.user.targetRole || '—'} · streak {detail.user.streak}</p></div>
                       </div>
                     )}
@@ -247,8 +247,8 @@ function ExperiencesTab() {
             <article key={e._id} className="flex items-start gap-5 border-b border-[var(--line)] py-6">
               <CompanyLogo company={e.companyId} size={44} />
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><span className="display text-[30px] leading-none text-zinc-100">{e.companyId?.name || 'Unknown'} <span className="text-zinc-500">—</span> {e.role}</span><span className={cn('text-[13px]', e.offerReceived === 'Yes' ? 'text-emerald-400' : e.offerReceived === 'No' ? 'text-rose-400' : 'text-amber-400')}>{e.offerReceived === 'Yes' ? 'offer' : e.offerReceived === 'No' ? 'no offer' : 'pending'}</span><span className={cn('text-[13px]', e.status === 'Published' ? 'text-zinc-500' : e.status === 'Rejected' ? 'text-rose-400' : 'text-amber-400')}>{e.status.toLowerCase()}</span>{e.isVerified && <span className="text-[13px] text-sky-300">verified</span>}{e.source === 'curated' && <span className="text-[13px] text-zinc-600">sample</span>}{e.qualityScore != null && <span className={cn('text-[13px] tnum', e.qualityScore >= 60 ? 'text-zinc-400' : 'text-amber-400')}>quality {e.qualityScore}</span>}</div>
-                <div className="mt-1.5 text-[13px] text-zinc-500">{e.collegeId?.shortName || e.college || 'college unknown'} · {e.month} {e.year} · {e.rounds?.length || 0} rounds{e.userId?.name ? ` · ${e.userId.name}${e.isAnonymous ? ' (anonymous)' : ''}` : ''} · {ago(e.createdAt)}</div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><span className="display text-[24px] leading-none text-zinc-100">{e.companyId?.name || 'Unknown'} <span className="text-zinc-500">—</span> {e.role}</span><span className={cn('text-[13px]', e.offerReceived === 'Yes' ? 'text-emerald-400' : e.offerReceived === 'No' ? 'text-rose-400' : 'text-amber-400')}>{e.offerReceived === 'Yes' ? 'offer' : e.offerReceived === 'No' ? 'no offer' : 'pending'}</span><span className={cn('text-[13px]', e.status === 'Published' ? 'text-zinc-500' : e.status === 'Rejected' ? 'text-rose-400' : 'text-amber-400')}>{e.status.toLowerCase()}</span>{e.isVerified && <span className="text-[13px] text-sky-300">verified</span>}{e.source === 'curated' && <span className="text-[13px] text-zinc-600">sample</span>}{e.qualityScore != null && <span className={cn('text-[13px] tnum', e.qualityScore >= 60 ? 'text-zinc-400' : 'text-amber-400')}>quality {e.qualityScore}</span>}</div>
+                <div className="tag mt-1.5">{e.collegeId?.shortName || e.college || 'college unknown'} · {e.month} {e.year} · {e.rounds?.length || 0} rounds{e.userId?.name ? ` · ${e.userId.name}${e.isAnonymous ? ' (anonymous)' : ''}` : ''} · {ago(e.createdAt)}</div>
                 {open === e._id ? (
                   <div className="mt-4 space-y-4 border-l border-[var(--line-strong)] pl-5">{e.rounds?.map((r, i) => <div key={i}><div className="text-[14px] font-medium text-zinc-200">Round {i + 1} · {r.type}</div>{r.questions?.map((qq, j) => <div key={j} className="mt-1 text-[14px] leading-relaxed text-zinc-400">{qq.text}</div>)}</div>)}{e.overallTips && <p className="text-[15px] italic leading-relaxed text-zinc-400">“{e.overallTips}”</p>}</div>
                 ) : e.overallTips && <p className="mt-3 line-clamp-1 text-[14px] text-zinc-500">{e.overallTips}</p>}
@@ -288,8 +288,8 @@ function ProblemsTab() {
         <div className="mt-4">{data.problems.map((p) => (
           <article key={p._id} className="flex items-start gap-5 border-b border-[var(--line)] py-6">
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><span className="display text-[30px] leading-none text-zinc-100">{p.title}</span><span className="flex items-center gap-1.5 text-[13px] capitalize text-zinc-400"><span className={cn('h-1.5 w-1.5 rounded-full', DOT[String(p.difficulty).toLowerCase()])} />{p.difficulty}</span><span className={cn('text-[13px]', p.status === 'approved' ? 'text-emerald-400' : p.status === 'quarantine' ? 'text-rose-400' : 'text-amber-400')}>{p.status}</span>{p.skillId?.name && <span className="text-[13px] text-zinc-500">{p.skillId.name}</span>}</div>
-              <div className="mt-1.5 text-[13px] text-zinc-500">{[p.company, p.round].filter(Boolean).join(' · ')}{p.company || p.round ? ' · ' : ''}↑{p.upvotes || 0} ↓{p.downvotes || 0}{p.authorId?.name ? ` · by ${p.authorId.name}` : ''} · {ago(p.createdAt)}</div>
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><span className="display text-[24px] leading-none text-zinc-100">{p.title}</span><span className="flex items-center gap-1.5 text-[13px] capitalize text-zinc-400"><span className={cn('h-1.5 w-1.5 rounded-full', DOT[String(p.difficulty).toLowerCase()])} />{p.difficulty}</span><span className={cn('text-[13px]', p.status === 'approved' ? 'text-emerald-400' : p.status === 'quarantine' ? 'text-rose-400' : 'text-amber-400')}>{p.status}</span>{p.skillId?.name && <span className="text-[13px] text-zinc-500">{p.skillId.name}</span>}</div>
+              <div className="tag mt-1.5">{[p.company, p.round].filter(Boolean).join(' · ')}{p.company || p.round ? ' · ' : ''}↑{p.upvotes || 0} ↓{p.downvotes || 0}{p.authorId?.name ? ` · by ${p.authorId.name}` : ''} · {ago(p.createdAt)}</div>
               {p.description && <p className="mt-3 line-clamp-2 max-w-3xl text-[14.5px] leading-relaxed text-zinc-400">{p.description}</p>}
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">{['waitlisted', 'approved', 'quarantine'].filter((s) => s !== p.status).map((s) => <Act key={s} tone={s === 'approved' ? 'good' : s === 'quarantine' ? 'bad' : 'warn'} onClick={() => set(p._id, s)} disabled={!!working[p._id]} busy={working[p._id] === s}>{s === 'approved' ? 'Approve' : s === 'quarantine' ? 'Quarantine' : 'Waitlist'}</Act>)}</div>
@@ -323,23 +323,23 @@ function AddDataTab() {
   };
   const slugify = (s) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const Sel = (p) => <select {...p} className={cn(inputCls, 'cursor-pointer')} />;
-  const Go = ({ k, children }) => <button disabled={busy === k} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--ember)] py-3 text-[14.5px] font-semibold text-[#1a0d07] transition-[filter] hover:brightness-110 disabled:opacity-50">{busy === k ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{children}</button>;
+  const Go = ({ k, children }) => <button disabled={busy === k} className="btn-line group mt-2 w-full justify-center">{busy === k ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{children}</button>;
 
   return (
     <div>
       <p className="mt-10 max-w-3xl text-[16px] leading-relaxed text-zinc-400">This is where real, verified numbers replace the illustrative ones. Placement records you add here feed every chart and prediction on the Placement pages.</p>
       <div className="mt-12 grid gap-16 lg:grid-cols-3">
         <form onSubmit={submit('college', () => adminService.createCollege({ ...college, slug: college.slug || slugify(college.shortName || college.name) }), () => setCollege({ name: '', shortName: '', slug: '', location: '', tier: 'Other', website: '' }))} className="space-y-5">
-          <h3 className="display text-[34px] text-zinc-100">A college</h3>
+          <h3 className="display text-[27.2px] text-zinc-100">A college</h3>
           <Field label="Full name *"><input required className={inputCls} value={college.name} onChange={(e) => setCollege({ ...college, name: e.target.value })} placeholder="National Institute of Technology Calicut" /></Field>
           <div className="grid grid-cols-2 gap-5"><Field label="Short name *"><input required className={inputCls} value={college.shortName} onChange={(e) => setCollege({ ...college, shortName: e.target.value })} placeholder="NIT Calicut" /></Field><Field label="Slug"><input className={inputCls} value={college.slug} onChange={(e) => setCollege({ ...college, slug: e.target.value })} placeholder="auto" /></Field></div>
-          <div className="grid grid-cols-2 gap-5"><Field label="Location"><input className={inputCls} value={college.location} onChange={(e) => setCollege({ ...college, location: e.target.value })} placeholder="Kozhikode, Kerala" /></Field><Field label="Tier"><Sel value={college.tier} onChange={(e) => setCollege({ ...college, tier: e.target.value })}>{['IIT', 'NIT', 'BITS', 'IIIT', 'Deemed', 'State', 'Private', 'Other'].map((t) => <option key={t} className="bg-[#141418]">{t}</option>)}</Sel></Field></div>
+          <div className="grid grid-cols-2 gap-5"><Field label="Location"><input className={inputCls} value={college.location} onChange={(e) => setCollege({ ...college, location: e.target.value })} placeholder="Kozhikode, Kerala" /></Field><Field label="Tier"><Sel value={college.tier} onChange={(e) => setCollege({ ...college, tier: e.target.value })}>{['IIT', 'NIT', 'BITS', 'IIIT', 'Deemed', 'State', 'Private', 'Other'].map((t) => <option key={t} className="bg-[#0d0d0d]">{t}</option>)}</Sel></Field></div>
           <Go k="college">Add college</Go>
         </form>
 
         <form onSubmit={submit('company', () => adminService.createCompany(company), () => setCompany({ name: '', tier: 'Product', avgCTC: '', ctcMin: '', ctcMax: '', roles: '', domain: '', headquarters: '', description: '' }))} className="space-y-5">
-          <h3 className="display text-[34px] text-zinc-100">A company</h3>
-          <div className="grid grid-cols-2 gap-5"><Field label="Name *"><input required className={inputCls} value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} placeholder="Stripe" /></Field><Field label="Tier"><Sel value={company.tier} onChange={(e) => setCompany({ ...company, tier: e.target.value })}>{['FAANG', 'Product', 'Finance', 'Service', 'Startup', 'Other'].map((t) => <option key={t} className="bg-[#141418]">{t}</option>)}</Sel></Field></div>
+          <h3 className="display text-[27.2px] text-zinc-100">A company</h3>
+          <div className="grid grid-cols-2 gap-5"><Field label="Name *"><input required className={inputCls} value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} placeholder="Stripe" /></Field><Field label="Tier"><Sel value={company.tier} onChange={(e) => setCompany({ ...company, tier: e.target.value })}>{['FAANG', 'Product', 'Finance', 'Service', 'Startup', 'Other'].map((t) => <option key={t} className="bg-[#0d0d0d]">{t}</option>)}</Sel></Field></div>
           <div className="grid grid-cols-3 gap-5"><Field label="CTC min (LPA)"><input type="number" className={inputCls} value={company.ctcMin} onChange={(e) => setCompany({ ...company, ctcMin: e.target.value, avgCTC: `${e.target.value}–${company.ctcMax} LPA` })} /></Field><Field label="CTC max"><input type="number" className={inputCls} value={company.ctcMax} onChange={(e) => setCompany({ ...company, ctcMax: e.target.value, avgCTC: `${company.ctcMin}–${e.target.value} LPA` })} /></Field><Field label="Domain"><input className={inputCls} value={company.domain} onChange={(e) => setCompany({ ...company, domain: e.target.value })} placeholder="stripe.com" /></Field></div>
           <Field label="Roles (comma-separated)"><input className={inputCls} value={company.roles} onChange={(e) => setCompany({ ...company, roles: e.target.value })} placeholder="SDE-1, Backend Engineer" /></Field>
           <Field label="Headquarters"><input className={inputCls} value={company.headquarters} onChange={(e) => setCompany({ ...company, headquarters: e.target.value })} /></Field>
@@ -347,9 +347,9 @@ function AddDataTab() {
         </form>
 
         <form onSubmit={submit('rec', () => adminService.createPlacementRecord({ ...rec, roles: rec.roles.split(',').map((r) => r.trim()).filter(Boolean), studentsHired: rec.studentsHired ? Number(rec.studentsHired) : undefined, packageOffered: rec.packageOffered ? { ctc: rec.packageOffered } : undefined }), () => setRec({ ...rec, roles: '', studentsHired: '', packageOffered: '' }))} className="space-y-5">
-          <h3 className="display text-[34px] text-zinc-100">A placement record</h3>
-          <div className="grid grid-cols-2 gap-5"><Field label="College *"><Sel required value={rec.collegeId} onChange={(e) => setRec({ ...rec, collegeId: e.target.value })}><option value="" className="bg-[#141418]">Select…</option>{colleges.map((c) => <option key={c._id} value={c._id} className="bg-[#141418]">{c.shortName}</option>)}</Sel></Field><Field label="Company *"><Sel required value={rec.companyId} onChange={(e) => setRec({ ...rec, companyId: e.target.value })}><option value="" className="bg-[#141418]">Select…</option>{companies.map((c) => <option key={c._id} value={c._id} className="bg-[#141418]">{c.name}</option>)}</Sel></Field></div>
-          <div className="grid grid-cols-2 gap-5"><Field label="Year *"><input type="number" required className={inputCls} value={rec.hiringYear} onChange={(e) => setRec({ ...rec, hiringYear: Number(e.target.value) })} /></Field><Field label="Season"><Sel value={rec.hiringSeason} onChange={(e) => setRec({ ...rec, hiringSeason: e.target.value })}>{['On-Campus', 'Off-Campus', 'Pool-Campus', 'Internship'].map((s) => <option key={s} className="bg-[#141418]">{s}</option>)}</Sel></Field></div>
+          <h3 className="display text-[27.2px] text-zinc-100">A placement record</h3>
+          <div className="grid grid-cols-2 gap-5"><Field label="College *"><Sel required value={rec.collegeId} onChange={(e) => setRec({ ...rec, collegeId: e.target.value })}><option value="" className="bg-[#0d0d0d]">Select…</option>{colleges.map((c) => <option key={c._id} value={c._id} className="bg-[#0d0d0d]">{c.shortName}</option>)}</Sel></Field><Field label="Company *"><Sel required value={rec.companyId} onChange={(e) => setRec({ ...rec, companyId: e.target.value })}><option value="" className="bg-[#0d0d0d]">Select…</option>{companies.map((c) => <option key={c._id} value={c._id} className="bg-[#0d0d0d]">{c.name}</option>)}</Sel></Field></div>
+          <div className="grid grid-cols-2 gap-5"><Field label="Year *"><input type="number" required className={inputCls} value={rec.hiringYear} onChange={(e) => setRec({ ...rec, hiringYear: Number(e.target.value) })} /></Field><Field label="Season"><Sel value={rec.hiringSeason} onChange={(e) => setRec({ ...rec, hiringSeason: e.target.value })}>{['On-Campus', 'Off-Campus', 'Pool-Campus', 'Internship'].map((s) => <option key={s} className="bg-[#0d0d0d]">{s}</option>)}</Sel></Field></div>
           <div className="grid grid-cols-2 gap-5"><Field label="Students hired"><input type="number" className={inputCls} value={rec.studentsHired} onChange={(e) => setRec({ ...rec, studentsHired: e.target.value })} /></Field><Field label="Package"><input className={inputCls} value={rec.packageOffered} onChange={(e) => setRec({ ...rec, packageOffered: e.target.value })} placeholder="24 LPA" /></Field></div>
           <Field label="Roles"><input className={inputCls} value={rec.roles} onChange={(e) => setRec({ ...rec, roles: e.target.value })} placeholder="SDE-1, Data Engineer" /></Field>
           <Go k="rec">Add record</Go>
@@ -358,7 +358,7 @@ function AddDataTab() {
 
       <Sec title={<>Recent <em>records</em></>} kicker="Latest placement records across all colleges.">
         <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left"><thead><tr>{['Year', 'College', 'Company', 'Hired', 'Package', 'Roles', ''].map((h) => <th key={h} className="pb-3 text-[12.5px] font-normal text-zinc-600">{h}</th>)}</tr></thead>
-          <tbody>{records.slice(0, 30).map((r) => <tr key={r._id}><td className="border-t border-[var(--line)] py-3 pr-4 display text-[22px] tnum text-zinc-200">{r.hiringYear}</td><td className="border-t border-[var(--line)] pr-4 text-[14px] text-zinc-400">{r.collegeId?.shortName}</td><td className="border-t border-[var(--line)] pr-4 text-[15px] text-zinc-200">{r.companyId?.name}</td><td className="border-t border-[var(--line)] pr-4 text-[14px] tnum text-zinc-400">{r.studentsHired ?? '—'}</td><td className="border-t border-[var(--line)] pr-4 text-[14px] tnum text-zinc-400">{r.packageOffered?.ctc || '—'}</td><td className="border-t border-[var(--line)] pr-4 text-[13.5px] text-zinc-500">{(r.roles || []).slice(0, 2).join(', ')}</td><td className="border-t border-[var(--line)] text-right"><button onClick={async () => { await adminService.deletePlacementRecord(r._id); toast.info('Record removed'); loadAll(); }} className="text-zinc-700 transition-colors hover:text-rose-400" title="Delete record"><Trash2 className="h-4 w-4" /></button></td></tr>)}</tbody></table></div>
+          <tbody>{records.slice(0, 30).map((r) => <tr key={r._id}><td className="border-t border-[var(--line)] py-3 pr-4 display text-[17.6px] tnum text-zinc-200">{r.hiringYear}</td><td className="border-t border-[var(--line)] pr-4 text-[14px] text-zinc-400">{r.collegeId?.shortName}</td><td className="border-t border-[var(--line)] pr-4 text-[15px] text-zinc-200">{r.companyId?.name}</td><td className="border-t border-[var(--line)] pr-4 text-[14px] tnum text-zinc-400">{r.studentsHired ?? '—'}</td><td className="border-t border-[var(--line)] pr-4 text-[14px] tnum text-zinc-400">{r.packageOffered?.ctc || '—'}</td><td className="border-t border-[var(--line)] pr-4 text-[13.5px] text-zinc-500">{(r.roles || []).slice(0, 2).join(', ')}</td><td className="border-t border-[var(--line)] text-right"><button onClick={async () => { await adminService.deletePlacementRecord(r._id); toast.info('Record removed'); loadAll(); }} className="text-zinc-700 transition-colors hover:text-rose-400" title="Delete record"><Trash2 className="h-4 w-4" /></button></td></tr>)}</tbody></table></div>
       </Sec>
     </div>
   );
@@ -372,13 +372,13 @@ export default function AdminPage() {
 
   return (
     <Page wide>
-      <header className="pt-14 md:pt-20">
-        <div className="text-[13px] text-zinc-500">Admin · signed in as {user.name}</div>
-        <h1 className="display mt-5 text-[clamp(46px,7vw,96px)] text-zinc-50">The <em className="text-[var(--ember)]">control</em> room.</h1>
+      <header className="pt-2 md:pt-6">
+        <div className="tag">Admin · signed in as {user.name}</div>
+        <h1 className="display mt-5 text-[clamp(37px,6vw,77px)] text-zinc-50">The <em className="text-[var(--ember)]">control</em> room.</h1>
         <nav className="mt-10 flex gap-1 overflow-x-auto border-b border-[var(--line-strong)] pb-3">
           {TABS.map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k)} className={cn('relative shrink-0 rounded-full px-5 py-2 text-[14px] font-medium transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
-              {tab === k && <motion.span layoutId="admin-tab" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+            <button key={k} onClick={() => setTab(k)} className={cn('relative shrink-0 rounded-sm px-5 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+              {tab === k && <motion.span layoutId="admin-tab" className="absolute inset-0 rounded-sm bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
               <span className="relative">{l}</span>
             </button>
           ))}

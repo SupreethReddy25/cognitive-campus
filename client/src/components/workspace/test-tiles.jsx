@@ -147,7 +147,7 @@ export function TestTiles({ running, results, onRun, selected, onSelect, stats, 
 }
 
 function StatusDot({ status }) {
-  const cls = status === 'pass' ? 'bg-emerald-400 shadow-[0_0_8px_#94d6a8]' : status === 'fail' ? 'bg-rose-400 shadow-[0_0_8px_#f0728a]' : status === 'running' ? 'animate-pulse bg-amber-400' : 'bg-zinc-700';
+  const cls = status === 'pass' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : status === 'fail' ? 'bg-rose-400 shadow-[0_0_8px_#fb7185]' : status === 'running' ? 'animate-pulse bg-amber-400' : 'bg-zinc-700';
   return <span className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', cls)} />;
 }
 

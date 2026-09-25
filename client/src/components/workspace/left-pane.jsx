@@ -57,7 +57,7 @@ export function LeftPane() {
                 {problem.skillId?.name && <span>{problem.skillId.name}</span>}
                 {problem.userSolved && <span className="flex items-center gap-1 text-emerald-400"><Check className="h-3.5 w-3.5" />solved</span>}
               </div>
-              <h1 className="display text-[44px] leading-[0.98] text-zinc-50">{problem.title}</h1>
+              <h1 className="display text-[35.2px] leading-[0.98] text-zinc-50">{problem.title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <button onClick={toggleBookmark} title={bookmarked ? 'Remove bookmark' : 'Bookmark for later'} className={cn('flex h-9 w-9 items-center justify-center rounded-full transition-colors', bookmarked ? 'text-[var(--star)]' : 'text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-200')}>
@@ -78,7 +78,7 @@ export function LeftPane() {
           {/* Tabs */}
           <div className="mt-7 flex items-center gap-1 border-b border-[var(--line)] pb-3">
             {tabs.map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={cn('rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors', tab === t ? 'bg-white/[0.08] text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+              <button key={t} onClick={() => setTab(t)} className={cn('rounded-sm px-4 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', tab === t ? 'bg-white/[0.08] text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
                 {t}
                 {t === 'Editorial' && editorialUnlocked && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />}
               </button>
@@ -180,11 +180,11 @@ function Editorial({ id, problem, unlockedHint }) {
   if (state.locked) {
     const n = state.failedAttempts || 0;
     return (
-      <div className="mt-8 rounded-2xl border border-dashed border-white/[0.1] p-7 text-center">
-        <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.04]"><Lock className="h-5 w-5 text-zinc-500" /></span>
+      <div className="mt-8 rounded-sm border border-dashed border-white/[0.1] p-7 text-center">
+        <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-sm bg-white/[0.04]"><Lock className="h-5 w-5 text-zinc-500" /></span>
         <div className="text-[14px] font-medium text-zinc-200">Editorial locked</div>
         <p className="mx-auto mt-1 max-w-xs text-[12.5px] leading-relaxed text-zinc-500">Solve the problem, or make {state.attemptsNeeded || 3} attempts, to unlock the optimal approach, complexity analysis and a code walkthrough.</p>
-        <div className="mx-auto mt-4 max-w-[200px]"><Bar value={Math.min(n, 3)} max={3} height={5} color="#f2c66d" /><div className="mt-1.5 font-mono text-[10px] text-zinc-600">{Math.min(n, 3)} / 3 attempts</div></div>
+        <div className="mx-auto mt-4 max-w-[200px]"><Bar value={Math.min(n, 3)} max={3} height={5} color="#fbbf24" /><div className="mt-1.5 font-mono text-[10px] text-zinc-600">{Math.min(n, 3)} / 3 attempts</div></div>
       </div>
     );
   }
@@ -202,7 +202,7 @@ function Editorial({ id, problem, unlockedHint }) {
     <div className="mt-6 space-y-7">
       <div className="flex items-center gap-2 text-[12px] text-emerald-300"><Unlock className="h-3.5 w-3.5" /> Editorial unlocked{state.solved ? ' — you solved this one' : ''}</div>
 
-      {ed.intuition && <div><Label className="mb-2 block text-zinc-600">The key insight</Label><p className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.05] p-4 text-[13.5px] leading-relaxed text-emerald-100/90">{ed.intuition}</p></div>}
+      {ed.intuition && <div><Label className="mb-2 block text-zinc-600">The key insight</Label><p className="rounded-sm border border-emerald-400/15 bg-emerald-400/[0.05] p-4 text-[13.5px] leading-relaxed text-emerald-100/90">{ed.intuition}</p></div>}
       {ed.approach && <div><Label className="mb-2 block text-zinc-600">Optimal approach</Label><RichText text={ed.approach} className="text-[13.5px]" /></div>}
 
       {ed.steps?.length > 0 && (
@@ -221,8 +221,8 @@ function Editorial({ id, problem, unlockedHint }) {
 
       {(ed.timeComplexity || ed.spaceComplexity) && (
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5"><Label className="mb-1 flex items-center gap-1.5 text-zinc-600"><Gauge className="h-3 w-3" /> Time</Label><div className="font-mono text-[13px] text-sky-300">{ed.timeComplexity}</div></div>
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5"><Label className="mb-1 flex items-center gap-1.5 text-zinc-600"><Cpu className="h-3 w-3" /> Space</Label><div className="font-mono text-[13px] text-violet-300">{ed.spaceComplexity}</div></div>
+          <div className="rounded-sm border border-white/[0.07] bg-white/[0.02] p-3.5"><Label className="mb-1 flex items-center gap-1.5 text-zinc-600"><Gauge className="h-3 w-3" /> Time</Label><div className="font-mono text-[13px] text-sky-300">{ed.timeComplexity}</div></div>
+          <div className="rounded-sm border border-white/[0.07] bg-white/[0.02] p-3.5"><Label className="mb-1 flex items-center gap-1.5 text-zinc-600"><Cpu className="h-3 w-3" /> Space</Label><div className="font-mono text-[13px] text-violet-300">{ed.spaceComplexity}</div></div>
         </div>
       )}
 
@@ -262,7 +262,7 @@ function Submissions({ id, setCode, setLanguage, version }) {
   }, [id, version]);
 
   if (rows === null) return <p className="mt-8 font-mono text-[11px] text-zinc-600">Loading history…</p>;
-  if (rows.length === 0) return <div className="mt-8 rounded-2xl border border-dashed border-white/[0.09] p-7 text-center text-[12.5px] text-zinc-500"><History className="mx-auto mb-2 h-5 w-5 text-zinc-600" />No submissions yet. Submit your first solution to start your history.</div>;
+  if (rows.length === 0) return <div className="mt-8 rounded-sm border border-dashed border-white/[0.09] p-7 text-center text-[12.5px] text-zinc-500"><History className="mx-auto mb-2 h-5 w-5 text-zinc-600" />No submissions yet. Submit your first solution to start your history.</div>;
 
   return (
     <div className="mt-5 space-y-2">
@@ -270,7 +270,7 @@ function Submissions({ id, setCode, setLanguage, version }) {
         const isOpen = open === i;
         const delta = s.masteryAfter != null && s.masteryBefore != null ? s.masteryAfter - s.masteryBefore : null;
         return (
-          <div key={s._id || i} className="overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02]">
+          <div key={s._id || i} className="overflow-hidden rounded-sm border border-white/[0.06] bg-white/[0.02]">
             <button onClick={() => setOpen(isOpen ? null : i)} className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left hover:bg-white/[0.03]">
               <span className={cn('h-2 w-2 shrink-0 rounded-full', s.isCorrect ? 'bg-emerald-400' : 'bg-rose-400')} />
               <div className="min-w-0 flex-1">
@@ -306,7 +306,7 @@ function IntelTab({ problem }) {
     <div className="mt-6 space-y-6">
       <div className="flex items-center gap-2 text-[12px] font-medium"><Shield className="h-3.5 w-3.5 text-[var(--signal)]" /><span className="text-[var(--signal)]">Community intel</span><span className="h-px flex-1 bg-white/[0.05]" /></div>
       {(problem.company || problem.round) && <div className="flex items-center gap-2 text-[13px] text-zinc-200"><Building2 className="h-4 w-4 text-zinc-500" />{problem.company}{problem.company && problem.round && <span className="text-zinc-700">|</span>}<span className="text-zinc-400">{problem.round}</span></div>}
-      {conf > 0 && <div><div className="mb-1.5 flex items-center justify-between font-mono text-[10px] text-zinc-500"><span>MEMORY CONFIDENCE</span><span>{conf}%</span></div><Bar value={conf} max={100} height={4} color="#94d6a8" /></div>}
+      {conf > 0 && <div><div className="mb-1.5 flex items-center justify-between font-mono text-[10px] text-zinc-500"><span>MEMORY CONFIDENCE</span><span>{conf}%</span></div><Bar value={conf} max={100} height={4} color="#34d399" /></div>}
       {problem.warStory && <blockquote className="border-l-2 border-[var(--signal)]/30 py-1 pl-4 text-[13.5px] italic leading-relaxed text-zinc-400">“{problem.warStory}”</blockquote>}
       <div className="flex items-center gap-3 border-t border-white/[0.05] pt-4"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1a2332] text-[10px] font-semibold text-zinc-300">{authorName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}</div><div><div className="font-mono text-[10px] text-zinc-500">Reported by</div><div className="text-[12.5px] text-zinc-200">{authorName}</div></div></div>
     </div>

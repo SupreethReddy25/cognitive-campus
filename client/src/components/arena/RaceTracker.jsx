@@ -30,8 +30,8 @@ export function RaceTracker() {
         {isActive && <span className="flex items-center gap-2 text-[var(--ember)]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--ember)]" />live</span>}
         {isFinished && <span className="flex items-center gap-1.5 font-medium text-[var(--star)]"><Crown className="h-3.5 w-3.5" />{iWon ? 'Victory' : `${winner?.name?.split(' ')[0]} wins`}</span>}
       </div>
-      <Lane label="You" p={mine} pct={pct(mine)} color="#ff7a4d" me />
-      <Lane label={opponent?.name?.split(' ')[0] || 'Opponent'} p={theirs} pct={pct(theirs)} color="#8fbcda" />
+      <Lane label="You" p={mine} pct={pct(mine)} color="#34d399" me />
+      <Lane label={opponent?.name?.split(' ')[0] || 'Opponent'} p={theirs} pct={pct(theirs)} color="#38bdf8" />
     </div>
   );
 }
@@ -47,7 +47,7 @@ function Lane({ label, p, pct, color, me = false }) {
         <span className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, height: 1, background: color, transition: 'width .7s cubic-bezier(.34,1.56,.64,1)' }} />
         <span className="absolute top-1/2" style={{ left: `${pct}%`, transition: 'left .7s cubic-bezier(.34,1.56,.64,1)', transform: 'translate(-50%,-50%)' }}>
           <span className="absolute -inset-3 rounded-full" style={{ background: `radial-gradient(circle, ${color}66, transparent 70%)` }} />
-          <span className="relative block h-2.5 w-2.5 rounded-full" style={{ background: done ? '#fff1cf' : color }} />
+          <span className="relative block h-2.5 w-2.5 rounded-full" style={{ background: done ? '#ecfdf5' : color }} />
         </span>
         <span className="absolute -right-1 top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border border-[var(--line-strong)]" />
       </div>

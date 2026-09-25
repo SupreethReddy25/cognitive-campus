@@ -133,14 +133,14 @@ export function CommandPalette({ open, onClose }) {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]" onClick={onClose}>
           <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px]" />
           <motion.div initial={{ opacity: 0, y: -12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="relative w-full max-w-[680px] overflow-hidden rounded-[28px] border border-[var(--line-strong)] bg-[#131317] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]" onClick={(e) => e.stopPropagation()}>
+            className="relative w-full max-w-[680px] overflow-hidden rounded-sm border border-[var(--line-strong)] bg-[#0d0d0d] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-4 border-b border-[var(--line)] px-7 py-5">
-              <input ref={inputRef} value={query} onChange={(e) => { setQuery(e.target.value); setCursor(0); }} onKeyDown={onKeyDown} placeholder="Jump to anything…" className="display w-full bg-transparent text-[34px] text-zinc-50 outline-none placeholder:text-zinc-700" />
+              <input ref={inputRef} value={query} onChange={(e) => { setQuery(e.target.value); setCursor(0); }} onKeyDown={onKeyDown} placeholder="Jump to anything…" className="display w-full bg-transparent text-[27.2px] text-zinc-50 outline-none placeholder:text-zinc-700" />
               <kbd className="shrink-0 rounded-md border border-[var(--line-strong)] px-2 py-1 text-[11px] text-zinc-600">esc</kbd>
             </div>
 
             <div ref={listRef} className="max-h-[52vh] overflow-y-auto scrollbar-surgical px-3 py-3">
-              {flat.length === 0 && <div className="py-12 text-center"><div className="display text-[28px] italic text-zinc-600">Nothing for “{query}”.</div></div>}
+              {flat.length === 0 && <div className="py-12 text-center"><div className="display text-[22.4px] italic text-zinc-600">Nothing for “{query}”.</div></div>}
               {groups.map((g) => (
                 <div key={g.name} className="mb-2">
                   <div className="px-4 pb-1.5 pt-3 text-[12px] font-medium text-zinc-600">{g.name}</div>
@@ -150,7 +150,7 @@ export function CommandPalette({ open, onClose }) {
                     const Icon = item.icon;
                     return (
                       <button key={item.id} data-idx={idx} onClick={() => execute(item)} onMouseMove={() => setCursor(idx)}
-                        className={cn('relative flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors', active ? 'bg-white/[0.06]' : '')}>
+                        className={cn('relative flex w-full items-center gap-4 rounded-sm px-4 py-3 text-left transition-colors', active ? 'bg-white/[0.06]' : '')}>
                         {active && <motion.span layoutId="cmd-active" className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-[var(--ember)]" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
                         <Icon className={cn('h-[18px] w-[18px] shrink-0 transition-colors', active ? 'text-[var(--ember)]' : 'text-zinc-600')} strokeWidth={1.6} />
                         <span className="min-w-0 flex-1">

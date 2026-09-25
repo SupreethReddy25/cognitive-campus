@@ -120,7 +120,7 @@ export function CollegeSelector({ value, onChange, placeholder = 'Search your co
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-2 left-0 right-0 z-50 rounded-2xl bg-[#141418] border border-[var(--line-strong)] shadow-[0_24px_60px_-16px_rgba(0,0,0,0.9)] overflow-hidden">
+        <div className="absolute top-full mt-2 left-0 right-0 z-50 rounded-sm bg-[#0d0d0d] border border-[var(--line-strong)] shadow-[0_24px_60px_-16px_rgba(0,0,0,0.9)] overflow-hidden">
           {results.map(college => {
             const tierClass = TIER_COLORS[college.tier] || TIER_COLORS.Other;
             return (
@@ -147,7 +147,7 @@ export function CollegeSelector({ value, onChange, placeholder = 'Search your co
       )}
 
       {open && results.length === 0 && query.length >= 2 && !loading && (
-        <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-xl bg-[#141418] border border-white/[0.08] shadow-2xl px-4 py-3">
+        <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-sm bg-[#0d0d0d] border border-white/[0.08] shadow-2xl px-4 py-3">
           <p className="text-sm text-zinc-500">No college found for "{query}".</p>
           <p className="text-xs text-zinc-700 mt-0.5">Contact admin to add your institution.</p>
         </div>

@@ -60,7 +60,7 @@ function WeekDots({ activity = {} }) {
 function Skeletons() {
   return (
     <div className="space-y-10 px-6 py-14 md:px-14">
-      <Skeleton className="h-24 w-2/3" /><Skeleton className="h-8 w-1/2" /><Skeleton className="h-[380px] w-full rounded-3xl" />
+      <Skeleton className="h-24 w-2/3" /><Skeleton className="h-8 w-1/2" /><Skeleton className="h-[380px] w-full rounded-sm" />
     </div>
   );
 }
@@ -115,7 +115,7 @@ export function DashboardView() {
     : recommendations[0] ? { id: recommendations[0].problem._id, title: recommendations[0].problem.title, verb: 'Start', note: recommendations[0].skill.name } : null;
   const mastered = skills.filter((s) => s.isMastered).length;
   const due = skills.filter((s) => s.reviewDue).length;
-  const rawQ = quote || { text: 'Ready when you are, ', highlight: "let's go", highlightColor: '#ff7a4d', suffix: '.' };
+  const rawQ = quote || { text: 'Ready when you are, ', highlight: "let's go", highlightColor: '#34d399', suffix: '.' };
   // the hero already greets by name — drop a leading "Good morning, Aarav." from the AI line
   const trimmed = (rawQ.text || '').replace(/^\s*(good (morning|afternoon|evening|night)|hey|hi|hello|welcome back|still up)[^.!?]*[.!?]\s*/i, '');
   const q = { ...rawQ, text: trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : rawQ.text };
@@ -125,10 +125,10 @@ export function DashboardView() {
     <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
       <div className="mx-auto max-w-[1320px] px-6 md:px-14">
         {/* ═══ Hero — one sentence, one action ═══ */}
-        <header className="pt-16 md:pt-24">
+        <header className="pt-4 md:pt-8">
           <Reveal>
-            <div className="text-[13px] text-zinc-500">{new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })} · Level {level}, {tierFor(level)}</div>
-            <h1 className="display mt-5 text-[clamp(56px,9vw,132px)] text-zinc-50">
+            <div className="tag">{new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })} · Level {level}, {tierFor(level)}</div>
+            <h1 className="display mt-5 text-[clamp(45px,7.6vw,106px)] text-zinc-50">
               {greeting()},<br /><em className="text-[var(--ember)]">{data.user.firstName || user?.name}</em><span className="text-zinc-600">.</span>
             </h1>
           </Reveal>
@@ -147,12 +147,12 @@ export function DashboardView() {
           <Reveal delay={0.2}>
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
               {next ? (
-                <Link to={`/problems/${next.id}`} className="group flex items-center gap-4 rounded-full bg-[var(--ember)] py-3 pl-7 pr-3 text-[#1a0d07] transition-[filter,transform] hover:brightness-110 active:scale-[0.98]">
+                <Link to={`/problems/${next.id}`} className="btn-line group">
                   <span className="text-[16px] font-semibold">{next.verb} {next.title}</span>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)] transition-transform group-hover:translate-x-0.5"><ArrowRight className="h-[18px] w-[18px]" /></span>
+                  <span className="flex items-center justify-center"><ArrowRight className="h-[18px] w-[18px]" /></span>
                 </Link>
               ) : (
-                <Link to="/problems" className="rounded-full bg-[var(--ember)] px-7 py-3.5 text-[16px] font-semibold text-[#1a0d07]">Choose a problem</Link>
+                <Link to="/problems" className="btn-line group">Choose a problem</Link>
               )}
               {daily && !daily.solvedToday && (
                 <Link to={`/problems/${daily.problem._id}`} className="group text-[14px] text-zinc-400 transition-colors hover:text-zinc-100">
@@ -170,7 +170,7 @@ export function DashboardView() {
         <section className="mt-20 md:mt-28">
           <Reveal>
             <div className="mb-2 flex flex-wrap items-end justify-between gap-4">
-              <h2 className="display text-[40px] text-zinc-100 md:text-[52px]">Your <em>sky</em></h2>
+              <h2 className="display text-[32px] text-zinc-100 md:text-[41.6px]">Your <em>sky</em></h2>
               <div className="max-w-md text-right text-[13px] leading-relaxed text-zinc-500">
                 <span className="text-zinc-300">{mastered}</span> of {skills.length} skills burn white-hot{due > 0 && <>, <span className="text-[var(--ember)]">{due} pulsing</span> — fading, worth a refresh</>}. Hover a star. Brighter means stronger.
               </div>
@@ -187,12 +187,12 @@ export function DashboardView() {
               {recommendations.slice(0, 3).map((r, i) => (
                 <li key={r.problem._id} className="border-b border-[var(--line)] last:border-0">
                   <Link to={`/problems/${r.problem._id}`} className="group flex items-start gap-5 py-4">
-                    <span className="display w-6 pt-0.5 text-[24px] text-zinc-600">{i + 1}</span>
+                    <span className="display w-6 pt-0.5 text-[19.2px] text-zinc-600">{i + 1}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[18px] font-medium text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{r.problem.title}</span>
                       <span className="mt-1 block text-[13px] leading-snug text-zinc-500">{r.reasons?.[0] || `Builds ${r.skill.name}`}</span>
                     </span>
-                    <span className="shrink-0 pt-1 text-right"><span className="display block text-[24px] tnum text-zinc-300">{Math.round(r.predictedSuccess * 100)}<span className="text-[13px]">%</span></span><span className="text-[10.5px] text-zinc-600">likely</span></span>
+                    <span className="shrink-0 pt-1 text-right"><span className="display block text-[19.2px] tnum text-zinc-300">{Math.round(r.predictedSuccess * 100)}<span className="text-[13px]">%</span></span><span className="text-[10.5px] text-zinc-600">likely</span></span>
                   </Link>
                 </li>
               ))}
@@ -203,7 +203,7 @@ export function DashboardView() {
           <Reveal delay={0.06}>
             <h3 className="text-[13px] font-medium text-zinc-500">Streak</h3>
             <div className="mt-3 flex items-baseline gap-3">
-              <span className="display text-[120px] leading-[0.9] tnum text-zinc-50"><CountUp value={data.streak.streak} /></span>
+              <span className="display text-[96px] leading-[0.9] tnum text-zinc-50"><CountUp value={data.streak.streak} /></span>
               <span className="text-[15px] text-zinc-500">day{data.streak.streak === 1 ? '' : 's'}</span>
             </div>
             <div className="mt-6"><WeekDots activity={data.activity} /></div>
@@ -218,7 +218,7 @@ export function DashboardView() {
           <Reveal delay={0.12}>
             <h3 className="text-[13px] font-medium text-zinc-500">Standing</h3>
             <div className="mt-3 flex items-baseline gap-3">
-              <span className="display text-[120px] leading-[0.9] tnum text-zinc-50">#{rank.position}</span>
+              <span className="display text-[96px] leading-[0.9] tnum text-zinc-50">#{rank.position}</span>
               <span className="text-[15px] text-zinc-500">of {rank.total}</span>
             </div>
             <div className="mt-6">
@@ -234,11 +234,11 @@ export function DashboardView() {
         {/* ═══ Look closer ═══ */}
         <section className="mt-24">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-strong)]">
-            <h2 className="display pb-3 text-[40px] text-zinc-100 md:text-[52px]">Look <em>closer</em></h2>
+            <h2 className="display pb-3 text-[32px] text-zinc-100 md:text-[41.6px]">Look <em>closer</em></h2>
             <div className="flex gap-1 pb-3">
               {TABS.map(([k, l]) => (
-                <button key={k} onClick={() => setTab(k)} className={cn('relative rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
-                  {tab === k && <motion.span layoutId="dash-tab" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+                <button key={k} onClick={() => setTab(k)} className={cn('relative rounded-sm px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+                  {tab === k && <motion.span layoutId="dash-tab" className="absolute inset-0 rounded-sm bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
                   <span className="relative">{l}</span>
                 </button>
               ))}
@@ -283,7 +283,7 @@ export function DashboardView() {
         </section>
 
         <footer className="mt-28 flex items-center justify-between border-t border-[var(--line)] py-8 text-[12px] text-zinc-700">
-          <span className="display text-[18px] italic text-zinc-600">cogni.</span>
+          <span className="display text-[14.4px] italic text-zinc-600">cogni.</span>
           <span>Bayesian knowledge tracing · every solve moves a star</span>
         </footer>
       </div>

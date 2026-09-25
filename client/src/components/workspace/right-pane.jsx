@@ -65,12 +65,12 @@ export function RightPane() {
     <aside className="relative flex h-full flex-col overflow-hidden">
       <div className="relative z-10 flex h-12 shrink-0 items-center justify-between border-b border-[var(--line)] px-5">
         <div className="flex items-baseline gap-3">
-          <span className="display text-[24px] leading-none text-zinc-100">Mentor</span>
+          <span className="display text-[19.2px] leading-none text-zinc-100">Mentor</span>
           {hintsUsed > 0 && <span className="text-[12px] tnum text-zinc-600" title="Hints reduce mastery gain slightly">{hintsUsed} used</span>}
         </div>
         <button onClick={() => setLighthouse(!lighthouse)} aria-pressed={lighthouse} title="Lighthouse: highlight the line the mentor points at" className="flex items-center gap-2 text-[12px] text-zinc-500 hover:text-zinc-300">
           <span className={cn('relative inline-block h-4 w-7 rounded-full transition-colors', lighthouse ? 'bg-[var(--ember)]' : 'bg-white/[0.12]')}>
-            <span className={cn('absolute top-[2px] h-3 w-3 rounded-full bg-[#14100d] transition-all', lighthouse ? 'left-[14px]' : 'left-[2px] bg-zinc-300')} />
+            <span className={cn('absolute top-[2px] h-3 w-3 rounded-full bg-[#04130d] transition-all', lighthouse ? 'left-[14px]' : 'left-[2px] bg-zinc-300')} />
           </span>
           Lighthouse
         </button>
@@ -80,7 +80,7 @@ export function RightPane() {
       <div ref={scrollerRef} className="relative z-10 min-h-0 flex-1 overflow-y-auto scrollbar-surgical">
         {turns.length === 0 ? (
           <div className="flex h-full flex-col justify-center px-6">
-            <p className="display text-[34px] leading-[1.05] text-zinc-300">Stuck? <em className="text-zinc-500">Ask for exactly as much help as you want.</em></p>
+            <p className="display text-[27.2px] leading-[1.05] text-zinc-300">Stuck? <em className="text-zinc-500">Ask for exactly as much help as you want.</em></p>
             <p className="mt-4 text-[13px] leading-relaxed text-zinc-600">Each step gives away a little more — and costs a little mastery. Start small.</p>
           </div>
         ) : (
@@ -88,7 +88,7 @@ export function RightPane() {
             {turns.map((t, i) => (
               <div key={i} onMouseEnter={() => t.cite && setCitedLines(t.cite)} className="animate-in fade-in slide-in-from-bottom-1 duration-300">
                 <div className="mb-2 flex items-center gap-2 text-[12px] text-[var(--ember-soft)]">
-                  <span className="display text-[18px] leading-none">{t.depth}</span>{DEPTHS[t.depth - 1].label}
+                  <span className="display text-[14.4px] leading-none">{t.depth}</span>{DEPTHS[t.depth - 1].label}
                   <span className="text-zinc-700">{t.source === 'curated' ? '· curated' : t.source === 'cache' ? '· saved' : t.source === 'ai' ? '· AI' : ''}</span>
                 </div>
                 <div className="whitespace-pre-line border-l-2 border-[var(--line-strong)] pl-4 text-[14.5px] leading-[1.7] text-zinc-300">{t.text}</div>
@@ -113,8 +113,8 @@ export function RightPane() {
       <div className="relative z-10 shrink-0 border-t border-[var(--line)] px-3 pb-20 pt-2">
         {DEPTHS.map((d) => (
           <button key={d.key} onClick={() => ask(d.depth)} disabled={!!busy || !code.trim()} title={d.desc}
-            className={cn('group flex w-full items-center gap-4 rounded-2xl px-3 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40', nudgeDepth === d.depth && turns.length ? 'bg-white/[0.05]' : 'hover:bg-white/[0.04]')}>
-            <span className="display flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line-strong)] text-[20px] text-zinc-400 transition-colors group-hover:border-[var(--ember)] group-hover:text-[var(--ember)]">{busy === d.depth ? <Loader2 className="h-4 w-4 animate-spin text-[var(--ember)]" /> : d.depth}</span>
+            className={cn('group flex w-full items-center gap-4 rounded-sm px-3 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40', nudgeDepth === d.depth && turns.length ? 'bg-white/[0.05]' : 'hover:bg-white/[0.04]')}>
+            <span className="display flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line-strong)] text-[16px] text-zinc-400 transition-colors group-hover:border-[var(--ember)] group-hover:text-[var(--ember)]">{busy === d.depth ? <Loader2 className="h-4 w-4 animate-spin text-[var(--ember)]" /> : d.depth}</span>
             <span className="min-w-0"><span className="block text-[14.5px] font-medium text-zinc-200">{d.label}</span><span className="block truncate text-[12px] text-zinc-600">{d.desc}</span></span>
           </button>
         ))}

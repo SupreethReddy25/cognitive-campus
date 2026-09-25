@@ -67,7 +67,7 @@ export function SuccessOverlay({ show, onDismiss, result, problem, onOpenEditori
     <AnimatePresence>
       {show && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={onDismiss}>
-          <div className="absolute inset-0 bg-[#0c0c10]/[0.93] backdrop-blur-md" />
+          <div className="absolute inset-0 bg-[#0a0a0a]/[0.93] backdrop-blur-md" />
 
           <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }} onClick={(e) => e.stopPropagation()} className="relative z-10 w-full max-w-[560px] text-center">
             <button onClick={onDismiss} className="absolute -top-2 right-0 text-zinc-600 transition-colors hover:text-zinc-300" aria-label="Close"><X className="h-5 w-5" /></button>
@@ -91,8 +91,8 @@ export function SuccessOverlay({ show, onDismiss, result, problem, onOpenEditori
             <h2 className="display mt-2 text-[clamp(44px,7vw,72px)] text-zinc-50">{problem?.title}</h2>
 
             <div className="mt-8 flex items-end justify-center gap-10">
-              <div><div className="display text-[64px] leading-none tnum text-[var(--star)]">+<CountUp value={r.xpEarned || 0} /></div><div className="mt-1 text-[13px] text-zinc-500">XP{xp.streakMultiplier > 1 ? ` · streak ×${xp.streakMultiplier}` : ''}{xp.dailyBonus > 0 ? ` · daily +${xp.dailyBonus}` : ''}</div></div>
-              <div><div className="display text-[64px] leading-none tnum text-zinc-50">{Math.round(before * 100)}<span className="text-[26px] text-zinc-600"> → </span><span style={{ color: col }}>{Math.round(after * 100)}</span><span className="text-[26px] text-zinc-600">%</span></div><div className="mt-1 text-[13px] text-zinc-500">{problem?.skillId?.name} mastery</div></div>
+              <div><div className="display text-[64px] leading-none tnum text-[var(--star)]">+<CountUp value={r.xpEarned || 0} /></div><div className="tag mt-1">XP{xp.streakMultiplier > 1 ? ` · streak ×${xp.streakMultiplier}` : ''}{xp.dailyBonus > 0 ? ` · daily +${xp.dailyBonus}` : ''}</div></div>
+              <div><div className="display text-[64px] leading-none tnum text-zinc-50">{Math.round(before * 100)}<span className="text-[26px] text-zinc-600"> → </span><span style={{ color: col }}>{Math.round(after * 100)}</span><span className="text-[26px] text-zinc-600">%</span></div><div className="tag mt-1">{problem?.skillId?.name} mastery</div></div>
             </div>
             {xp.alreadySolved && <p className="mx-auto mt-4 max-w-sm text-[13px] text-zinc-600">XP is awarded once per problem — every solve still sharpens your mastery estimate.</p>}
 
@@ -100,12 +100,12 @@ export function SuccessOverlay({ show, onDismiss, result, problem, onOpenEditori
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               {next && (
-                <button onClick={() => { onDismiss?.(); navigate(`/problems/${next.problem._id}`); }} className="group flex items-center gap-4 rounded-full bg-[var(--ember)] py-2.5 pl-7 pr-2.5 text-left text-[#1a0d07] transition-[filter] hover:brightness-110">
+                <button onClick={() => { onDismiss?.(); navigate(`/problems/${next.problem._id}`); }} className="btn-line group">
                   <span className="min-w-0"><span className="block text-[11.5px] font-medium opacity-70">Next · {Math.round(next.predictedSuccess * 100)}% likely</span><span className="block max-w-[240px] truncate text-[15px] font-semibold">{next.problem.title}</span></span>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)]"><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#04130d] text-[var(--ember)]"><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
                 </button>
               )}
-              <button onClick={() => { onDismiss?.(); onOpenEditorial?.(); }} className="rounded-full border border-[var(--line-strong)] px-6 py-3 text-[14px] text-zinc-300 transition-colors hover:border-zinc-400">Read the editorial</button>
+              <button onClick={() => { onDismiss?.(); onOpenEditorial?.(); }} className="rounded-sm border border-[var(--line-strong)] px-6 py-3 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300 transition-colors hover:border-zinc-400">Read the editorial</button>
               <button onClick={onDismiss} className={cn('text-[14px] text-zinc-600 transition-colors hover:text-zinc-300')}>Keep going</button>
             </div>
           </motion.div>

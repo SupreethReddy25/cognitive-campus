@@ -42,19 +42,19 @@ function Preview({ c, onSubmit }) {
       <AnimatePresence mode="wait">
         {c && (
           <motion.div key={c._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}
-            className="rounded-[28px] border border-[var(--line-strong)] bg-[var(--ink-2)] p-8">
+            className="rounded-sm border border-[var(--line-strong)] bg-[var(--ink-2)] p-8">
             <div className="flex items-center gap-4">
               <CompanyLogo company={c} size={56} />
               <div className="min-w-0">
-                <div className="display truncate text-[38px] leading-none text-zinc-50">{c.name}</div>
-                <div className="mt-1.5 text-[12.5px] text-zinc-500">{c.tier}{c.headquarters ? ` · ${c.headquarters.split('·')[0].trim()}` : ''}</div>
+                <div className="display truncate text-[30.4px] leading-none text-zinc-50">{c.name}</div>
+                <div className="tag mt-1.5">{c.tier}{c.headquarters ? ` · ${c.headquarters.split('·')[0].trim()}` : ''}</div>
               </div>
             </div>
 
             <div className="mt-8 grid grid-cols-3 gap-4 border-t border-[var(--line)] pt-6">
-              <div><div className="display text-[44px] leading-none tnum text-zinc-50">{c.offerRate != null ? c.offerRate : '—'}{c.offerRate != null && <span className="text-[20px] text-zinc-500">%</span>}</div><div className="mt-2 text-[11.5px] text-zinc-500">offer rate</div></div>
-              <div><div className="display text-[44px] leading-none tnum text-zinc-50">{c.experienceCount}</div><div className="mt-2 text-[11.5px] text-zinc-500">reports{c.recentExperiences > 0 && <span className="text-[var(--ember)]"> · +{c.recentExperiences}</span>}</div></div>
-              <div><div className="display text-[44px] leading-none tnum text-zinc-50">{ctcText(c)}</div><div className="mt-2 text-[11.5px] text-zinc-500">LPA</div></div>
+              <div><div className="display text-[35.2px] leading-none tnum text-zinc-50">{c.offerRate != null ? c.offerRate : '—'}{c.offerRate != null && <span className="text-[20px] text-zinc-500">%</span>}</div><div className="mt-2 text-[11.5px] text-zinc-500">offer rate</div></div>
+              <div><div className="display text-[35.2px] leading-none tnum text-zinc-50">{c.experienceCount}</div><div className="mt-2 text-[11.5px] text-zinc-500">reports{c.recentExperiences > 0 && <span className="text-[var(--ember)]"> · +{c.recentExperiences}</span>}</div></div>
+              <div><div className="display text-[35.2px] leading-none tnum text-zinc-50">{ctcText(c)}</div><div className="mt-2 text-[11.5px] text-zinc-500">LPA</div></div>
             </div>
 
             <div className="mt-7">
@@ -75,8 +75,8 @@ function Preview({ c, onSubmit }) {
             <div className="mt-7 text-[12.5px] leading-relaxed text-zinc-500">Hires for <span className="text-zinc-300">{(c.roles || []).slice(0, 4).join(', ') || 'multiple roles'}</span>.</div>
 
             <div className="mt-8 flex items-center gap-3">
-              <Link to={`/companies/${c.slug}`} className="group flex flex-1 items-center justify-between rounded-full bg-[var(--ember)] py-2.5 pl-6 pr-2.5 text-[14px] font-semibold text-[#1a0d07] transition-[filter] hover:brightness-110">
-                Open the dossier<span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)]"><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+              <Link to={`/companies/${c.slug}`} className="btn-line group w-full justify-between">
+                Open the dossier<span className="flex items-center justify-center"><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
               </Link>
               <button onClick={() => onSubmit(c)} title="Add your experience" className="flex h-[46px] w-[46px] items-center justify-center rounded-full border border-[var(--line-strong)] text-zinc-400 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]"><Plus className="h-4 w-4" /></button>
             </div>
@@ -138,22 +138,22 @@ export default function IntelHubPage() {
   return (
     <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
       <div className="mx-auto max-w-[1360px] px-6 md:px-14">
-        <header className="flex items-start justify-between pt-14 md:pt-20">
+        <header className="flex items-start justify-between pt-2 md:pt-6">
           <div className="max-w-3xl">
-            <div className="text-[13px] text-zinc-500">Intel · the interview atlas</div>
-            <h1 className="display mt-5 text-[clamp(48px,7.4vw,104px)] text-zinc-50">Know the interview <em className="text-[var(--ember)]">before</em> you walk in.</h1>
+            <div className="tag">Intel · the interview atlas</div>
+            <h1 className="display mt-5 text-[clamp(38px,6.3vw,83px)] text-zinc-50">Know the interview <em className="text-[var(--ember)]">before</em> you walk in.</h1>
             <p className="mt-7 max-w-xl text-[18px] leading-relaxed text-zinc-400">
               <span className="text-zinc-100"><CountUp value={totalReports} /></span> reports across <span className="text-zinc-100"><CountUp value={companies.length} /></span> companies{recent > 0 && <>, <span className="text-[var(--ember)]">{recent} added this month</span></>}. Reports marked “sample” are illustrative until real students add theirs. Every percentage carries a confidence interval, so you know how far to trust it.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-6">
-              <button onClick={() => setSubmitTarget({})} className="group flex items-center gap-3 rounded-full bg-[var(--ember)] py-3 pl-7 pr-3 text-[#1a0d07] transition-[filter,transform] hover:brightness-110 active:scale-[0.98]">
+              <button onClick={() => setSubmitTarget({})} className="btn-line group">
                 <span className="text-[15px] font-semibold">Share your interview</span>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)]"><Plus className="h-4 w-4" strokeWidth={2.4} /></span>
+                <span className="flex items-center justify-center"><Plus className="h-4 w-4" strokeWidth={2.4} /></span>
               </button>
               <span className="text-[13px] text-zinc-500">Paste raw notes — AI structures them. Earn up to <span className="text-[var(--star)]">200 XP</span>.</span>
             </div>
           </div>
-          <button onClick={() => setTab(tab === 'atlas' ? 'review' : 'atlas')} className="mt-2 hidden rounded-full border border-[var(--line-strong)] px-4 py-2 text-[13px] text-zinc-400 transition-colors hover:text-zinc-100 md:block">
+          <button onClick={() => setTab(tab === 'atlas' ? 'review' : 'atlas')} className="mt-2 hidden rounded-sm border border-[var(--line-strong)] px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-400 transition-colors hover:text-zinc-100 md:block">
             {tab === 'atlas' ? 'Review queue' : '← Back to atlas'}
           </button>
         </header>
@@ -164,7 +164,7 @@ export default function IntelHubPage() {
 
             {/* search — an oversized line, not a form field */}
             <div className="mt-12 flex items-center gap-4 border-b border-[var(--line-strong)] pb-4 focus-within:border-[var(--ember)]">
-              <input ref={searchRef} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search a company, a role…" className="display w-full bg-transparent text-[clamp(30px,4vw,52px)] text-zinc-50 placeholder:text-zinc-700 focus:outline-none" />
+              <input ref={searchRef} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search a company, a role…" className="display w-full bg-transparent text-[clamp(24px,3.4vw,42px)] text-zinc-50 placeholder:text-zinc-700 focus:outline-none" />
               {search ? <button onClick={() => setSearch('')} className="text-zinc-500 hover:text-zinc-100"><X className="h-5 w-5" /></button> : <kbd className="hidden rounded-md border border-[var(--line-strong)] px-2 py-1 text-[11px] text-zinc-600 md:block">/</kbd>}
             </div>
 
@@ -172,13 +172,13 @@ export default function IntelHubPage() {
               <div className="flex flex-wrap items-center gap-1.5">
                 {TIERS.map((t) => (
                   <button key={t} onClick={() => setTiers((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]))}
-                    className={cn('rounded-full border px-3.5 py-1.5 transition-colors', tiers.includes(t) ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200')}>{t}</button>
+                    className={cn('rounded-sm border px-3.5 py-1.5 transition-colors font-mono text-[10.5px] uppercase tracking-[0.16em]', tiers.includes(t) ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200')}>{t}</button>
                 ))}
-                <button onClick={() => setRefine((r) => !r)} className={cn('rounded-full px-3.5 py-1.5 transition-colors', refine ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>Refine {refine ? '−' : '+'}</button>
+                <button onClick={() => setRefine((r) => !r)} className={cn('rounded-sm px-3.5 py-1.5 transition-colors', refine ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>Refine {refine ? '−' : '+'}</button>
               </div>
               <div className="flex items-center gap-1 text-zinc-500">
                 <span className="mr-1">Sorted by</span>
-                {SORTS.map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-full px-3 py-1.5 transition-colors', sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}
+                {SORTS.map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-sm px-3 py-1.5 transition-colors', sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}
               </div>
             </div>
 
@@ -204,7 +204,7 @@ export default function IntelHubPage() {
               <div>
                 {loading ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="mb-3 h-16" />)
                   : filtered.length === 0 ? (
-                    <div className="py-20 text-center"><div className="display text-[34px] italic text-zinc-500">Nothing matches.</div>{anyFilter && <button onClick={() => { setSearch(''); setTiers([]); setCtc([0, MAX_CTC]); setMinReports(0); }} className="mt-4 text-[13px] text-[var(--ember)] hover:underline">Clear every filter</button>}</div>
+                    <div className="py-20 text-center"><div className="display text-[27.2px] italic text-zinc-500">Nothing matches.</div>{anyFilter && <button onClick={() => { setSearch(''); setTiers([]); setCtc([0, MAX_CTC]); setMinReports(0); }} className="mt-4 text-[13px] text-[var(--ember)] hover:underline">Clear every filter</button>}</div>
                   ) : (
                     <ol onMouseLeave={() => setHoverId(null)}>
                       {filtered.map((c, i) => {
@@ -213,7 +213,7 @@ export default function IntelHubPage() {
                           <motion.li key={c._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.025, 0.35) }} onMouseEnter={() => setHoverId(c._id)} onFocus={() => setHoverId(c._id)}>
                             <Link to={`/companies/${c.slug}`} className="group flex items-baseline gap-5 border-b border-[var(--line)] py-4">
                               <span className="w-8 shrink-0 text-[13px] tnum text-zinc-700">{String(i + 1).padStart(2, '0')}</span>
-                              <span className={cn('display shrink-0 text-[clamp(30px,3.6vw,50px)] leading-none transition-all duration-300', active ? 'translate-x-2 text-[var(--ember)]' : 'text-zinc-200')}>{c.name}</span>
+                              <span className={cn('display shrink-0 text-[clamp(24px,3.1vw,40px)] leading-none transition-all duration-300', active ? 'translate-x-2 text-[var(--ember)]' : 'text-zinc-200')}>{c.name}</span>
                               {c.recentExperiences > 0 && <span className="-translate-y-3 text-[11px] font-medium text-[var(--ember)]">+{c.recentExperiences}</span>}
                               <span className="mb-2 hidden flex-1 self-end border-b border-dotted border-zinc-700 sm:block" />
                               <span className="hidden shrink-0 text-right text-[13px] leading-tight text-zinc-500 sm:block"><span className="tnum text-zinc-300">{c.experienceCount}</span> reports<br /><span className="tnum">{ctcText(c)}</span> LPA</span>

@@ -10,15 +10,15 @@ import { Page, PrimaryButton, CompanyLogo, Skeleton, ErrorNote, CountUp, chartTo
 
 const SECTIONS = [['overview', 'Overview'], ['gauntlet', 'The gauntlet'], ['asked', 'What they ask'], ['voices', 'Voices'], ['prep', 'Prep plan']];
 const CONF = { none: 'No data yet', low: 'Low confidence', medium: 'Medium confidence', high: 'High confidence' };
-const DIFF_COLOR = { Easy: '#94d6a8', Medium: '#f2c66d', Hard: '#f0728a' };
+const DIFF_COLOR = { Easy: '#34d399', Medium: '#fbbf24', Hard: '#fb7185' };
 const OUTCOME = { Yes: ['Offer', 'text-emerald-400'], No: ['No offer', 'text-rose-400'], Pending: ['Pending', 'text-amber-400'] };
-const chip = (on) => cn('shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
+const chip = (on) => cn('shrink-0 rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
 
 function Section({ id, kicker, title, children }) {
   return (
     <section id={id} className="scroll-mt-24 pt-24">
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
-        <h2 className="display text-[clamp(38px,5vw,64px)] text-zinc-50">{title}</h2>
+        <h2 className="display text-[clamp(30px,4.2vw,51px)] text-zinc-50">{title}</h2>
         {kicker && <div className="max-w-xs pb-1.5 text-right text-[13px] leading-snug text-zinc-500">{kicker}</div>}
       </div>
       {children}
@@ -36,12 +36,12 @@ function Voice({ exp, onVote }) {
       <button onClick={() => setOpen((o) => !o)} className="group flex w-full items-start gap-6 text-left">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="display text-[34px] leading-none text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{exp.role}</span>
+            <span className="display text-[27.2px] leading-none text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{exp.role}</span>
             <span className={cn('text-[13px] font-medium', tone)}>{label}</span>
             {exp.isVerified && <span className="inline-flex items-center gap-1 text-[12px] text-sky-300"><ShieldCheck className="h-3.5 w-3.5" />verified</span>}
-            {exp.source === 'curated' && <span title="Written for the demo dataset, not reported by a real student" className="rounded-full border border-[var(--line-strong)] px-2.5 py-0.5 text-[11.5px] text-zinc-500">sample report</span>}
+            {exp.source === 'curated' && <span title="Written for the demo dataset, not reported by a real student" className="rounded-sm border border-[var(--line-strong)] px-2.5 py-0.5 text-[11.5px] text-zinc-500">sample report</span>}
           </div>
-          <div className="mt-2 text-[13px] text-zinc-500">
+          <div className="tag mt-2">
             {exp.month} {exp.year}{(exp.collegeId?.shortName || exp.college) ? ` · ${exp.collegeId?.shortName || exp.college}` : ''} · {exp.rounds?.length || 0} rounds, {qCount} questions{exp.difficulty ? ` · felt ${exp.difficulty.toLowerCase()}` : ''} · {exp.source === 'curated' ? 'illustrative' : exp.author ? exp.author : 'anonymous'}
           </div>
           {!open && exp.overallTips && <p className="mt-4 max-w-3xl text-[17px] leading-[1.6] text-zinc-400">&ldquo;{exp.overallTips.length > 260 ? `${exp.overallTips.slice(0, 260)}…` : exp.overallTips}&rdquo;</p>}
@@ -58,7 +58,7 @@ function Voice({ exp, onVote }) {
               )}
               {exp.rounds?.map((r, i) => (
                 <div key={i}>
-                  <div className="flex flex-wrap items-baseline gap-x-3"><span className="display text-[28px] text-zinc-600">{String(i + 1).padStart(2, '0')}</span><span className="text-[17px] font-medium text-zinc-100">{r.type}</span>{r.duration && <span className="text-[13px] text-zinc-500">{r.duration}</span>}{r.vibe && <span className="text-[13px] text-zinc-500">· {r.vibe}</span>}</div>
+                  <div className="flex flex-wrap items-baseline gap-x-3"><span className="display text-[22.4px] text-zinc-600">{String(i + 1).padStart(2, '0')}</span><span className="text-[17px] font-medium text-zinc-100">{r.type}</span>{r.duration && <span className="text-[13px] text-zinc-500">{r.duration}</span>}{r.vibe && <span className="text-[13px] text-zinc-500">· {r.vibe}</span>}</div>
                   {r.topics?.length > 0 && <div className="mt-2 text-[13px] text-[var(--ember-soft)]">{r.topics.join(' · ')}</div>}
                   <ul className="mt-3 space-y-3">{r.questions?.filter((q) => q.text).map((q, j) => <li key={j} className="max-w-3xl text-[15px] leading-relaxed text-zinc-300">{q.text}<span className="ml-2 text-[11.5px] text-zinc-600">{q.questionType}</span></li>)}</ul>
                   {r.tips && <p className="mt-3 max-w-3xl text-[14px] italic leading-relaxed text-zinc-500">{r.tips}</p>}
@@ -72,8 +72,8 @@ function Voice({ exp, onVote }) {
       </AnimatePresence>
 
       <div className="mt-5 flex items-center gap-1 text-[13px]">
-        <button onClick={() => onVote(exp, 'up')} className={cn('flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors', exp.userVote === 'up' ? 'bg-emerald-400/15 text-emerald-300' : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200')}><ThumbsUp className="h-3.5 w-3.5" />{exp.upvotes}</button>
-        <button onClick={() => onVote(exp, 'down')} className={cn('flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors', exp.userVote === 'down' ? 'bg-rose-400/15 text-rose-300' : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200')}><ThumbsDown className="h-3.5 w-3.5" />{exp.downvotes}</button>
+        <button onClick={() => onVote(exp, 'up')} className={cn('flex items-center gap-1.5 rounded-sm px-3 py-1.5 transition-colors', exp.userVote === 'up' ? 'bg-emerald-400/15 text-emerald-300' : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200')}><ThumbsUp className="h-3.5 w-3.5" />{exp.upvotes}</button>
+        <button onClick={() => onVote(exp, 'down')} className={cn('flex items-center gap-1.5 rounded-sm px-3 py-1.5 transition-colors', exp.userVote === 'down' ? 'bg-rose-400/15 text-rose-300' : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200')}><ThumbsDown className="h-3.5 w-3.5" />{exp.downvotes}</button>
         {exp.qualityScore != null && <span className="ml-3 text-[12px] text-zinc-700">quality {exp.qualityScore}/100</span>}
       </div>
     </article>
@@ -118,7 +118,7 @@ function PrepPlan({ slug, companyName }) {
           )}
           <div className="grid gap-16 lg:grid-cols-[380px_1fr]">
             <div>
-              <div className="flex items-baseline gap-3"><span className="display text-[130px] leading-[0.85] tnum text-zinc-50">{plan.readiness}</span><span className="text-[15px] text-zinc-500">/ 100<br />ready today</span></div>
+              <div className="flex items-baseline gap-3"><span className="display text-[104px] leading-[0.85] tnum text-zinc-50">{plan.readiness}</span><span className="text-[15px] text-zinc-500">/ 100<br />ready today</span></div>
               <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">{plan.summary}</p>
               <div className="mt-10">
                 <div className="mb-4 text-[13px] text-zinc-500">Where to focus — how often it&apos;s asked vs. how well you know it</div>
@@ -135,13 +135,13 @@ function PrepPlan({ slug, companyName }) {
             <div>
               {plan.phases.map((ph, i) => (
                 <div key={i} className="border-t border-[var(--line-strong)] py-8 first:border-0 first:pt-0">
-                  <div className="flex items-baseline justify-between gap-4"><div className="flex items-baseline gap-4"><span className="display text-[44px] leading-none text-[var(--ember)]">{i + 1}</span><span className="display text-[32px] text-zinc-100">{ph.name}</span></div><span className="text-[13px] text-zinc-500">days {ph.days}</span></div>
+                  <div className="flex items-baseline justify-between gap-4"><div className="flex items-baseline gap-4"><span className="display text-[35.2px] leading-none text-[var(--ember)]">{i + 1}</span><span className="display text-[25.6px] text-zinc-100">{ph.name}</span></div><span className="text-[13px] text-zinc-500">days {ph.days}</span></div>
                   <p className="mt-2 pl-[52px] text-[14px] text-zinc-500">{ph.goal}</p>
                   <ul className="mt-6 space-y-5 pl-[52px]">
                     {ph.tasks.map((t, j) => (
                       <li key={j}>
                         <div className="text-[15px] leading-relaxed text-zinc-300"><span className="mr-2.5 text-[12px] font-medium text-[var(--ember-soft)]">{TASK_LABEL[t.type] || 'Study'}</span>{t.text}</div>
-                        {t.problems?.length > 0 && <div className="mt-2.5 flex flex-wrap gap-2">{t.problems.map((p) => <Link key={p._id} to={`/problems/${p._id}`} className="rounded-full border border-[var(--line-strong)] px-3.5 py-1.5 text-[13px] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">{p.title}</Link>)}</div>}
+                        {t.problems?.length > 0 && <div className="mt-2.5 flex flex-wrap gap-2">{t.problems.map((p) => <Link key={p._id} to={`/problems/${p._id}`} className="rounded-sm border border-[var(--line-strong)] px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">{p.title}</Link>)}</div>}
                       </li>
                     ))}
                   </ul>
@@ -231,11 +231,11 @@ export default function CompanyDetailPage() {
   return (
     <Page>
       {/* ═══ Hero ═══ */}
-      <header className="pt-10 md:pt-14">
+      <header className="pt-0 md:pt-2">
         <Link to="/intel" className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-zinc-100"><ArrowLeft className="h-4 w-4" /> Atlas</Link>
         <div className="mt-10 grid gap-14 lg:grid-cols-[1.35fr_1fr] lg:items-end">
           <div>
-            <div className="flex items-center gap-4"><CompanyLogo company={company} size={52} /><div className="text-[13.5px] text-zinc-500">{company.tier}{company.headquarters ? ` · ${company.headquarters}` : ''}{company.founded ? ` · founded ${company.founded}` : ''} · {CONF[stats.dataConfidence]}</div></div>
+            <div className="flex items-center gap-4"><CompanyLogo company={company} size={52} /><div className="tag">{company.tier}{company.headquarters ? ` · ${company.headquarters}` : ''}{company.founded ? ` · founded ${company.founded}` : ''} · {CONF[stats.dataConfidence]}</div></div>
             <h1 className="display mt-6 text-[clamp(64px,11vw,168px)] leading-[0.9] text-zinc-50">{company.name}</h1>
             {company.description && <p className="mt-8 max-w-xl text-[18px] leading-relaxed text-zinc-400">{company.description}</p>}
             <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -244,10 +244,10 @@ export default function CompanyDetailPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-x-10 gap-y-10">
-            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{stats.offerRate != null ? <CountUp value={stats.offerRate} /> : '—'}{stats.offerRate != null && <span className="text-[30px] text-zinc-500">%</span>}</div><div className="mt-3 text-[13px] text-zinc-500">offer rate{stats.offerRateCI && <><br /><span className="text-zinc-600">likely {stats.offerRateCI.low}–{stats.offerRateCI.high}%</span></>}</div></div>
-            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50"><CountUp value={stats.totalReports} /></div><div className="mt-3 text-[13px] text-zinc-500">reports</div></div>
-            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{stats.avgRounds || rounds.length || '—'}</div><div className="mt-3 text-[13px] text-zinc-500">rounds, on average</div></div>
-            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{company.ctcMin != null ? (company.ctcMin === company.ctcMax ? company.ctcMin : `${company.ctcMin}–${company.ctcMax}`) : '—'}</div><div className="mt-3 text-[13px] text-zinc-500">LPA package</div></div>
+            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{stats.offerRate != null ? <CountUp value={stats.offerRate} /> : '—'}{stats.offerRate != null && <span className="text-[30px] text-zinc-500">%</span>}</div><div className="tag mt-3">offer rate{stats.offerRateCI && <><br /><span className="text-zinc-600">likely {stats.offerRateCI.low}–{stats.offerRateCI.high}%</span></>}</div></div>
+            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50"><CountUp value={stats.totalReports} /></div><div className="tag mt-3">reports</div></div>
+            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{stats.avgRounds || rounds.length || '—'}</div><div className="tag mt-3">rounds, on average</div></div>
+            <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[76px] leading-none tnum text-zinc-50">{company.ctcMin != null ? (company.ctcMin === company.ctcMax ? company.ctcMin : `${company.ctcMin}–${company.ctcMax}`) : '—'}</div><div className="tag mt-3">LPA package</div></div>
           </div>
         </div>
         {company.website && <a href={company.website} target="_blank" rel="noreferrer" className="mt-12 mr-8 inline-block text-[14px] text-zinc-500 transition-colors hover:text-[var(--ember)]">{company.website.replace(/^https?:\/\/(www\.)?/, '')} ↗</a>}
@@ -256,10 +256,10 @@ export default function CompanyDetailPage() {
 
       {/* sticky section nav */}
       <div className="sticky top-4 z-30 mt-14 flex justify-center">
-        <nav className="flex items-center gap-1 rounded-full border border-[var(--line-strong)] bg-[#141418]/95 p-1 backdrop-blur-md">
+        <nav className="flex items-center gap-1 rounded-full border border-[var(--line-strong)] bg-[#0d0d0d]/95 p-1 backdrop-blur-md">
           {SECTIONS.map(([id, l]) => (
-            <button key={id} onClick={() => go(id)} className={cn('relative rounded-full px-4 py-2 text-[13px] font-medium transition-colors', active === id ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
-              {active === id && <motion.span layoutId="co-nav" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+            <button key={id} onClick={() => go(id)} className={cn('relative rounded-sm px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', active === id ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+              {active === id && <motion.span layoutId="co-nav" className="absolute inset-0 rounded-sm bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
               <span className="relative">{l}{id === 'voices' && <span className="ml-1.5 text-zinc-600">{experiences.length}</span>}</span>
             </button>
           ))}
@@ -288,8 +288,8 @@ export default function CompanyDetailPage() {
                 <YAxis yAxisId="l" tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
                 <Tooltip {...chartTooltipStyle} />
-                <RBar yAxisId="l" dataKey="reports" name="Reports" fill="#f2c66d" fillOpacity={0.28} radius={[8, 8, 0, 0]} barSize={34} />
-                <Line yAxisId="r" dataKey="offerRate" name="Offer rate %" stroke="#ff7a4d" strokeWidth={2.4} dot={{ r: 4.5, fill: '#0c0c10', stroke: '#ff7a4d', strokeWidth: 2 }} connectNulls />
+                <RBar yAxisId="l" dataKey="reports" name="Reports" fill="#fbbf24" fillOpacity={0.28} radius={[8, 8, 0, 0]} barSize={34} />
+                <Line yAxisId="r" dataKey="offerRate" name="Offer rate %" stroke="#34d399" strokeWidth={2.4} dot={{ r: 4.5, fill: '#0a0a0a', stroke: '#34d399', strokeWidth: 2 }} connectNulls />
               </ComposedChart></ResponsiveContainer></div>
             ) : <p className="text-[14px] text-zinc-600">Not enough data yet.</p>}
           </div>
@@ -359,7 +359,7 @@ export default function CompanyDetailPage() {
             ))}
           </div>
           {!filteredQs.length && <p className="py-10 text-center text-[14px] text-zinc-600">No questions match.</p>}
-          {filteredQs.length > qLimit && <button onClick={() => setQLimit((n) => n + 12)} className="mt-8 rounded-full border border-[var(--line-strong)] px-6 py-2.5 text-[13px] text-zinc-400 hover:text-zinc-100">Show more questions</button>}
+          {filteredQs.length > qLimit && <button onClick={() => setQLimit((n) => n + 12)} className="mt-8 rounded-sm border border-[var(--line-strong)] px-6 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-400 hover:text-zinc-100">Show more questions</button>}
         </div>
 
         <div className="mt-24 grid gap-16 lg:grid-cols-2">
@@ -383,15 +383,15 @@ export default function CompanyDetailPage() {
       <Section id="voices" title={<>The <em>voices</em></>} kicker="Firsthand accounts. Open one to read every round.">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-1.5">{['All', 'Yes', 'No', 'Pending'].map((o) => <button key={o} onClick={() => setExpFilter({ ...expFilter, offer: o })} className={chip(expFilter.offer === o)}>{o === 'Yes' ? 'Got the offer' : o === 'No' ? 'No offer' : o}</button>)}</div>
-          <div className="flex items-center gap-1 text-[13px] text-zinc-500"><span className="mr-1">Order</span>{[['recent', 'Recent'], ['top', 'Top voted'], ['quality', 'Best written']].map(([k, l]) => <button key={k} onClick={() => setExpFilter({ ...expFilter, sort: k })} className={cn('rounded-full px-3 py-1.5', expFilter.sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}</div>
+          <div className="flex items-center gap-1 text-[13px] text-zinc-500"><span className="mr-1">Order</span>{[['recent', 'Recent'], ['top', 'Top voted'], ['quality', 'Best written']].map(([k, l]) => <button key={k} onClick={() => setExpFilter({ ...expFilter, sort: k })} className={cn('rounded-sm px-3 py-1.5', expFilter.sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}</div>
         </div>
         {filteredExps.length ? (
           <>
             {filteredExps.slice(0, expLimit).map((e) => <Voice key={e._id} exp={e} onVote={vote} />)}
-            {filteredExps.length > expLimit && <button onClick={() => setExpLimit((n) => n + 6)} className="mt-8 rounded-full border border-[var(--line-strong)] px-6 py-2.5 text-[13px] text-zinc-400 hover:text-zinc-100">Show {Math.min(6, filteredExps.length - expLimit)} more</button>}
+            {filteredExps.length > expLimit && <button onClick={() => setExpLimit((n) => n + 6)} className="mt-8 rounded-sm border border-[var(--line-strong)] px-6 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-400 hover:text-zinc-100">Show {Math.min(6, filteredExps.length - expLimit)} more</button>}
           </>
         ) : (
-          <div className="py-16 text-center"><div className="display text-[34px] italic text-zinc-500">No accounts match.</div><button onClick={() => setShowSubmit(true)} className="mt-4 text-[14px] text-[var(--ember)] hover:underline">Be the first to share how yours went</button></div>
+          <div className="py-16 text-center"><div className="display text-[27.2px] italic text-zinc-500">No accounts match.</div><button onClick={() => setShowSubmit(true)} className="mt-4 text-[14px] text-[var(--ember)] hover:underline">Be the first to share how yours went</button></div>
         )}
       </Section>
 

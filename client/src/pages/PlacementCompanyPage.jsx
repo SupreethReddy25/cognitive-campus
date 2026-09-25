@@ -9,13 +9,13 @@ import { useToast } from '../context/ToastContext';
 import { Page, PrimaryButton, Skeleton, ErrorNote, CountUp, cn } from '../components/ui/kit';
 
 const CONF = { none: 'no data yet', low: 'low confidence', medium: 'medium confidence', high: 'high confidence' };
-const chip = (on) => cn('rounded-full border px-3.5 py-1.5 text-[13px] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
+const chip = (on) => cn('rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
 
 function Section({ title, kicker, children }) {
   return (
     <section className="pt-20">
       <div className="mb-8 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
-        <h2 className="display text-[clamp(34px,4.4vw,56px)] text-zinc-50">{title}</h2>
+        <h2 className="display text-[clamp(27px,3.7vw,45px)] text-zinc-50">{title}</h2>
         {kicker && <div className="hidden max-w-xs pb-1.5 text-right text-[13px] leading-snug text-zinc-500 md:block">{kicker}</div>}
       </div>
       {children}
@@ -31,12 +31,12 @@ function Voice({ exp }) {
       <button onClick={() => setOpen((o) => !o)} className="group flex w-full items-start justify-between gap-6 text-left">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-x-4">
-            <span className="display text-[30px] leading-none text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{exp.role}</span>
+            <span className="display text-[24px] leading-none text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{exp.role}</span>
             <span className={cn('text-[13px] font-medium', outcome[1])}>{outcome[0]}</span>
             {exp.isVerified && <span className="inline-flex items-center gap-1 text-[12px] text-sky-300"><ShieldCheck className="h-3.5 w-3.5" />verified</span>}
-            {exp.source === 'curated' && <span className="rounded-full border border-[var(--line-strong)] px-2.5 py-0.5 text-[11.5px] text-zinc-500">sample report</span>}
+            {exp.source === 'curated' && <span className="rounded-sm border border-[var(--line-strong)] px-2.5 py-0.5 text-[11.5px] text-zinc-500">sample report</span>}
           </div>
-          <div className="mt-1.5 text-[13px] text-zinc-500">{exp.month} {exp.year}{exp.difficulty ? ` · felt ${String(exp.difficulty).toLowerCase()}` : ''}{exp.roundCount > 0 ? ` · ${exp.roundCount} round${exp.roundCount !== 1 ? 's' : ''}` : ''}{exp.upvotes > 0 ? ` · ${exp.upvotes} helpful` : ''}</div>
+          <div className="tag mt-1.5">{exp.month} {exp.year}{exp.difficulty ? ` · felt ${String(exp.difficulty).toLowerCase()}` : ''}{exp.roundCount > 0 ? ` · ${exp.roundCount} round${exp.roundCount !== 1 ? 's' : ''}` : ''}{exp.upvotes > 0 ? ` · ${exp.upvotes} helpful` : ''}</div>
         </div>
         <ChevronDown className={cn('mt-2 h-5 w-5 shrink-0 text-zinc-600 transition-transform', open && 'rotate-180')} />
       </button>
@@ -44,7 +44,7 @@ function Voice({ exp }) {
         <div className="mt-6 space-y-7 border-l border-[var(--line-strong)] pl-7">
           {exp.rounds?.map((r, i) => (
             <div key={i}>
-              <div className="flex flex-wrap items-baseline gap-3"><span className="display text-[26px] text-zinc-600">{String(i + 1).padStart(2, '0')}</span><span className="text-[16px] font-medium text-zinc-100">{r.type}</span>{r.duration && <span className="text-[13px] text-zinc-500">{r.duration}</span>}</div>
+              <div className="flex flex-wrap items-baseline gap-3"><span className="display text-[20.8px] text-zinc-600">{String(i + 1).padStart(2, '0')}</span><span className="text-[16px] font-medium text-zinc-100">{r.type}</span>{r.duration && <span className="text-[13px] text-zinc-500">{r.duration}</span>}</div>
               {r.topics?.length > 0 && <div className="mt-1.5 text-[13px] text-[var(--ember-soft)]">{r.topics.join(' · ')}</div>}
               <ul className="mt-2.5 space-y-2">{r.questions?.map((q, j) => <li key={j} className="max-w-3xl text-[15px] leading-relaxed text-zinc-300">{q.text}</li>)}</ul>
               {r.tips && <p className="mt-2 text-[13.5px] italic text-zinc-500">{r.tips}</p>}
@@ -98,7 +98,7 @@ export default function PlacementCompanyPage() {
   if (!collegeSlug) {
     return (
       <Page><div className="mx-auto max-w-xl pt-32 text-center">
-        <h1 className="display text-[clamp(44px,6vw,72px)] text-zinc-50">Pick your <em className="text-[var(--ember)]">college</em> first.</h1>
+        <h1 className="display text-[clamp(35px,5.1vw,58px)] text-zinc-50">Pick your <em className="text-[var(--ember)]">college</em> first.</h1>
         <p className="mt-5 text-[16px] text-zinc-500">This view is scoped to reports from your own campus.</p>
         <Link to="/placement" className="mt-8 inline-block text-[15px] text-[var(--ember)] hover:underline">Go to the placement dashboard →</Link>
       </div></Page>
@@ -122,12 +122,12 @@ export default function PlacementCompanyPage() {
 
   return (
     <Page>
-      <header className="pt-10 md:pt-14">
+      <header className="pt-0 md:pt-2">
         <Link to="/placement" className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-zinc-100"><ArrowLeft className="h-4 w-4" /> {college?.shortName} placement</Link>
         <div className="mt-10 flex flex-wrap items-end justify-between gap-8">
           <div>
-            <div className="text-[13.5px] text-zinc-500">{company?.tier} · at {college?.name} · {CONF[dataConfidence]}</div>
-            <h1 className="display mt-5 text-[clamp(56px,10vw,150px)] leading-[0.92] text-zinc-50">{company?.name}</h1>
+            <div className="tag">{company?.tier} · at {college?.name} · {CONF[dataConfidence]}</div>
+            <h1 className="display mt-5 text-[clamp(45px,8.5vw,120px)] leading-[0.92] text-zinc-50">{company?.name}</h1>
           </div>
           <div className="flex items-center gap-6">
             <Link to={`/companies/${companySlug}`} className="text-[14px] text-zinc-400 transition-colors hover:text-[var(--ember)]">Global dossier →</Link>
@@ -135,10 +135,10 @@ export default function PlacementCompanyPage() {
           </div>
         </div>
         <div className="mt-12 grid grid-cols-2 gap-x-10 gap-y-8 lg:grid-cols-4">
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[64px] leading-none tnum text-zinc-50">{stats.offerRate != null ? <><CountUp value={stats.offerRate} /><span className="text-[26px] text-zinc-500">%</span></> : '—'}</div><div className="mt-3 text-[13px] text-zinc-500">offer rate at your campus</div></div>
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[64px] leading-none tnum text-zinc-50"><CountUp value={stats.totalReports} /></div><div className="mt-3 text-[13px] text-zinc-500">reports from seniors</div></div>
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[64px] leading-none tnum text-zinc-50">{stats.yearsActive?.length || 0}</div><div className="mt-3 text-[13px] text-zinc-500">seasons active{stats.yearsActive?.length ? ` · ${stats.yearsActive[stats.yearsActive.length - 1]}–${stats.yearsActive[0]}` : ''}</div></div>
-          <div className="border-t border-[var(--line-strong)] pt-4"><div className="text-[15px] leading-relaxed text-zinc-300">{(stats.commonRoles || []).slice(0, 4).join(' · ') || '—'}</div><div className="mt-3 text-[13px] text-zinc-500">roles offered</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[51.2px] leading-none tnum text-zinc-50">{stats.offerRate != null ? <><CountUp value={stats.offerRate} /><span className="text-[26px] text-zinc-500">%</span></> : '—'}</div><div className="tag mt-3">offer rate at your campus</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[51.2px] leading-none tnum text-zinc-50"><CountUp value={stats.totalReports} /></div><div className="tag mt-3">reports from seniors</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="display text-[51.2px] leading-none tnum text-zinc-50">{stats.yearsActive?.length || 0}</div><div className="tag mt-3">seasons active{stats.yearsActive?.length ? ` · ${stats.yearsActive[stats.yearsActive.length - 1]}–${stats.yearsActive[0]}` : ''}</div></div>
+          <div className="border-t border-[var(--line-strong)] pt-4"><div className="text-[15px] leading-relaxed text-zinc-300">{(stats.commonRoles || []).slice(0, 4).join(' · ') || '—'}</div><div className="tag mt-3">roles offered</div></div>
         </div>
       </header>
 
@@ -152,7 +152,7 @@ export default function PlacementCompanyPage() {
             {stats.topTopics?.length > 0 && (
               <div><div className="mb-4 text-[13px] text-zinc-500">Topics reported</div>
                 {stats.topTopics.slice(0, 8).map((t) => (
-                  <div key={t.topic} className="flex items-baseline justify-between border-b border-[var(--line)] py-3"><span className="display text-[26px] text-zinc-100">{t.topic}</span><span className="text-[13px] tnum text-zinc-500">{t.pct != null ? `${t.pct}%` : t.count}</span></div>
+                  <div key={t.topic} className="flex items-baseline justify-between border-b border-[var(--line)] py-3"><span className="display text-[20.8px] text-zinc-100">{t.topic}</span><span className="text-[13px] tnum text-zinc-500">{t.pct != null ? `${t.pct}%` : t.count}</span></div>
                 ))}
               </div>
             )}
@@ -183,7 +183,7 @@ export default function PlacementCompanyPage() {
               <thead><tr>{['Year', 'Season', 'Roles', 'Package', 'Eligibility', 'Hired'].map((h) => <th key={h} className="pb-3 text-[12.5px] font-normal text-zinc-600">{h}</th>)}</tr></thead>
               <tbody>{placementRecords.map((rec, i) => (
                 <tr key={i} className="border-t border-[var(--line)]">
-                  <td className="py-3.5 pr-6 display text-[24px] tnum text-zinc-100">{rec.hiringYear}</td>
+                  <td className="py-3.5 pr-6 display text-[19.2px] tnum text-zinc-100">{rec.hiringYear}</td>
                   <td className="py-3.5 pr-6 text-[14px] text-zinc-500">{rec.hiringSeason}{rec.source === 'modelled' && <span className="ml-2 text-[11.5px] text-amber-400/80">modelled</span>}</td>
                   <td className="py-3.5 pr-6 text-[14px] text-zinc-300">{rec.roles?.join(', ') || '—'}</td>
                   <td className="py-3.5 pr-6 text-[14px] text-zinc-300">{rec.packageOffered?.ctc || '—'}</td>
