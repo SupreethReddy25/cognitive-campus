@@ -1,680 +1,353 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { adminService, companiesService, collegesService } from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Shield, Users, BookOpen, FileText, TrendingUp, Check, X,
-  Loader2, AlertCircle, ChevronDown, ChevronUp, Search,
-  Building2, GraduationCap, Sparkles, ArrowUpRight,
-  RefreshCw, UserCheck, Layers, BarChart2
+  ResponsiveContainer, ComposedChart, Bar as RBar, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend, BarChart
+} from 'recharts';
+import {
+  Shield, Users, BookOpen, FileText, Check, X, Loader2, Search, Building2, GraduationCap, Sparkles, RefreshCw, UserCheck, Layers, BarChart2,
+  TrendingUp, Activity, AlertTriangle, ChevronDown, Trash2, Brain, Plus, Eye, Flame
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { adminService, companiesService, collegesService, analyticsService } from '../services/api';
+import { Card, Label, SectionTitle, Stat, Pill, DiffPill, Bar, Skeleton, EmptyState, CountUp, CompanyLogo, chartTooltipStyle, cn } from '../components/ui/kit';
 
-// ─── Shared primitives ───────────────────────────────────────────────────────
-const Badge = ({ children, color = 'zinc' }) => {
-  const colors = {
-    green:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    red:    'bg-red-500/10 text-red-400 border-red-500/20',
-    amber:  'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    blue:   'bg-sky-500/10 text-sky-400 border-sky-500/20',
-    violet: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-    zinc:   'bg-white/[0.04] text-zinc-500 border-white/[0.06]',
-  };
+const TABS = [
+  ['overview', 'Overview', BarChart2], ['curriculum', 'Curriculum', Layers], ['students', 'Students', Users],
+  ['experiences', 'Experiences', FileText], ['problems', 'Problems', BookOpen], ['add', 'Add data', Sparkles]
+];
+const inputCls = 'w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 py-2.5 text-[13px] text-zinc-200 outline-none focus:border-violet-400/50 transition-all placeholder:text-zinc-700';
+const Spinner = () => <div className="flex items-center justify-center gap-3 py-16 text-zinc-600"><Loader2 className="h-5 w-5 animate-spin" /><span className="font-mono text-[10px] uppercase tracking-widest">Loading…</span></div>;
+const Field = ({ label, children }) => <div className="space-y-1.5"><Label>{label}</Label>{children}</div>;
+const ago = (iso) => { if (!iso) return '—'; const d = Math.floor((Date.now() - new Date(iso)) / 86400000); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d}d ago`; };
+
+// ─── Overview ────────────────────────────────────────────────────────────────
+function OverviewTab({ onGoto }) {
+  const [s, setS] = useState(null);
+  useEffect(() => { adminService.getStats().then((r) => setS(r.data.data)).catch(() => {}); }, []);
+  if (!s) return <Spinner />;
+  const pending = s.moderation.pendingExperiences + s.moderation.waitlistedProblems + s.moderation.quarantinedProblems;
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold border uppercase tracking-wider ${colors[color]}`}>
-      {children}
-    </span>
+    <div className="space-y-6">
+      {pending > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.05] px-5 py-3.5">
+          <div className="flex items-center gap-3 text-[13px] text-amber-100"><AlertTriangle className="h-4 w-4 text-amber-300" /> {s.moderation.pendingExperiences} experience{s.moderation.pendingExperiences !== 1 ? 's' : ''} and {s.moderation.waitlistedProblems + s.moderation.quarantinedProblems} problem{s.moderation.waitlistedProblems + s.moderation.quarantinedProblems !== 1 ? 's' : ''} need review</div>
+          <div className="flex gap-2"><button onClick={() => onGoto('experiences')} className="rounded-lg border border-amber-400/30 px-3 py-1.5 font-mono text-[10.5px] uppercase text-amber-200 hover:bg-amber-400/10">Experiences</button><button onClick={() => onGoto('problems')} className="rounded-lg border border-amber-400/30 px-3 py-1.5 font-mono text-[10.5px] uppercase text-amber-200 hover:bg-amber-400/10">Problems</button></div>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Students" icon={Users} value={<CountUp value={s.totalStudents} />} sub={`${s.totalAdmins} admin${s.totalAdmins !== 1 ? 's' : ''}`} />
+        <Stat label="Submissions" icon={FileText} accent="blue" value={<CountUp value={s.totalSubmissions} />} sub={`${s.passRate}% pass rate`} />
+        <Stat label="Active users" icon={Activity} accent="violet" value={<CountUp value={s.active.week} />} sub={`${s.active.day} today · ${s.active.month} in 30d`} />
+        <Stat label="Avg student XP" icon={TrendingUp} accent="amber" value={<CountUp value={s.averageXP} />} sub={`${s.totalXP.toLocaleString()} XP total`} />
+      </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Problems" icon={BookOpen} value={s.content.problems.total} sub={`${s.content.problems.approved || 0} live · ${s.totalProblemsAttempted} attempted`} />
+        <Stat label="Companies" icon={Building2} accent="blue" value={s.content.companies} sub={`${s.content.colleges} colleges`} />
+        <Stat label="Experiences" icon={FileText} accent="violet" value={s.content.experiences.total} sub={`${s.content.experiences.Published || 0} published`} />
+        <Stat label="Placement records" icon={GraduationCap} accent="amber" value={s.content.placementRecords} sub="across all colleges" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <Card>
+          <SectionTitle icon={Activity} title="Submissions per day · last 14 days" sub="Bars: submissions. Lines: correct submissions and active students." />
+          <div className="h-64"><ResponsiveContainer><ComposedChart data={s.submissionsPerDay.map((d) => ({ ...d, label: d.date.slice(5) }))} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}><CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} /><XAxis dataKey="label" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} /><YAxis tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} /><Tooltip {...chartTooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><RBar dataKey="submissions" name="Submissions" fill="#38bdf8" radius={[5, 5, 0, 0]} barSize={18} /><Line dataKey="correct" name="Correct" stroke="#34d399" strokeWidth={2} dot={false} /><Line dataKey="activeUsers" name="Active students" stroke="#a78bfa" strokeWidth={2} dot={false} /></ComposedChart></ResponsiveContainer></div>
+        </Card>
+        <Card>
+          <SectionTitle icon={Flame} title="Most attempted problems" />
+          <div className="space-y-3">{s.topProblems.map((p, i) => <div key={p._id}><div className="mb-1 flex items-center justify-between text-[12.5px]"><span className="flex items-center gap-2 truncate text-zinc-200"><span className="font-mono text-zinc-600">{i + 1}</span>{p.title}<DiffPill difficulty={p.difficulty} className="scale-90" /></span><span className="font-mono text-[10.5px] text-zinc-500">{p.solved}/{p.attempts}</span></div><Bar value={p.solved} max={p.attempts} height={4} color="#34d399" /></div>)}</div>
+          <div className="mt-6"><Label className="mb-2 block">Students by XP</Label><div className="h-24"><ResponsiveContainer><BarChart data={s.xpDistribution.map((b) => ({ name: typeof b.bucket === 'number' ? ['0-50', '50-200', '200-500', '500-1k', '1k+'][[0, 50, 200, 500, 1000].indexOf(b.bucket)] || b.bucket : b.bucket, n: b.students }))}><XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 9 }} tickLine={false} axisLine={false} /><Tooltip {...chartTooltipStyle} /><RBar dataKey="n" name="Students" fill="#fbbf24" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></div>
+        </Card>
+      </div>
+    </div>
   );
-};
+}
 
-const StatCard = ({ icon: Icon, label, value, sub, color = 'signal' }) => (
-  <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 hover:bg-white/[0.04] transition-colors">
-    <div className="flex items-start justify-between mb-4">
-      <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
-        color === 'signal' ? 'bg-[var(--signal)]/10' : 'bg-violet-500/10'
-      }`}>
-        <Icon className={`h-4.5 w-4.5 ${color === 'signal' ? 'text-[var(--signal)]' : 'text-violet-400'}`} strokeWidth={1.6} />
-      </div>
-    </div>
-    <div className="text-2xl font-bold text-zinc-100 tabular-nums">{value ?? '—'}</div>
-    <div className="text-xs text-zinc-500 mt-0.5">{label}</div>
-    {sub && <div className="text-[10px] text-zinc-700 mt-1 font-mono">{sub}</div>}
-  </div>
-);
+// ─── Curriculum ──────────────────────────────────────────────────────────────
+function CurriculumTab() {
+  const toast = useToast();
+  const [h, setH] = useState(null);
+  const [colleges, setColleges] = useState([]);
+  const [college, setCollege] = useState('');
+  const [model, setModel] = useState(null);
+  const [refitting, setRefitting] = useState(false);
 
-const SectionHeader = ({ title, sub, action }) => (
-  <div className="flex items-center justify-between mb-4">
-    <div>
-      <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest">{title}</h2>
-      {sub && <p className="text-[11px] text-zinc-600 mt-0.5">{sub}</p>}
-    </div>
-    {action}
-  </div>
-);
+  const load = useCallback(() => adminService.getHeatmap(college ? { collegeId: college } : {}).then((r) => setH(r.data.data)), [college]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { collegesService.getColleges({ limit: 100 }).then((r) => setColleges(r.data.data.colleges || [])); analyticsService.getModel().then((r) => setModel(r.data.data)); }, []);
 
-// ─── Tab: Overview ───────────────────────────────────────────────────────────
-function OverviewTab() {
-  const [stats, setStats]     = useState(null);
-  const [heatmap, setHeatmap] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const refit = async () => {
+    setRefitting(true);
+    try { const r = await analyticsService.refitModel(); toast.success('BKT parameters refit', `${r.data.data.summary.filter((x) => x.fitted).length} skills updated from real submissions`); analyticsService.getModel().then((m) => setModel(m.data.data)); }
+    catch { toast.error('Refit failed'); } finally { setRefitting(false); }
+  };
 
-  useEffect(() => {
-    Promise.all([adminService.getStats(), adminService.getHeatmap()])
-      .then(([s, h]) => {
-        if (s.data.success) setStats(s.data.data);
-        if (h.data.success) setHeatmap(h.data.data.heatmap || []);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <LoadingSpinner />;
-
+  if (!h) return <Spinner />;
+  const BINS = [['<20%', '#fb7185'], ['20–40', '#f97316'], ['40–60', '#fbbf24'], ['60–85', '#38bdf8'], ['Mastered', '#34d399']];
   return (
-    <div className="space-y-8">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users}    label="Total Students"      value={stats?.totalStudents}         sub="registered accounts" />
-        <StatCard icon={FileText} label="Total Submissions"   value={stats?.totalSubmissions}      sub="code runs + submits" />
-        <StatCard icon={BookOpen} label="Problems Attempted"  value={stats?.totalProblemsAttempted} sub="distinct problems" color="violet" />
-        <StatCard icon={TrendingUp} label="Avg Student XP"   value={stats?.averageXP}             sub={`top: ${stats?.mostAttemptedProblem?.title || '—'}`} color="violet" />
-      </div>
-
-      {/* Skill Heatmap */}
-      <div>
-        <SectionHeader title="Cohort Skill Heatmap" sub="Average BKT mastery per skill across all students — lower = cohort struggling" />
-        <div className="space-y-2">
-          {heatmap.map(row => {
+    <div className="space-y-6">
+      <Card>
+        <SectionTitle icon={Layers} title="Cohort skill heatmap" sub="Average BKT mastery per skill (lowest first) with the full distribution of students — a direct signal for curriculum planning." action={
+          <select value={college} onChange={(e) => setCollege(e.target.value)} className="rounded-lg border border-white/[0.07] bg-[#0b0f15] px-3 py-2 text-[12px] text-zinc-300 outline-none"><option value="">All colleges</option>{colleges.map((c) => <option key={c._id} value={c._id}>{c.shortName}</option>)}</select>} />
+        {h.recommendation && <div className="mb-5 rounded-xl border border-violet-400/20 bg-violet-400/[0.05] px-4 py-3 text-[12.5px] text-violet-100"><b className="text-violet-300">Insight · </b>{h.recommendation}</div>}
+        <div className="space-y-3">
+          {h.heatmap.map((row) => {
             const pct = Math.round(row.avgMastery * 100);
-            const bar = Math.round(row.masteryRate * 100);
-            const color = pct >= 70 ? 'bg-[var(--signal)]' : pct >= 40 ? 'bg-amber-400' : 'bg-red-500';
+            const tot = row.distribution.reduce((a, b) => a + b, 0) || 1;
             return (
-              <div key={row.skillId} className="flex items-center gap-4 py-2 border-b border-white/[0.03]">
-                <div className="w-36 shrink-0 text-xs text-zinc-400 font-medium truncate">{row.skillName}</div>
-                <div className="flex-1 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
-                </div>
-                <div className="w-12 text-right font-mono text-[11px] text-zinc-400">{pct}%</div>
-                <div className="w-20 text-right font-mono text-[10px] text-zinc-600">{row.totalStudents} students</div>
-                <div className="w-20 text-right font-mono text-[10px] text-zinc-600">{bar}% mastered</div>
+              <div key={row.skillId} className="grid items-center gap-4 border-b border-white/[0.04] pb-3 last:border-0 md:grid-cols-[150px_1fr_70px_130px]">
+                <div><div className="text-[13px] font-medium text-zinc-200">{row.skillName}</div><div className="font-mono text-[10px] text-zinc-600">{row.totalStudents} students · {row.accuracy != null ? `${Math.round(row.accuracy * 100)}% accuracy` : 'no data'}</div></div>
+                <div className="flex h-5 overflow-hidden rounded-md bg-white/[0.04]" title={BINS.map(([l], i) => `${l}: ${row.distribution[i]}`).join(' · ')}>{row.distribution.map((n, i) => <motion.div key={i} initial={{ width: 0 }} animate={{ width: `${(n / tot) * 100}%` }} transition={{ duration: 0.8, delay: i * 0.05 }} style={{ background: BINS[i][1] }} className="h-full" />)}</div>
+                <div className={cn('text-right font-mono text-[13px] font-semibold', pct >= 70 ? 'text-emerald-400' : pct >= 45 ? 'text-amber-400' : 'text-rose-400')}>{row.totalStudents ? `${pct}%` : '—'}</div>
+                <div className="text-right font-mono text-[10.5px] text-zinc-500">{row.masteredCount} mastered · {Math.round(row.masteryRate * 100)}%</div>
               </div>
             );
           })}
-          {heatmap.length === 0 && (
-            <p className="text-xs text-zinc-700 py-4">No skill data yet — students need to make submissions first.</p>
-          )}
         </div>
-      </div>
+        <div className="mt-4 flex flex-wrap gap-3">{BINS.map(([l, c]) => <span key={l} className="flex items-center gap-1.5 font-mono text-[10px] text-zinc-500"><span className="h-2 w-3 rounded" style={{ background: c }} />{l}</span>)}</div>
+      </Card>
+
+      {model && (
+        <Card>
+          <SectionTitle icon={Brain} title="Adaptive knowledge-tracing model" sub="Per-skill BKT parameters learned from real submissions (Bayesian-regularised maximum likelihood). Textbook defaults shown for comparison." action={<button onClick={refit} disabled={refitting} className="flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/10 px-3.5 py-2 font-mono text-[10.5px] uppercase tracking-wider text-violet-300 hover:bg-violet-400/20 disabled:opacity-50">{refitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Refit now</button>} />
+          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left"><thead><tr className="border-b border-white/[0.06]">{['Skill', 'P(L0)', 'P(T) learn', 'P(S) slip', 'P(G) guess', 'Sequences', 'LL gain'].map((c) => <th key={c} className="pb-2.5 pr-4 font-mono text-[9.5px] font-medium uppercase tracking-[0.18em] text-zinc-600">{c}</th>)}</tr></thead>
+            <tbody>{model.skills.map((m) => { const d = model.defaults; const cell = (k) => <td className="py-2.5 pr-4 font-mono text-[12px]"><span className={cn(m.fitted && Math.abs(m.params[k] - d[k]) >= 0.03 ? 'text-violet-300' : 'text-zinc-400')}>{m.params[k].toFixed(2)}</span><span className="ml-1 text-[9px] text-zinc-700">({d[k]})</span></td>; return <tr key={m.skillId} className="border-b border-white/[0.03]"><td className="py-2.5 pr-4 text-[12.5px] text-zinc-200">{m.name}{!m.fitted && <span className="ml-2 font-mono text-[9px] text-zinc-600">default</span>}</td>{cell('pL0')}{cell('pT')}{cell('pS')}{cell('pG')}<td className="py-2.5 pr-4 font-mono text-[11.5px] text-zinc-500">{m.sequences}</td><td className="py-2.5 font-mono text-[11.5px] text-emerald-400">{m.logLikelihoodGain > 0 ? `+${m.logLikelihoodGain}` : '—'}</td></tr>; })}</tbody></table></div>
+        </Card>
+      )}
     </div>
   );
 }
 
-// ─── Tab: Experiences ────────────────────────────────────────────────────────
+// ─── Students ────────────────────────────────────────────────────────────────
+function StudentsTab({ me }) {
+  const toast = useToast();
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
+  const [sort, setSort] = useState('xp');
+  const [open, setOpen] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [working, setWorking] = useState({});
+
+  const load = useCallback(() => { setLoading(true); adminService.getStudents({ q, sort }).then((r) => setRows(r.data.data.students)).finally(() => setLoading(false)); }, [q, sort]);
+  useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [load]);
+
+  const view = async (id) => { if (open === id) { setOpen(null); return; } setOpen(id); setDetail(null); const r = await adminService.getStudent(id); setDetail(r.data.data); };
+  const toggleRole = async (s) => {
+    const role = s.role === 'admin' ? 'student' : 'admin';
+    setWorking((w) => ({ ...w, [s._id]: true }));
+    try { await adminService.updateUserRole(s._id, role); setRows((p) => p.map((x) => (x._id === s._id ? { ...x, role } : x))); toast.success(role === 'admin' ? 'Promoted to admin' : 'Admin access revoked', s.name); }
+    catch (e) { toast.error('Could not change role', e.response?.data?.message); }
+    finally { setWorking((w) => { const n = { ...w }; delete n[s._id]; return n; }); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or email…" className="w-full bg-transparent text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600" /></div>
+        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{[['xp', 'Top XP'], ['active', 'Recently active'], ['recent', 'Newest']].map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', sort === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}</button>)}</div>
+      </div>
+      {loading ? <Spinner /> : rows.length === 0 ? <EmptyState icon={Users} title="No users found" /> : (
+        <Card padded={false} className="overflow-hidden">
+          {rows.map((s) => (
+            <div key={s._id} className="border-b border-white/[0.04] last:border-0">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3.5 md:grid-cols-[1.3fr_90px_120px_90px_80px_150px]">
+                <button onClick={() => view(s._id)} className="flex min-w-0 items-center gap-3 text-left"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[11px] font-semibold text-zinc-300">{s.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}</span><span className="min-w-0"><span className="block truncate text-[13.5px] font-medium text-zinc-100">{s.name}</span><span className="block truncate font-mono text-[10.5px] text-zinc-600">{s.email}</span></span></button>
+                <div className="hidden text-[12.5px] md:block"><span className="font-mono text-zinc-200">{s.xp}</span> <span className="text-[10px] text-zinc-600">XP · L{s.level}</span></div>
+                <div className="hidden text-[12px] text-zinc-500 md:block">{s.collegeId?.shortName || '—'}</div>
+                <div className="hidden text-[12px] text-zinc-400 md:block">{s.skillsMastered}/12 <span className="text-zinc-600">mastered</span></div>
+                <div className="hidden font-mono text-[11px] text-zinc-500 md:block">{s.passRate != null ? `${s.passRate}%` : '—'}<div className="text-[9px] text-zinc-700">{ago(s.lastActiveDate)}</div></div>
+                <div className="flex items-center justify-end gap-2"><Pill tone={s.role === 'admin' ? 'violet' : 'zinc'}>{s.role}</Pill><button onClick={() => toggleRole(s)} disabled={!!working[s._id] || s._id === me} title={s._id === me ? "You can't change your own role here" : ''} className={cn('rounded-lg border px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-wider disabled:opacity-40', s.role === 'admin' ? 'border-white/10 text-zinc-500 hover:text-zinc-200' : 'border-violet-400/30 text-violet-300 hover:bg-violet-400/10')}>{working[s._id] ? <Loader2 className="h-3 w-3 animate-spin" /> : s.role === 'admin' ? 'Revoke' : 'Promote'}</button></div>
+              </div>
+              <AnimatePresence initial={false}>
+                {open === s._id && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden bg-black/20">
+                    {!detail ? <Spinner /> : (
+                      <div className="grid gap-6 px-5 py-5 lg:grid-cols-2">
+                        <div><Label className="mb-3 block">Skill mastery</Label><div className="space-y-2">{detail.skills.map((k) => <div key={k.name} className="flex items-center gap-3 text-[12px]"><span className="w-36 truncate text-zinc-400">{k.name}</span><Bar value={k.masteryP} max={1} height={5} color={k.masteryP >= 0.85 ? '#34d399' : k.masteryP >= 0.5 ? '#38bdf8' : '#fbbf24'} className="flex-1" /><span className="w-10 text-right font-mono text-zinc-500">{Math.round(k.masteryP * 100)}%</span></div>)}</div></div>
+                        <div><Label className="mb-3 block">Recent submissions · {detail.totals.submissions} total · {detail.totals.passRate ?? '—'}% pass</Label><div className="space-y-1.5">{detail.recentSubmissions.map((x) => <div key={x._id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2 text-[12px]"><span className="flex items-center gap-2 truncate"><span className={cn('h-1.5 w-1.5 rounded-full', x.isCorrect ? 'bg-emerald-400' : 'bg-rose-400')} /><span className="truncate text-zinc-300">{x.problemId?.title}</span></span><span className="font-mono text-[10px] text-zinc-600">{ago(x.createdAt)}</span></div>)}{!detail.recentSubmissions.length && <p className="text-[12px] text-zinc-600">No submissions yet.</p>}</div><div className="mt-3 font-mono text-[10.5px] text-zinc-600">{detail.user.collegeId?.name || 'No college'} · target: {detail.user.targetCompanyId?.name || '—'} / {detail.user.targetRole || '—'} · streak {detail.user.streak}</div></div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── Experiences ─────────────────────────────────────────────────────────────
 function ExperiencesTab() {
-  const [experiences, setExperiences] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [filter, setFilter]           = useState('all');
-  const [working, setWorking]         = useState({});
+  const toast = useToast();
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState('Draft');
+  const [q, setQ] = useState('');
+  const [working, setWorking] = useState({});
+  const [open, setOpen] = useState(null);
 
-  const load = useCallback(() => {
-    setLoading(true);
-    adminService.getExperiences({ status: filter, limit: 100 })
-      .then(r => { if (r.data.success) setExperiences(r.data.data); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [filter]);
+  const load = useCallback(() => adminService.getExperiences({ status, q, limit: 100 }).then((r) => setData(r.data.data)), [status, q]);
+  useEffect(() => { setData(null); const t = setTimeout(load, 200); return () => clearTimeout(t); }, [load]);
 
-  useEffect(() => { load(); }, [load]);
-
-  async function act(id, action) {
-    setWorking(w => ({ ...w, [id]: action }));
-    try {
-      await adminService.verifyExperience(id, action);
-      setExperiences(prev => prev.filter(e => e._id !== id));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setWorking(w => { const n = { ...w }; delete n[id]; return n; });
-    }
-  }
-
-  const STATUS_FILTERS = ['all', 'Published', 'Rejected'];
+  const act = async (id, action) => {
+    setWorking((w) => ({ ...w, [id]: action }));
+    try { await adminService.verifyExperience(id, action); toast.success({ verify: 'Verified & published', reject: 'Rejected', restore: 'Restored' }[action]); load(); }
+    catch { toast.error('Action failed'); } finally { setWorking((w) => { const n = { ...w }; delete n[id]; return n; }); }
+  };
+  const counts = data?.counts || {};
+  const FILTERS = [['Draft', 'Pending review', counts.Draft], ['Published', 'Published', counts.Published], ['Rejected', 'Rejected', counts.Rejected], ['all', 'All', Object.values(counts).reduce((a, b) => a + b, 0)]];
 
   return (
     <div className="space-y-4">
-      <SectionHeader
-        title="Interview Experiences"
-        sub="Verify community submissions or reject low-quality ones"
-        action={
-          <div className="flex items-center gap-2">
-            {STATUS_FILTERS.map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                  filter === f ? 'bg-[var(--signal)]/10 text-[var(--signal)] border border-[var(--signal)]/20' : 'text-zinc-600 hover:text-zinc-300'
-                }`}>
-                {f}
-              </button>
-            ))}
-            <button onClick={load} className="p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors">
-              <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.6} />
-            </button>
-          </div>
-        }
-      />
-      {loading ? <LoadingSpinner /> : (
-        <div className="space-y-2">
-          {experiences.map(exp => (
-            <div key={exp._id} className="flex items-start gap-4 p-4 rounded-lg border border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <span className="text-sm font-semibold text-zinc-200">
-                    {exp.companyId?.name || 'Unknown'} — {exp.role}
-                  </span>
-                  <Badge color={exp.offerReceived === 'Yes' ? 'green' : exp.offerReceived === 'No' ? 'red' : 'amber'}>
-                    {exp.offerReceived}
-                  </Badge>
-                  <Badge color={exp.status === 'Published' ? 'green' : exp.status === 'Rejected' ? 'red' : 'amber'}>
-                    {exp.status}
-                  </Badge>
-                  {exp.isVerified && <Badge color="blue">Verified</Badge>}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{FILTERS.map(([k, l, n]) => <button key={k} onClick={() => setStatus(k)} className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}<span className="text-zinc-600">{n ?? 0}</span></button>)}</div>
+        <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] px-3.5 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company or role…" className="w-full bg-transparent text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600" /></div>
+        <button onClick={() => { setData(null); load(); }} className="rounded-lg border border-white/[0.07] p-2.5 text-zinc-500 hover:text-zinc-200"><RefreshCw className="h-4 w-4" /></button>
+      </div>
+      {!data ? <Spinner /> : data.experiences.length === 0 ? <EmptyState icon={FileText} title={status === 'Draft' ? 'Moderation queue is clear' : 'No experiences here'} text={status === 'Draft' ? 'Very thin submissions land here for review.' : ''} /> : (
+        <div className="space-y-2.5">
+          {data.experiences.map((e) => (
+            <Card key={e._id} padded={false}>
+              <div className="flex items-start gap-4 p-4">
+                <CompanyLogo company={e.companyId} size={38} className="rounded-lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2"><span className="text-[14px] font-semibold text-zinc-100">{e.companyId?.name || 'Unknown'} — {e.role}</span><Pill tone={e.offerReceived === 'Yes' ? 'green' : e.offerReceived === 'No' ? 'red' : 'amber'}>{e.offerReceived}</Pill><Pill tone={e.status === 'Published' ? 'green' : e.status === 'Rejected' ? 'red' : 'amber'}>{e.status}</Pill>{e.isVerified && <Pill tone="blue">Verified</Pill>}{e.qualityScore != null && <Pill tone={e.qualityScore >= 60 ? 'green' : e.qualityScore >= 30 ? 'amber' : 'red'}>Q {e.qualityScore}</Pill>}</div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 font-mono text-[10.5px] text-zinc-600"><span>{e.collegeId?.shortName || e.college || 'College unknown'}</span><span>{e.month} {e.year}</span><span>{e.rounds?.length || 0} rounds</span>{e.userId?.name && <span>by {e.userId.name}{e.isAnonymous ? ' (anon)' : ''}</span>}<span>{ago(e.createdAt)}</span></div>
+                  {open === e._id ? <div className="mt-3 space-y-2 rounded-xl bg-black/20 p-3 text-[12px] text-zinc-400">{e.rounds?.map((r, i) => <div key={i}><b className="text-zinc-300">R{i + 1} {r.type}</b>{r.questions?.map((qq, j) => <div key={j} className="ml-3 text-zinc-500">• {qq.text}</div>)}</div>)}{e.overallTips && <div className="italic text-zinc-500">“{e.overallTips}”</div>}</div> : e.overallTips && <p className="mt-2 line-clamp-1 text-[12px] text-zinc-500">{e.overallTips}</p>}
+                  <button onClick={() => setOpen(open === e._id ? null : e._id)} className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-zinc-600 hover:text-zinc-300"><Eye className="h-3 w-3" />{open === e._id ? 'Hide' : 'Preview'}</button>
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-zinc-600 font-mono flex-wrap">
-                  <span>{exp.collegeId?.name || exp.college || 'College unknown'}</span>
-                  {exp.cgpa && <span>· CGPA {exp.cgpa}</span>}
-                  <span>· {exp.rounds?.length || 0} rounds</span>
-                  <span>· {new Date(exp.createdAt).toLocaleDateString()}</span>
-                  {exp.userId?.name && <span>· by {exp.userId.name}</span>}
-                  {exp.isAnonymous && <span>· Anonymous</span>}
+                <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row">
+                  {e.status !== 'Published' || !e.isVerified ? <button onClick={() => act(e._id, 'verify')} disabled={!!working[e._id]} className="flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 font-mono text-[10.5px] text-emerald-300 hover:bg-emerald-400/20 disabled:opacity-50">{working[e._id] === 'verify' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Verify</button> : null}
+                  {e.status !== 'Rejected' ? <button onClick={() => act(e._id, 'reject')} disabled={!!working[e._id]} className="flex items-center gap-1.5 rounded-lg border border-rose-400/25 bg-rose-400/10 px-3 py-1.5 font-mono text-[10.5px] text-rose-300 hover:bg-rose-400/20 disabled:opacity-50">{working[e._id] === 'reject' ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />} Reject</button> : <button onClick={() => act(e._id, 'restore')} disabled={!!working[e._id]} className="rounded-lg border border-white/10 px-3 py-1.5 font-mono text-[10.5px] text-zinc-400 hover:text-zinc-100">Restore</button>}
                 </div>
-                {exp.overallTips && (
-                  <p className="text-[11px] text-zinc-500 mt-1.5 line-clamp-1">{exp.overallTips}</p>
-                )}
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => act(exp._id, 'verify')}
-                  disabled={!!working[exp._id]}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
-                >
-                  {working[exp._id] === 'verify' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                  Verify
-                </button>
-                <button
-                  onClick={() => act(exp._id, 'reject')}
-                  disabled={!!working[exp._id]}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                >
-                  {working[exp._id] === 'reject' ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-                  Reject
-                </button>
-              </div>
-            </div>
+            </Card>
           ))}
-          {experiences.length === 0 && !loading && (
-            <p className="text-xs text-zinc-700 py-8 text-center">No experiences with status "{filter}".</p>
-          )}
         </div>
       )}
     </div>
   );
 }
 
-// ─── Tab: Problems ───────────────────────────────────────────────────────────
+// ─── Problems ────────────────────────────────────────────────────────────────
 function ProblemsTab() {
-  const [problems, setProblems] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState('all');
-  const [working, setWorking]   = useState({});
-
-  const load = useCallback(() => {
-    setLoading(true);
-    adminService.getProblems({ status: filter })
-      .then(r => { if (r.data.success) setProblems(r.data.data); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [filter]);
-
-  useEffect(() => { load(); }, [load]);
-
-  async function setStatus(id, status) {
-    setWorking(w => ({ ...w, [id]: status }));
-    try {
-      const r = await adminService.updateProblemStatus(id, status);
-      if (r.data.success) {
-        setProblems(prev => prev.map(p => p._id === id ? { ...p, status, isActive: status === 'approved' } : p));
-      }
-    } catch (err) { console.error(err); }
-    finally { setWorking(w => { const n = { ...w }; delete n[id]; return n; }); }
-  }
-
-  const STATUS_FILTERS = ['all', 'quarantine', 'waitlisted', 'approved'];
-  const STATUS_COLOR   = { quarantine: 'red', waitlisted: 'amber', approved: 'green' };
-  const DIFF_COLOR     = { easy: 'green', medium: 'amber', hard: 'red' };
-
+  const toast = useToast();
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState('waitlisted');
+  const [q, setQ] = useState('');
+  const [working, setWorking] = useState({});
+  const load = useCallback(() => adminService.getProblems({ status, q }).then((r) => setData(r.data.data)), [status, q]);
+  useEffect(() => { setData(null); const t = setTimeout(load, 200); return () => clearTimeout(t); }, [load]);
+  const set = async (id, s) => { setWorking((w) => ({ ...w, [id]: s })); try { await adminService.updateProblemStatus(id, s); toast.success(`Marked ${s}`); load(); } catch { toast.error('Update failed'); } finally { setWorking((w) => { const n = { ...w }; delete n[id]; return n; }); } };
+  const counts = data?.counts || {};
+  const TONE = { quarantine: 'red', waitlisted: 'amber', approved: 'green' };
   return (
     <div className="space-y-4">
-      <SectionHeader
-        title="Problem Review Queue"
-        sub="quarantine → waitlisted → approved. Only 'approved' problems appear in the coding judge."
-        action={
-          <div className="flex items-center gap-2">
-            {STATUS_FILTERS.map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                  filter === f ? 'bg-[var(--signal)]/10 text-[var(--signal)] border border-[var(--signal)]/20' : 'text-zinc-600 hover:text-zinc-300'
-                }`}>
-                {f}
-              </button>
-            ))}
-            <button onClick={load} className="p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors">
-              <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.6} />
-            </button>
-          </div>
-        }
-      />
-      {loading ? <LoadingSpinner /> : (
-        <div className="space-y-2">
-          {problems.map(p => (
-            <div key={p._id} className="flex items-center gap-4 p-4 rounded-lg border border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <span className="text-sm font-semibold text-zinc-200 truncate">{p.title}</span>
-                  <Badge color={DIFF_COLOR[p.difficulty]}>{p.difficulty}</Badge>
-                  <Badge color={STATUS_COLOR[p.status]}>{p.status}</Badge>
-                  {p.skillId?.name && <Badge color="zinc">{p.skillId.name}</Badge>}
-                </div>
-                <div className="flex items-center gap-3 text-[11px] text-zinc-600 font-mono flex-wrap">
-                  {p.company && <span>{p.company}</span>}
-                  {p.round && <span>· {p.round}</span>}
-                  <span>· ↑{p.upvotes || 0} ↓{p.downvotes || 0}</span>
-                  <span>· {new Date(p.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {p.status !== 'waitlisted' && (
-                  <button onClick={() => setStatus(p._id, 'waitlisted')} disabled={!!working[p._id]}
-                    className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-mono hover:bg-amber-500/20 transition-colors disabled:opacity-50">
-                    {working[p._id] === 'waitlisted' ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null} Waitlist
-                  </button>
-                )}
-                {p.status !== 'approved' && (
-                  <button onClick={() => setStatus(p._id, 'approved')} disabled={!!working[p._id]}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono hover:bg-emerald-500/20 transition-colors disabled:opacity-50">
-                    {working[p._id] === 'approved' ? <Loader2 className="h-3 w-3 animate-spin inline" /> : <Check className="h-3 w-3 inline mr-1" />}Approve
-                  </button>
-                )}
-                {p.status !== 'quarantine' && (
-                  <button onClick={() => setStatus(p._id, 'quarantine')} disabled={!!working[p._id]}
-                    className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-mono hover:bg-red-500/20 transition-colors disabled:opacity-50">
-                    Quarantine
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          {problems.length === 0 && !loading && (
-            <p className="text-xs text-zinc-700 py-8 text-center">No problems with status "{filter}".</p>
-          )}
-        </div>
+      <p className="text-[12.5px] text-zinc-500">Community-proposed problems flow <b className="text-zinc-300">quarantine → waitlisted → approved</b>. Only approved problems appear in the coding judge; approving a proposal awards its author 150 XP.</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{[['waitlisted', 'Waitlisted'], ['quarantine', 'Quarantine'], ['approved', 'Approved'], ['all', 'All']].map(([k, l]) => <button key={k} onClick={() => setStatus(k)} className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}<span className="text-zinc-600">{k === 'all' ? Object.values(counts).reduce((a, b) => a + b, 0) : counts[k] || 0}</span></button>)}</div>
+        <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] px-3.5 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search problems…" className="w-full bg-transparent text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600" /></div>
+      </div>
+      {!data ? <Spinner /> : data.problems.length === 0 ? <EmptyState icon={BookOpen} title="Nothing in this queue" /> : (
+        <div className="space-y-2.5">{data.problems.map((p) => (
+          <Card key={p._id} padded={false}><div className="flex items-start gap-4 p-4">
+            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[14px] font-semibold text-zinc-100">{p.title}</span><DiffPill difficulty={p.difficulty} /><Pill tone={TONE[p.status]}>{p.status}</Pill>{p.skillId?.name && <Pill tone="zinc">{p.skillId.name}</Pill>}</div>
+              <div className="mt-1 flex flex-wrap gap-x-3 font-mono text-[10.5px] text-zinc-600">{p.company && <span>{p.company}</span>}{p.round && <span>{p.round}</span>}<span>↑{p.upvotes || 0} ↓{p.downvotes || 0}</span>{p.authorId?.name && <span>by {p.authorId.name}</span>}<span>{ago(p.createdAt)}</span></div>
+              {p.description && <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-zinc-500">{p.description}</p>}</div>
+            <div className="flex shrink-0 gap-1.5">{['waitlisted', 'approved', 'quarantine'].filter((s) => s !== p.status).map((s) => <button key={s} onClick={() => set(p._id, s)} disabled={!!working[p._id]} className={cn('rounded-lg border px-3 py-1.5 font-mono text-[10.5px] capitalize disabled:opacity-50', s === 'approved' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20' : s === 'quarantine' ? 'border-rose-400/25 bg-rose-400/10 text-rose-300 hover:bg-rose-400/20' : 'border-amber-400/25 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20')}>{working[p._id] === s ? <Loader2 className="h-3 w-3 animate-spin" /> : s === 'approved' ? 'Approve' : s === 'quarantine' ? 'Quarantine' : 'Waitlist'}</button>)}</div>
+          </div></Card>
+        ))}</div>
       )}
     </div>
   );
 }
 
-// ─── Tab: Students ───────────────────────────────────────────────────────────
-function StudentsTab() {
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState('');
-  const [working, setWorking]   = useState({});
-
-  useEffect(() => {
-    adminService.getStudents()
-      .then(r => { if (r.data.success) setStudents(r.data.data.students || []); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function toggleRole(student) {
-    const newRole = student.role === 'admin' ? 'student' : 'admin';
-    setWorking(w => ({ ...w, [student._id]: true }));
-    try {
-      const r = await adminService.updateUserRole(student._id, newRole);
-      if (r.data.success) {
-        setStudents(prev => prev.map(s => s._id === student._id ? { ...s, role: newRole } : s));
-      }
-    } catch (err) { console.error(err); }
-    finally { setWorking(w => { const n = { ...w }; delete n[student._id]; return n; }); }
-  }
-
-  const filtered = students.filter(s =>
-    !search ||
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader
-        title="User Management"
-        sub="View all students and promote them to admin (placement team access)"
-        action={
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-600" strokeWidth={1.6} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name or email..."
-              className="pl-9 pr-4 py-2 rounded-lg bg-white/[0.03] border border-white/[0.07] text-sm text-zinc-300 outline-none focus:border-[var(--signal)]/30 placeholder:text-zinc-700 w-64"
-            />
-          </div>
-        }
-      />
-      {loading ? <LoadingSpinner /> : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/[0.05]">
-                {['Name / Email', 'XP / Level', 'Skills Mastered', 'Role', 'Joined', 'Action'].map(h => (
-                  <th key={h} className="text-left pb-3 pr-4 text-[9px] font-mono text-zinc-700 uppercase tracking-[0.2em]">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(s => (
-                <tr key={s._id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                  <td className="py-3 pr-4">
-                    <div className="text-sm font-medium text-zinc-200">{s.name}</div>
-                    <div className="text-[11px] text-zinc-600 font-mono">{s.email}</div>
-                  </td>
-                  <td className="py-3 pr-4 font-mono text-sm text-zinc-300">
-                    {s.xp} XP <span className="text-zinc-600 text-[10px]">· Lv.{s.level}</span>
-                  </td>
-                  <td className="py-3 pr-4 text-sm text-zinc-400">{s.skillsMastered || 0} / 12</td>
-                  <td className="py-3 pr-4">
-                    <Badge color={s.role === 'admin' ? 'violet' : 'zinc'}>{s.role}</Badge>
-                  </td>
-                  <td className="py-3 pr-4 text-[11px] text-zinc-600 font-mono">
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="py-3">
-                    <button
-                      onClick={() => toggleRole(s)}
-                      disabled={!!working[s._id]}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono border transition-colors disabled:opacity-50 ${
-                        s.role === 'admin'
-                          ? 'bg-zinc-500/10 border-zinc-500/20 text-zinc-400 hover:bg-zinc-500/20'
-                          : 'bg-violet-500/10 border-violet-500/20 text-violet-400 hover:bg-violet-500/20'
-                      }`}
-                    >
-                      {working[s._id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserCheck className="h-3 w-3" />}
-                      {s.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filtered.length === 0 && !loading && (
-            <p className="text-xs text-zinc-700 py-8 text-center">No students found.</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Tab: Add Data ───────────────────────────────────────────────────────────
+// ─── Add data ────────────────────────────────────────────────────────────────
 function AddDataTab() {
-  const [companies, setCompanies]     = useState([]);
-  const [colleges, setColleges]       = useState([]);
+  const toast = useToast();
+  const [companies, setCompanies] = useState([]);
+  const [colleges, setColleges] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [college, setCollege] = useState({ name: '', shortName: '', slug: '', location: '', tier: 'Other', website: '' });
+  const [company, setCompany] = useState({ name: '', tier: 'Product', avgCTC: '', ctcMin: '', ctcMax: '', roles: '', domain: '', headquarters: '', description: '' });
+  const [rec, setRec] = useState({ collegeId: '', companyId: '', hiringYear: new Date().getFullYear(), hiringSeason: 'On-Campus', roles: '', studentsHired: '', packageOffered: '' });
+  const [busy, setBusy] = useState('');
 
-  const [collegeForm, setCollegeForm] = useState({ name: '', shortName: '', slug: '', location: '', tier: 'Other', website: '' });
-  const [collegeMsg, setCollegeMsg]   = useState(null);
-  const [collegeLoading, setCollegeLoading] = useState(false);
-
-  const [recordForm, setRecordForm]   = useState({ collegeId: '', companyId: '', hiringYear: new Date().getFullYear(), hiringSeason: 'On-Campus', roles: '', studentsHired: '', packageOffered: '' });
-  const [recordMsg, setRecordMsg]     = useState(null);
-  const [recordLoading, setRecordLoading] = useState(false);
-
-  useEffect(() => {
-    Promise.all([companiesService.getCompanies(), collegesService.getColleges({ limit: 100 })])
-      .then(([c, col]) => {
-        if (c.data.success)   setCompanies(c.data.data || []);
-        if (col.data.success) setColleges(col.data.data || []);
-      })
-      .catch(console.error);
+  const loadAll = useCallback(() => {
+    Promise.all([companiesService.getCompanies(), collegesService.getColleges({ limit: 100 }), adminService.getPlacementRecords()])
+      .then(([c, col, r]) => { setCompanies(c.data.data || []); setColleges(col.data.data.colleges || []); setRecords(r.data.data.records || []); }).catch(() => {});
   }, []);
+  useEffect(() => { loadAll(); }, [loadAll]);
 
-  function setC(k, v) { setCollegeForm(p => ({ ...p, [k]: v })); }
-  function setR(k, v) { setRecordForm(p => ({ ...p, [k]: v })); }
-
-  async function submitCollege(e) {
-    e.preventDefault();
-    setCollegeLoading(true); setCollegeMsg(null);
-    try {
-      const r = await adminService.createCollege(collegeForm);
-      if (r.data.success) {
-        setCollegeMsg({ type: 'ok', text: `College "${collegeForm.name}" created!` });
-        setColleges(prev => [...prev, r.data.data.college]);
-        setCollegeForm({ name: '', shortName: '', slug: '', location: '', tier: 'Other', website: '' });
-      } else {
-        setCollegeMsg({ type: 'err', text: r.data.error || 'Failed' });
-      }
-    } catch (err) {
-      setCollegeMsg({ type: 'err', text: err.response?.data?.error || 'Server error' });
-    } finally { setCollegeLoading(false); }
-  }
-
-  async function submitRecord(e) {
-    e.preventDefault();
-    setRecordLoading(true); setRecordMsg(null);
-    try {
-      const payload = {
-        ...recordForm,
-        roles: recordForm.roles.split(',').map(r => r.trim()).filter(Boolean),
-        studentsHired: +recordForm.studentsHired || undefined,
-        packageOffered: recordForm.packageOffered ? { ctc: recordForm.packageOffered } : undefined,
-      };
-      const r = await adminService.createPlacementRecord(payload);
-      if (r.data.success) {
-        setRecordMsg({ type: 'ok', text: 'Placement record added!' });
-        setRecordForm({ collegeId: '', companyId: '', hiringYear: new Date().getFullYear(), hiringSeason: 'On-Campus', roles: '', studentsHired: '', packageOffered: '' });
-      } else {
-        setRecordMsg({ type: 'err', text: r.data.error || 'Failed' });
-      }
-    } catch (err) {
-      setRecordMsg({ type: 'err', text: err.response?.data?.error || 'Server error' });
-    } finally { setRecordLoading(false); }
-  }
-
-  const InputCls = "w-full rounded-lg bg-white/[0.03] border border-white/[0.08] px-4 py-2.5 text-sm text-zinc-200 outline-none focus:border-[var(--signal)]/40 transition-all placeholder:text-zinc-700";
-  const LabelCls = "text-[9px] font-mono tracking-[0.2em] uppercase text-zinc-600";
+  const submit = (kind, fn, reset) => async (e) => {
+    e.preventDefault(); setBusy(kind);
+    try { await fn(); toast.success('Saved'); reset(); loadAll(); } catch (err) { toast.error('Could not save', err.response?.data?.message || err.response?.data?.error); } finally { setBusy(''); }
+  };
+  const slugify = (s) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="space-y-8">
+      <div className="grid gap-8 lg:grid-cols-3">
+        <form onSubmit={submit('college', () => adminService.createCollege({ ...college, slug: college.slug || slugify(college.shortName || college.name) }), () => setCollege({ name: '', shortName: '', slug: '', location: '', tier: 'Other', website: '' }))} className="space-y-3.5">
+          <SectionTitle icon={GraduationCap} title="Add college" />
+          <Field label="Full name *"><input required className={inputCls} value={college.name} onChange={(e) => setCollege({ ...college, name: e.target.value })} placeholder="National Institute of Technology Calicut" /></Field>
+          <div className="grid grid-cols-2 gap-3"><Field label="Short name *"><input required className={inputCls} value={college.shortName} onChange={(e) => setCollege({ ...college, shortName: e.target.value })} placeholder="NIT Calicut" /></Field><Field label="Slug"><input className={inputCls} value={college.slug} onChange={(e) => setCollege({ ...college, slug: e.target.value })} placeholder="auto" /></Field></div>
+          <div className="grid grid-cols-2 gap-3"><Field label="Location"><input className={inputCls} value={college.location} onChange={(e) => setCollege({ ...college, location: e.target.value })} placeholder="Kozhikode, Kerala" /></Field><Field label="Tier"><select className={inputCls} value={college.tier} onChange={(e) => setCollege({ ...college, tier: e.target.value })}>{['IIT', 'NIT', 'BITS', 'IIIT', 'Deemed', 'State', 'Private', 'Other'].map((t) => <option key={t}>{t}</option>)}</select></Field></div>
+          <button disabled={busy === 'college'} className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-400/25 bg-violet-400/10 py-2.5 text-[13px] font-semibold text-violet-300 hover:bg-violet-400/20 disabled:opacity-50">{busy === 'college' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Add college</button>
+        </form>
 
-      {/* Add College */}
-      <div>
-        <SectionHeader title="Add College" sub="Colleges added here appear in placement intelligence" />
-        <form onSubmit={submitCollege} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Full Name *</div>
-              <input className={InputCls} value={collegeForm.name} onChange={e => setC('name', e.target.value)} placeholder="National Institute of Technology Trichy" required />
-            </div>
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Short Name *</div>
-              <input className={InputCls} value={collegeForm.shortName} onChange={e => setC('shortName', e.target.value)} placeholder="NIT Trichy" required />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <div className={LabelCls}>URL Slug *</div>
-              <input className={InputCls} value={collegeForm.slug} onChange={e => setC('slug', e.target.value)} placeholder="nit-trichy" required />
-            </div>
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Location</div>
-              <input className={InputCls} value={collegeForm.location} onChange={e => setC('location', e.target.value)} placeholder="Tiruchirappalli, TN" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Tier</div>
-              <select className={InputCls} value={collegeForm.tier} onChange={e => setC('tier', e.target.value)}>
-                {['IIT','NIT','BITS','IIIT','Deemed','State','Private','Other'].map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Website</div>
-              <input className={InputCls} value={collegeForm.website} onChange={e => setC('website', e.target.value)} placeholder="https://nitt.edu" />
-            </div>
-          </div>
-          {collegeMsg && (
-            <div className={`p-3 rounded-lg text-xs font-mono border ${collegeMsg.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-              {collegeMsg.text}
-            </div>
-          )}
-          <button type="submit" disabled={collegeLoading} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[var(--signal)]/10 border border-[var(--signal)]/20 text-[var(--signal)] text-sm font-semibold hover:bg-[var(--signal)]/20 transition-colors disabled:opacity-50">
-            {collegeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GraduationCap className="h-4 w-4" />}
-            Add College
-          </button>
+        <form onSubmit={submit('company', () => adminService.createCompany(company), () => setCompany({ name: '', tier: 'Product', avgCTC: '', ctcMin: '', ctcMax: '', roles: '', domain: '', headquarters: '', description: '' }))} className="space-y-3.5">
+          <SectionTitle icon={Building2} title="Add company" />
+          <div className="grid grid-cols-2 gap-3"><Field label="Name *"><input required className={inputCls} value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} placeholder="Stripe" /></Field><Field label="Tier"><select className={inputCls} value={company.tier} onChange={(e) => setCompany({ ...company, tier: e.target.value })}>{['FAANG', 'Product', 'Finance', 'Service', 'Startup', 'Other'].map((t) => <option key={t}>{t}</option>)}</select></Field></div>
+          <div className="grid grid-cols-3 gap-3"><Field label="CTC min (LPA)"><input type="number" className={inputCls} value={company.ctcMin} onChange={(e) => setCompany({ ...company, ctcMin: e.target.value, avgCTC: `${e.target.value}–${company.ctcMax} LPA` })} /></Field><Field label="CTC max"><input type="number" className={inputCls} value={company.ctcMax} onChange={(e) => setCompany({ ...company, ctcMax: e.target.value, avgCTC: `${company.ctcMin}–${e.target.value} LPA` })} /></Field><Field label="Domain"><input className={inputCls} value={company.domain} onChange={(e) => setCompany({ ...company, domain: e.target.value })} placeholder="stripe.com" /></Field></div>
+          <Field label="Roles (comma-separated)"><input className={inputCls} value={company.roles} onChange={(e) => setCompany({ ...company, roles: e.target.value })} placeholder="SDE-1, Backend Engineer" /></Field>
+          <Field label="Headquarters"><input className={inputCls} value={company.headquarters} onChange={(e) => setCompany({ ...company, headquarters: e.target.value })} /></Field>
+          <button disabled={busy === 'company'} className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/10 py-2.5 text-[13px] font-semibold text-emerald-300 hover:bg-emerald-400/20 disabled:opacity-50">{busy === 'company' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Add company</button>
+        </form>
+
+        <form onSubmit={submit('rec', () => adminService.createPlacementRecord({ ...rec, roles: rec.roles.split(',').map((r) => r.trim()).filter(Boolean), studentsHired: rec.studentsHired ? Number(rec.studentsHired) : undefined, packageOffered: rec.packageOffered ? { ctc: rec.packageOffered } : undefined }), () => setRec({ ...rec, roles: '', studentsHired: '', packageOffered: '' }))} className="space-y-3.5">
+          <SectionTitle icon={Layers} title="Add placement record" />
+          <div className="grid grid-cols-2 gap-3"><Field label="College *"><select required className={inputCls} value={rec.collegeId} onChange={(e) => setRec({ ...rec, collegeId: e.target.value })}><option value="">Select…</option>{colleges.map((c) => <option key={c._id} value={c._id}>{c.shortName}</option>)}</select></Field><Field label="Company *"><select required className={inputCls} value={rec.companyId} onChange={(e) => setRec({ ...rec, companyId: e.target.value })}><option value="">Select…</option>{companies.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</select></Field></div>
+          <div className="grid grid-cols-2 gap-3"><Field label="Year *"><input type="number" required className={inputCls} value={rec.hiringYear} onChange={(e) => setRec({ ...rec, hiringYear: Number(e.target.value) })} /></Field><Field label="Season"><select className={inputCls} value={rec.hiringSeason} onChange={(e) => setRec({ ...rec, hiringSeason: e.target.value })}>{['On-Campus', 'Off-Campus', 'Pool-Campus', 'Internship'].map((s) => <option key={s}>{s}</option>)}</select></Field></div>
+          <div className="grid grid-cols-2 gap-3"><Field label="Students hired"><input type="number" className={inputCls} value={rec.studentsHired} onChange={(e) => setRec({ ...rec, studentsHired: e.target.value })} /></Field><Field label="Package"><input className={inputCls} value={rec.packageOffered} onChange={(e) => setRec({ ...rec, packageOffered: e.target.value })} placeholder="24 LPA" /></Field></div>
+          <Field label="Roles"><input className={inputCls} value={rec.roles} onChange={(e) => setRec({ ...rec, roles: e.target.value })} placeholder="SDE-1, Data Engineer" /></Field>
+          <button disabled={busy === 'rec'} className="flex w-full items-center justify-center gap-2 rounded-xl border border-sky-400/25 bg-sky-400/10 py-2.5 text-[13px] font-semibold text-sky-300 hover:bg-sky-400/20 disabled:opacity-50">{busy === 'rec' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Add record</button>
         </form>
       </div>
 
-      {/* Add Placement Record */}
-      <div>
-        <SectionHeader title="Add Placement Record" sub="Structured verified hiring data — appears in college dashboards" />
-        <form onSubmit={submitRecord} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <div className={LabelCls}>College *</div>
-              <select className={InputCls} value={recordForm.collegeId} onChange={e => setR('collegeId', e.target.value)} required>
-                <option value="">Select college...</option>
-                {colleges.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Company *</div>
-              <select className={InputCls} value={recordForm.companyId} onChange={e => setR('companyId', e.target.value)} required>
-                <option value="">Select company...</option>
-                {companies.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Hiring Year *</div>
-              <input type="number" className={InputCls} value={recordForm.hiringYear} onChange={e => setR('hiringYear', +e.target.value)} min="2015" max="2030" required />
-            </div>
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Season</div>
-              <select className={InputCls} value={recordForm.hiringSeason} onChange={e => setR('hiringSeason', e.target.value)}>
-                {['On-Campus','Off-Campus','Pool-Campus','Internship'].map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Roles (comma-separated)</div>
-              <input className={InputCls} value={recordForm.roles} onChange={e => setR('roles', e.target.value)} placeholder="SDE-1, Data Engineer" />
-            </div>
-            <div className="space-y-1.5">
-              <div className={LabelCls}>Students Hired</div>
-              <input type="number" className={InputCls} value={recordForm.studentsHired} onChange={e => setR('studentsHired', e.target.value)} placeholder="5" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <div className={LabelCls}>Package / CTC</div>
-            <input className={InputCls} value={recordForm.packageOffered} onChange={e => setR('packageOffered', e.target.value)} placeholder="e.g. 24 LPA" />
-          </div>
-          {recordMsg && (
-            <div className={`p-3 rounded-lg text-xs font-mono border ${recordMsg.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-              {recordMsg.text}
-            </div>
-          )}
-          <button type="submit" disabled={recordLoading} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-semibold hover:bg-violet-500/20 transition-colors disabled:opacity-50">
-            {recordLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />}
-            Add Placement Record
-          </button>
-        </form>
-      </div>
+      <Card>
+        <SectionTitle icon={FileText} title="Recent placement records" sub="Latest 100 across all colleges" />
+        <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left"><thead><tr className="border-b border-white/[0.06]">{['Year', 'College', 'Company', 'Hired', 'Package', 'Roles', ''].map((h) => <th key={h} className="pb-2.5 pr-4 font-mono text-[9.5px] font-medium uppercase tracking-[0.18em] text-zinc-600">{h}</th>)}</tr></thead>
+          <tbody>{records.slice(0, 30).map((r) => <tr key={r._id} className="border-b border-white/[0.03] text-[12.5px]"><td className="py-2.5 pr-4 font-mono text-zinc-300">{r.hiringYear}</td><td className="pr-4 text-zinc-400">{r.collegeId?.shortName}</td><td className="pr-4 text-zinc-200">{r.companyId?.name}</td><td className="pr-4 font-mono text-zinc-400">{r.studentsHired ?? '—'}</td><td className="pr-4 font-mono text-zinc-400">{r.packageOffered?.ctc || '—'}</td><td className="pr-4 text-zinc-500">{(r.roles || []).slice(0, 2).join(', ')}</td><td className="text-right"><button onClick={async () => { await adminService.deletePlacementRecord(r._id); toast.info('Record removed'); loadAll(); }} className="text-zinc-700 hover:text-rose-400"><Trash2 className="h-3.5 w-3.5" /></button></td></tr>)}</tbody></table></div>
+      </Card>
     </div>
   );
 }
 
-// ─── Shared loading ──────────────────────────────────────────────────────────
-function LoadingSpinner() {
-  return (
-    <div className="flex items-center justify-center py-16 gap-3 text-zinc-700">
-      <Loader2 className="h-5 w-5 animate-spin" strokeWidth={1.5} />
-      <span className="font-mono text-[10px] tracking-widest uppercase">Loading...</span>
-    </div>
-  );
-}
-
-// ─── Main Admin Page ─────────────────────────────────────────────────────────
-const TABS = [
-  { id: 'overview',     label: 'Overview',    icon: BarChart2  },
-  { id: 'experiences',  label: 'Experiences', icon: FileText   },
-  { id: 'problems',     label: 'Problems',    icon: BookOpen   },
-  { id: 'students',     label: 'Students',    icon: Users      },
-  { id: 'add',          label: 'Add Data',    icon: Sparkles   },
-];
-
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
-
-  // Guard — only admins
-  if (!user || user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const [tab, setTab] = useState('overview');
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-      {/* Header */}
-      <header className="sticky top-0 z-10 flex items-center justify-between px-10 h-12 border-b border-white/[0.04] bg-background/80 backdrop-blur-xl shrink-0">
-        <div className="flex items-center gap-3">
-          <Shield className="h-3.5 w-3.5 text-violet-400" strokeWidth={1.6} />
-          <span className="font-mono text-[10px] tracking-[0.24em] text-zinc-200 uppercase">Admin Panel</span>
-          <span className="mx-2 h-3 w-px bg-white/[0.06]" />
-          <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-600 uppercase">Placement Intelligence Control</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-zinc-600">Logged in as</span>
-          <span className="text-[10px] font-mono text-violet-400">{user.name}</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
-        </div>
+      <header className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-white/[0.04] bg-background/80 px-6 backdrop-blur-xl md:px-10">
+        <div className="flex items-center gap-3"><Shield className="h-3.5 w-3.5 text-violet-400" strokeWidth={1.6} /><span className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-200">Admin</span><span className="mx-1 hidden h-3 w-px bg-white/[0.06] sm:block" /><span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600 sm:block">Placement cell control room</span></div>
+        <div className="flex items-center gap-2 font-mono text-[10px]"><span className="text-zinc-600">signed in as</span><span className="text-violet-400">{user.name}</span><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" /></div>
       </header>
-
-      {/* Tab Nav */}
-      <div className="flex items-center gap-1 px-10 py-3 border-b border-white/[0.04] bg-black/10">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-[10px] tracking-widest uppercase transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
-                  : 'text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.03]'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" strokeWidth={1.6} />
-              {tab.label}
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-white/[0.04] bg-black/10 px-6 py-3 md:px-10">
+        {TABS.map(([k, l, I]) => <button key={k} onClick={() => setTab(k)} className={cn('flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all', tab === k ? 'border border-violet-500/20 bg-violet-500/10 text-violet-300' : 'text-zinc-600 hover:bg-white/[0.03] hover:text-zinc-300')}><I className="h-3.5 w-3.5" strokeWidth={1.6} />{l}</button>)}
       </div>
-
-      {/* Content */}
-      <div className="px-10 py-8 max-w-7xl">
-        {activeTab === 'overview'    && <OverviewTab />}
-        {activeTab === 'experiences' && <ExperiencesTab />}
-        {activeTab === 'problems'    && <ProblemsTab />}
-        {activeTab === 'students'    && <StudentsTab />}
-        {activeTab === 'add'         && <AddDataTab />}
+      <div className="max-w-[1400px] px-6 py-8 md:px-10">
+        {tab === 'overview' && <OverviewTab onGoto={setTab} />}
+        {tab === 'curriculum' && <CurriculumTab />}
+        {tab === 'students' && <StudentsTab me={user._id} />}
+        {tab === 'experiences' && <ExperiencesTab />}
+        {tab === 'problems' && <ProblemsTab />}
+        {tab === 'add' && <AddDataTab />}
       </div>
     </div>
   );
