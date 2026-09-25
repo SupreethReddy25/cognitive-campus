@@ -18,15 +18,15 @@ export const cn = (...parts) => parts.filter(Boolean).join(' ');
 // ─── Typography / layout ─────────────────────────────────────────────────────
 
 export function Label({ children, className = '' }) {
-  return <span className={cn('font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500', className)}>{children}</span>;
+  return <span className={cn('text-[11.5px] font-medium tracking-[0.01em] text-zinc-500', className)}>{children}</span>;
 }
 
 export function Card({ children, className = '', glow = false, padded = true, as: Tag = 'div', ...rest }) {
   return (
     <Tag
       className={cn(
-        'relative rounded-2xl border border-white/[0.07] bg-[#0b0f15]/80 backdrop-blur-xl',
-        padded && 'p-5',
+        'relative rounded-[20px] border border-[var(--line)] bg-[var(--ink-2)]',
+        padded && 'p-6',
         glow && 'card-glow',
         className
       )}
@@ -37,15 +37,12 @@ export function Card({ children, className = '', glow = false, padded = true, as
   );
 }
 
-export function SectionTitle({ icon: Icon, title, sub, action, className = '' }) {
+export function SectionTitle({ title, sub, action, className = '' }) {
   return (
-    <div className={cn('mb-4 flex items-start justify-between gap-3', className)}>
+    <div className={cn('mb-5 flex items-end justify-between gap-4', className)}>
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={1.8} />}
-          <Label className="text-zinc-300">{title}</Label>
-        </div>
-        {sub && <p className="mt-1 text-[11.5px] leading-relaxed text-zinc-600">{sub}</p>}
+        <h3 className="display text-[26px] text-zinc-100">{title}</h3>
+        {sub && <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-zinc-500">{sub}</p>}
       </div>
       {action}
     </div>
@@ -109,18 +106,15 @@ export function Delta({ value, suffix = '', invert = false, className = '' }) {
   );
 }
 
-export function Stat({ label, value, sub, icon: Icon, accent = 'signal', className = '', children }) {
-  const colors = { signal: 'text-[var(--signal)] bg-[var(--signal)]/10', blue: 'text-sky-400 bg-sky-400/10', violet: 'text-violet-400 bg-violet-400/10', amber: 'text-amber-400 bg-amber-400/10', rose: 'text-rose-400 bg-rose-400/10' };
+/** A "figure": no box — a hairline, a quiet label, and a large serif number. */
+export function Stat({ label, value, sub, className = '', children }) {
   return (
-    <Card className={cn('group transition-all duration-300 hover:border-white/[0.14] hover:bg-[#0d1219]', className)}>
-      <div className="mb-3 flex items-center justify-between">
-        <Label>{label}</Label>
-        {Icon && <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg', colors[accent])}><Icon className="h-3.5 w-3.5" strokeWidth={1.8} /></span>}
-      </div>
-      <div className="text-[26px] font-semibold leading-none tabular-nums text-zinc-100">{value}</div>
-      {sub && <div className="mt-2 text-[11.5px] text-zinc-500">{sub}</div>}
+    <div className={cn('border-t border-[var(--line-strong)] pt-4', className)}>
+      <Label>{label}</Label>
+      <div className="display mt-2 text-[44px] leading-none tnum text-zinc-50">{value}</div>
+      {sub && <div className="mt-2.5 text-[12.5px] leading-snug text-zinc-500">{sub}</div>}
       {children}
-    </Card>
+    </div>
   );
 }
 
@@ -129,7 +123,7 @@ export function Stat({ label, value, sub, icon: Icon, accent = 'signal', classNa
 export function Bar({ value = 0, max = 1, color = 'var(--signal)', height = 6, className = '', animate = true, marker = null }) {
   const pct = Math.max(0, Math.min(100, (value / (max || 1)) * 100));
   return (
-    <div className={cn('relative w-full overflow-hidden rounded-full bg-white/[0.06]', className)} style={{ height }}>
+    <div className={cn('relative w-full overflow-hidden rounded-full bg-white/[0.07]', className)} style={{ height }}>
       <motion.div
         className="h-full rounded-full"
         style={{ background: color }}
@@ -142,7 +136,7 @@ export function Bar({ value = 0, max = 1, color = 'var(--signal)', height = 6, c
   );
 }
 
-export function Ring({ value = 0, size = 88, stroke = 8, color = 'var(--signal)', track = 'rgba(255,255,255,0.07)', children, className = '' }) {
+export function Ring({ value = 0, size = 88, stroke = 8, color = 'var(--signal)', track = 'rgba(236,230,216,0.09)', children, className = '' }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(1, value));
@@ -189,18 +183,19 @@ export function Sparkline({ data = [], width = 120, height = 32, color = 'var(--
 // ─── Badges ──────────────────────────────────────────────────────────────────
 
 const PILL = {
-  zinc: 'bg-white/[0.04] text-zinc-400 border-white/[0.07]',
-  green: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  red: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-  blue: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-  violet: 'bg-violet-500/10 text-violet-400 border-violet-500/20'
+  zinc: 'border-[var(--line-strong)] text-zinc-400',
+  green: 'border-emerald-400/30 text-emerald-300',
+  amber: 'border-amber-400/30 text-amber-300',
+  red: 'border-rose-400/30 text-rose-300',
+  blue: 'border-sky-400/30 text-sky-300',
+  violet: 'border-violet-400/30 text-violet-300'
 };
+const DOT = { zinc: 'bg-zinc-500', green: 'bg-emerald-400', amber: 'bg-amber-400', red: 'bg-rose-400', blue: 'bg-sky-400', violet: 'bg-violet-400' };
 
 export function Pill({ children, tone = 'zinc', className = '', icon: Icon }) {
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider', PILL[tone], className)}>
-      {Icon && <Icon className="h-3 w-3" strokeWidth={2} />}
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[3px] text-[11px] font-medium capitalize', PILL[tone], className)}>
+      {Icon ? <Icon className="h-3 w-3" strokeWidth={2} /> : <span className={cn('h-1.5 w-1.5 rounded-full', DOT[tone])} />}
       {children}
     </span>
   );
@@ -213,15 +208,15 @@ export function DiffPill({ difficulty, className }) {
 }
 
 const TIER_STYLE = {
-  FAANG: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300',
-  Product: 'border-sky-400/30 bg-sky-400/10 text-sky-300',
-  Finance: 'border-amber-400/30 bg-amber-400/10 text-amber-300',
-  Service: 'border-zinc-400/25 bg-zinc-400/10 text-zinc-300',
-  Startup: 'border-violet-400/30 bg-violet-400/10 text-violet-300',
-  Other: 'border-white/10 bg-white/5 text-zinc-400'
+  FAANG: 'border-[var(--ember)]/40 text-[var(--ember-soft)]',
+  Product: 'border-sky-400/35 text-sky-300',
+  Finance: 'border-amber-400/35 text-amber-300',
+  Service: 'border-zinc-500/40 text-zinc-400',
+  Startup: 'border-violet-400/35 text-violet-300',
+  Other: 'border-[var(--line-strong)] text-zinc-400'
 };
 export function TierBadge({ tier, className }) {
-  return <span className={cn('rounded-md border px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em]', TIER_STYLE[tier] || TIER_STYLE.Other, className)}>{tier || 'Other'}</span>;
+  return <span className={cn('rounded-full border px-2.5 py-[3px] text-[11px] font-medium', TIER_STYLE[tier] || TIER_STYLE.Other, className)}>{tier || 'Other'}</span>;
 }
 
 /** Logo with a monogram fallback when the image is blocked/missing (Clearbit is unreliable). */
@@ -232,13 +227,13 @@ export function CompanyLogo({ company, size = 40, className = '' }) {
   const showImg = company?.logo && !failed;
   return (
     <div
-      className={cn('flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white', className)}
-      style={{ width: size, height: size, ...(showImg ? {} : { background: `linear-gradient(135deg, hsl(${hue} 55% 32%), hsl(${(hue + 40) % 360} 55% 22%))` }) }}
+      className={cn('flex shrink-0 items-center justify-center overflow-hidden rounded-full', showImg ? 'bg-[#f4efe4]' : 'border border-[var(--line-strong)]', className)}
+      style={{ width: size, height: size, ...(showImg ? {} : { background: `hsl(${hue} 22% 15%)` }) }}
     >
       {showImg ? (
-        <img src={company.logo} alt={name} className="h-full w-full object-contain p-1.5" onError={() => setFailed(true)} loading="lazy" />
+        <img src={company.logo} alt={name} className="h-full w-full object-contain p-[18%]" onError={() => setFailed(true)} loading="lazy" />
       ) : (
-        <span className="font-semibold text-white" style={{ fontSize: size * 0.42 }}>{name.slice(0, 1).toUpperCase()}</span>
+        <span className="display" style={{ fontSize: size * 0.5, color: `hsl(${hue} 62% 74%)` }}>{name.slice(0, 1).toUpperCase()}</span>
       )}
     </div>
   );
@@ -258,32 +253,66 @@ export const rarityStyle = (r) => RARITY[r] || RARITY.common;
 // ─── Feedback states ─────────────────────────────────────────────────────────
 
 export function Skeleton({ className = '' }) {
-  return <div className={cn('animate-pulse rounded-lg bg-white/[0.05]', className)} />;
+  return <div className={cn('animate-pulse rounded-xl bg-white/[0.045]', className)} />;
 }
 
-export function EmptyState({ icon: Icon = Sparkles, title, text, action, className = '' }) {
+export function EmptyState({ title, text, action, className = '' }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.09] px-6 py-12 text-center', className)}>
-      <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.04]"><Icon className="h-5 w-5 text-zinc-500" strokeWidth={1.5} /></span>
-      <div className="text-[14px] font-medium text-zinc-300">{title}</div>
-      {text && <p className="mt-1 max-w-sm text-[12.5px] leading-relaxed text-zinc-600">{text}</p>}
-      {action && <div className="mt-4">{action}</div>}
+    <div className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)}>
+      <div className="display text-[28px] italic text-zinc-400">{title}</div>
+      {text && <p className="mt-2 max-w-sm text-[13px] leading-relaxed text-zinc-600">{text}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
 
 export function ErrorNote({ children }) {
-  return <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-4 py-3 text-[12.5px] text-rose-300">{children}</div>;
+  return <div className="rounded-xl border border-rose-400/25 px-4 py-3 text-[13px] text-rose-300">{children}</div>;
 }
 
 /** Shared recharts tooltip look. */
 export const chartTooltipStyle = {
-  contentStyle: { background: 'rgba(10,14,20,0.96)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 12, color: '#e4e4e7' },
-  labelStyle: { color: '#a1a1aa', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.1em' },
-  itemStyle: { color: '#e4e4e7' },
-  cursor: { stroke: 'rgba(255,255,255,0.08)' }
+  contentStyle: { background: 'rgba(18,18,22,0.98)', border: '1px solid rgba(236,230,216,0.14)', borderRadius: 12, fontSize: 12, color: '#ece6d8', boxShadow: '0 12px 40px -12px rgba(0,0,0,.6)' },
+  labelStyle: { color: '#9a9384', fontFamily: 'Geist Mono Variable, monospace', fontSize: 10.5, letterSpacing: '0.04em' },
+  itemStyle: { color: '#ece6d8' },
+  cursor: { stroke: 'rgba(236,230,216,0.12)' }
 };
 
-export const CHART_COLORS = ['#34d399', '#38bdf8', '#a78bfa', '#fbbf24', '#fb7185', '#f97316', '#2dd4bf', '#818cf8'];
+export const CHART_COLORS = ['#ff7a4d', '#f2c66d', '#8fbcda', '#94d6a8', '#f0728a', '#9aa5dc', '#d9a679', '#b4e0bd'];
 
 export const pct = (x, d = 0) => (x === null || x === undefined ? '—' : `${(x * 100).toFixed(d)}%`);
+
+// ─── Page scaffolding ────────────────────────────────────────────────────────
+
+/** Scroll container + centred column shared by every page. */
+export function Page({ children, className = '', wide = false }) {
+  return (
+    <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
+      <div className={cn('mx-auto px-6 md:px-14', wide ? 'max-w-[1500px]' : 'max-w-[1360px]', className)}>{children}</div>
+    </div>
+  );
+}
+
+/** Editorial page header: a quiet kicker, an oversized serif title, one sentence, optional right-hand slot. */
+export function PageHead({ kicker, title, lead, right, className = '' }) {
+  return (
+    <header className={cn('flex flex-wrap items-end justify-between gap-x-12 gap-y-8 pt-14 md:pt-20', className)}>
+      <div className="max-w-3xl">
+        {kicker && <div className="text-[13px] text-zinc-500">{kicker}</div>}
+        <h1 className="display mt-5 text-[clamp(46px,7vw,96px)] text-zinc-50">{title}</h1>
+        {lead && <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-zinc-400">{lead}</p>}
+      </div>
+      {right}
+    </header>
+  );
+}
+
+/** Ember pill button with the circular arrow — the one primary action style. */
+export function PrimaryButton({ children, icon: Icon, className = '', ...rest }) {
+  return (
+    <button className={cn('group flex items-center gap-3 rounded-full bg-[var(--ember)] py-2.5 pl-6 pr-2.5 text-[#1a0d07] transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50', className)} {...rest}>
+      <span className="text-[14.5px] font-semibold">{children}</span>
+      {Icon && <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)] transition-transform group-hover:translate-x-0.5"><Icon className="h-4 w-4" strokeWidth={2.2} /></span>}
+    </button>
+  );
+}

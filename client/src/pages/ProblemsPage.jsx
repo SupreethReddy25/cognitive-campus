@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Bookmark, BookmarkCheck, CheckCircle2, CircleDashed, Circle, ArrowUpRight, Building2, Terminal, X, Sparkles, Flame } from 'lucide-react';
-import { problemsService, skillsService, usersService, engagementService, analyticsService } from '../services/api';
+import { Search, Bookmark, BookmarkCheck, CheckCircle2, CircleDashed, Circle, ArrowUpRight, X } from 'lucide-react';
+import { problemsService, skillsService, usersService, engagementService } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { Card, Label, DiffPill, Bar, Skeleton, EmptyState, Pill, cn } from '../components/ui/kit';
+import { Bar, Skeleton, cn } from '../components/ui/kit';
 
 const STATUS = [['all', 'All'], ['todo', 'Unsolved'], ['attempted', 'Attempted'], ['solved', 'Solved'], ['bookmarked', 'Bookmarked']];
 const DIFFS = ['all', 'easy', 'medium', 'hard'];
@@ -27,6 +27,7 @@ export default function ProblemsPage() {
   const [status, setStatus] = useState('all');
   const [company, setCompany] = useState('');
   const [page, setPage] = useState(1);
+  const [showCompanies, setShowCompanies] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -96,116 +97,108 @@ export default function ProblemsPage() {
   const clear = () => { setQ(''); setSkill(''); setDiff('all'); setStatus('all'); setCompany(''); };
   const anyFilter = q || skill || diff !== 'all' || status !== 'all' || company;
 
+  const chip = (on) => cn('shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors', on ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200');
+  const DIFF_DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400' };
+
   return (
     <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-      <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-6 backdrop-blur-xl md:px-10">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500"><span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" /><span className="text-zinc-200">Workspace</span><span className="mx-2 h-3 w-px bg-white/[0.06]" /><Terminal className="h-3 w-3" /><span>Problem browser</span></div>
-        <div className="font-mono text-[10px] tracking-[0.2em] text-zinc-600">{problems.length} PROBLEMS · {solved.length} SOLVED</div>
-      </header>
-
-      <div className="space-y-6 px-6 py-8 md:px-10">
-        {/* Hero + progress */}
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mx-auto max-w-[1360px] px-6 md:px-14">
+        <header className="grid gap-12 pt-14 md:pt-20 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <div>
-            <h1 className="font-display text-[44px] font-light leading-[1.05] tracking-tight text-zinc-50">Choose your <span className="italic text-[var(--signal)]">challenge</span>.</h1>
-            <p className="mt-3 max-w-xl text-[13.5px] leading-relaxed text-zinc-500">Every submission feeds the Bayesian Knowledge Tracing engine. Filter by skill, company or status — or take the problem the model thinks you are ready for.</p>
-            {rec && (
-              <Link to={`/problems/${rec.problem._id}`} className="group mt-5 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-[var(--signal)]/25 bg-[var(--signal)]/[0.06] p-4 transition-all hover:border-[var(--signal)]/45 hover:bg-[var(--signal)]/[0.1]">
-                <div className="min-w-0">
-                  <div className="mb-1 flex items-center gap-2"><Pill tone="green" icon={Sparkles}>Recommended</Pill><DiffPill difficulty={rec.problem.difficulty} /></div>
-                  <div className="truncate text-[15px] font-semibold text-zinc-100">{rec.problem.title}</div>
-                  <div className="mt-0.5 text-[11.5px] text-zinc-500">{rec.reasons?.[0]}</div>
-                </div>
-                <div className="flex shrink-0 items-center gap-3"><div className="text-right"><div className="font-mono text-[16px] text-zinc-200">{Math.round(rec.predictedSuccess * 100)}%</div><div className="font-mono text-[8.5px] uppercase tracking-wider text-zinc-600">predicted</div></div><ArrowUpRight className="h-4 w-4 text-zinc-600 transition-colors group-hover:text-[var(--signal)]" /></div>
-              </Link>
-            )}
+            <div className="text-[13px] text-zinc-500">Practice · {problems.length} problems, each one tuned to a skill</div>
+            <h1 className="display mt-5 text-[clamp(48px,7vw,96px)] text-zinc-50">Pick your <em className="text-[var(--ember)]">next</em> problem.</h1>
           </div>
-          <Card>
-            <Label>Your progress</Label>
-            <div className="mt-4 space-y-3">
-              {['easy', 'medium', 'hard'].map((d) => {
-                const s = byDiff(d);
-                return (
-                  <div key={d}>
-                    <div className="mb-1 flex items-center justify-between text-[12px]"><DiffPill difficulty={d} /><span className="font-mono text-zinc-400">{s.done} / {s.total}</span></div>
-                    <Bar value={s.done} max={s.total || 1} height={5} color={d === 'easy' ? '#34d399' : d === 'medium' ? '#fbbf24' : '#fb7185'} />
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <Card padded={false} className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-2">
-              <Search className="h-3.5 w-3.5 text-zinc-600" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title, tag or company…" className="w-full bg-transparent text-[13px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none" />
-              {q && <button onClick={() => setQ('')}><X className="h-3.5 w-3.5 text-zinc-600 hover:text-zinc-300" /></button>}
-            </div>
-            <select value={skill} onChange={(e) => setSkill(e.target.value)} className="rounded-xl border border-white/[0.07] bg-[#0b0f15] px-3 py-2 text-[12px] text-zinc-300 focus:outline-none">
-              <option value="">All skills</option>
-              {skills.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
-            </select>
-            <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">
-              {DIFFS.map((d) => <button key={d} onClick={() => setDiff(d)} className={cn('rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors', diff === d ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{d}</button>)}
-            </div>
-            <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">
-              {STATUS.map(([k, l]) => <button key={k} onClick={() => setStatus(k)} className={cn('rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}</button>)}
-            </div>
-          </div>
-          {companies.length > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <span className="mr-1 flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-wider text-zinc-600"><Building2 className="h-3 w-3" /> Asked at</span>
-              {companies.map((c) => <button key={c} onClick={() => setCompany(company === c ? '' : c)} className={cn('rounded-md border px-2 py-1 text-[11px] transition-colors', company === c ? 'border-[var(--signal)]/40 bg-[var(--signal)]/10 text-[var(--signal)]' : 'border-white/[0.06] text-zinc-500 hover:text-zinc-200')}>{c}</button>)}
-            </div>
-          )}
-        </Card>
-
-        {/* List */}
-        {loading ? (
-          <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
-        ) : view.length === 0 ? (
-          <EmptyState icon={Search} title="No problems match" text="Try clearing a filter or searching for something broader." action={anyFilter && <button onClick={clear} className="rounded-lg border border-white/10 px-4 py-2 text-[12px] text-zinc-300 hover:bg-white/[0.05]">Clear filters</button>} />
-        ) : (
-          <Card padded={false} className="overflow-hidden">
-            <div className="hidden grid-cols-[44px_1fr_170px_150px_90px_84px] items-center gap-4 border-b border-white/[0.06] px-5 py-3 font-mono text-[9.5px] uppercase tracking-[0.22em] text-zinc-600 md:grid"><span /><span>Problem</span><span>Skill · mastery</span><span>Companies</span><span>Difficulty</span><span /></div>
-            {view.map((p, i) => {
-              const st = statusOf(p);
-              const ss = states[p.skillId?._id];
+          <div className="grid grid-cols-3 gap-6">
+            {['easy', 'medium', 'hard'].map((d) => {
+              const st = byDiff(d);
               return (
-                <motion.div key={p._id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.25) }}>
-                  <Link to={`/problems/${p._id}`} className="group grid grid-cols-[44px_1fr_auto] items-center gap-4 border-b border-white/[0.04] px-5 py-3.5 transition-colors last:border-0 hover:bg-white/[0.03] md:grid-cols-[44px_1fr_170px_150px_90px_84px]">
-                    <span title={st === 'solved' ? 'Solved' : st === 'attempted' ? 'Attempted' : 'Not started'}>{st === 'solved' ? <CheckCircle2 className="h-[18px] w-[18px] text-emerald-400" /> : st === 'attempted' ? <CircleDashed className="h-[18px] w-[18px] text-amber-400" /> : <Circle className="h-[18px] w-[18px] text-zinc-700" />}</span>
-                    <div className="min-w-0">
-                      <div className="truncate text-[14.5px] font-medium text-zinc-100 transition-colors group-hover:text-[var(--signal)]">{p.title}</div>
-                      <div className="mt-0.5 flex items-center gap-2 font-mono text-[10px] text-zinc-600">{(p.tags || []).slice(0, 3).join(' · ')}{attempted[p._id] && <span className="text-zinc-500">· {attempted[p._id].attempts} attempt{attempted[p._id].attempts !== 1 ? 's' : ''}</span>}</div>
-                    </div>
-                    <div className="hidden md:block">
-                      <div className="truncate text-[12px] text-zinc-400">{p.skillId?.name}</div>
-                      {ss && ss.attempts > 0 ? <div className="mt-1 flex items-center gap-2"><Bar value={ss.masteryP} max={1} height={3} className="w-16" color={ss.masteryP >= 0.85 ? '#34d399' : '#38bdf8'} /><span className="font-mono text-[10px] text-zinc-500">{Math.round(ss.masteryP * 100)}%</span></div> : <div className="mt-1 font-mono text-[10px] text-zinc-700">not started</div>}
-                    </div>
-                    <div className="hidden truncate text-[11px] text-zinc-500 md:block">{(p.companies || []).slice(0, 3).join(', ') || '—'}</div>
-                    <div className="hidden md:block"><DiffPill difficulty={p.difficulty} /></div>
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="md:hidden"><DiffPill difficulty={p.difficulty} /></span>
-                      <button onClick={(e) => toggleBookmark(e, p._id)} title="Bookmark" className={cn('flex h-8 w-8 items-center justify-center rounded-lg transition-colors', bookmarks.has(p._id) ? 'text-amber-300' : 'text-zinc-700 hover:text-zinc-300')}>{bookmarks.has(p._id) ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}</button>
-                    </div>
-                  </Link>
-                </motion.div>
+                <div key={d} className="border-t border-[var(--line-strong)] pt-3">
+                  <div className="display text-[44px] leading-none tnum text-zinc-50">{st.done}<span className="text-[20px] text-zinc-600">/{st.total}</span></div>
+                  <div className="mt-2 flex items-center gap-2 text-[12px] capitalize text-zinc-500"><span className={cn('h-1.5 w-1.5 rounded-full', DIFF_DOT[d])} />{d}</div>
+                </div>
               );
             })}
-          </Card>
+          </div>
+        </header>
+
+        {rec && (
+          <Link to={`/problems/${rec.problem._id}`} className="group mt-14 flex flex-wrap items-center justify-between gap-6 rounded-[28px] border border-[var(--ember)]/30 bg-[var(--ember)]/[0.05] px-8 py-7 transition-colors hover:border-[var(--ember)]/60 hover:bg-[var(--ember)]/[0.09]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[12.5px] text-[var(--ember-soft)]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--ember)]" />The model&apos;s pick for you</div>
+              <div className="display mt-2 truncate text-[clamp(30px,3.6vw,46px)] leading-none text-zinc-50">{rec.problem.title}</div>
+              <div className="mt-2.5 max-w-2xl text-[14px] text-zinc-400">{rec.reasons?.[0] || `Builds ${rec.skill.name}`}</div>
+            </div>
+            <div className="flex items-center gap-7">
+              <div className="text-right"><div className="display text-[48px] leading-none tnum text-zinc-50">{Math.round(rec.predictedSuccess * 100)}<span className="text-[20px] text-zinc-500">%</span></div><div className="mt-1 text-[11.5px] text-zinc-500">likely to solve</div></div>
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--ember)] text-[#1a0d07] transition-transform group-hover:translate-x-1"><ArrowUpRight className="h-6 w-6" /></span>
+            </div>
+          </Link>
         )}
 
-        {pages > 1 && (
-          <div className="flex items-center justify-center gap-3">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-lg border border-white/[0.07] px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-400 hover:text-zinc-100 disabled:opacity-30">Prev</button>
-            <span className="font-mono text-[11px] tabular-nums text-zinc-500">{page} / {pages}</span>
-            <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages} className="rounded-lg border border-white/[0.07] px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-400 hover:text-zinc-100 disabled:opacity-30">Next</button>
+        {/* filters */}
+        <div className="mt-14 flex items-center gap-4 border-b border-[var(--line-strong)] pb-3 focus-within:border-[var(--ember)]">
+          <Search className="h-5 w-5 text-zinc-600" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by title, tag or company…" className="display w-full bg-transparent text-[32px] text-zinc-50 placeholder:text-zinc-700 focus:outline-none" />
+          {q && <button onClick={() => setQ('')} className="text-zinc-500 hover:text-zinc-100"><X className="h-5 w-5" /></button>}
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-surgical">
+            <button onClick={() => setSkill('')} className={chip(!skill)}>All skills</button>
+            {skills.map((sk) => <button key={sk._id} onClick={() => setSkill(skill === sk._id ? '' : sk._id)} className={chip(skill === sk._id)}>{sk.name}</button>)}
           </div>
-        )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {DIFFS.map((d) => <button key={d} onClick={() => setDiff(d)} className={cn(chip(diff === d), 'capitalize')}>{d === 'all' ? 'Any difficulty' : d}</button>)}
+              <span className="mx-2 h-5 w-px bg-[var(--line-strong)]" />
+              {STATUS.map(([k, l]) => <button key={k} onClick={() => setStatus(k)} className={chip(status === k)}>{l}</button>)}
+            </div>
+            {companies.length > 0 && <button onClick={() => setShowCompanies((v) => !v)} className="text-[13px] text-zinc-500 hover:text-zinc-100">{company ? `Asked at ${company}` : 'Asked at…'} {showCompanies ? '−' : '+'}</button>}
+          </div>
+          {showCompanies && <div className="flex flex-wrap gap-1.5">{companies.map((c) => <button key={c} onClick={() => setCompany(company === c ? '' : c)} className={chip(company === c)}>{c}</button>)}</div>}
+        </div>
+
+        {/* list */}
+        <div className="mt-8">
+          <div className="mb-2 flex items-center justify-between text-[12.5px] text-zinc-600"><span><span className="tnum text-zinc-300">{filtered.length}</span> problem{filtered.length === 1 ? '' : 's'}{anyFilter && <button onClick={clear} className="ml-3 text-[var(--ember)] hover:underline">clear filters</button>}</span></div>
+          {loading ? (
+            <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
+          ) : view.length === 0 ? (
+            <div className="py-20 text-center"><div className="display text-[34px] italic text-zinc-500">Nothing matches.</div></div>
+          ) : (
+            <ol>
+              {view.map((p, i) => {
+                const st = statusOf(p);
+                const ss = states[p.skillId?._id];
+                return (
+                  <motion.li key={p._id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.25) }}>
+                    <Link to={`/problems/${p._id}`} className="group relative grid grid-cols-[28px_1fr_auto] items-center gap-5 border-b border-[var(--line)] py-4 transition-colors hover:bg-white/[0.02] md:grid-cols-[28px_1fr_190px_110px_44px]">
+                      <span className="absolute -left-4 top-3 hidden h-[calc(100%-24px)] w-[2px] rounded-full bg-[var(--ember)] opacity-0 transition-opacity group-hover:opacity-100 md:block" />
+                      <span title={st === 'solved' ? 'Solved' : st === 'attempted' ? 'Attempted' : 'Not started'}>{st === 'solved' ? <CheckCircle2 className="h-[19px] w-[19px] text-emerald-400" /> : st === 'attempted' ? <CircleDashed className="h-[19px] w-[19px] text-amber-400" /> : <Circle className="h-[19px] w-[19px] text-zinc-700" />}</span>
+                      <div className="min-w-0">
+                        <div className={cn('truncate text-[18px] font-medium transition-colors group-hover:text-[var(--ember)]', st === 'solved' ? 'text-zinc-400' : 'text-zinc-100')}>{p.title}</div>
+                        <div className="mt-1 truncate text-[12.5px] text-zinc-600">{(p.tags || []).slice(0, 3).join(' · ')}{(p.companies || []).length > 0 && <span className="hidden md:inline"> — {(p.companies || []).slice(0, 3).join(', ')}</span>}{attempted[p._id] && <span> · {attempted[p._id].attempts} attempt{attempted[p._id].attempts !== 1 ? 's' : ''}</span>}</div>
+                      </div>
+                      <div className="hidden md:block">
+                        <div className="truncate text-[13px] text-zinc-400">{p.skillId?.name}</div>
+                        {ss && ss.attempts > 0 ? <div className="mt-1.5 flex items-center gap-2"><Bar value={ss.masteryP} max={1} height={2} className="w-20" color={ss.masteryP >= 0.85 ? '#fff1cf' : ss.masteryP >= 0.5 ? '#f2c66d' : '#c9683f'} /><span className="text-[11px] tnum text-zinc-500">{Math.round(ss.masteryP * 100)}%</span></div> : <div className="mt-1.5 text-[11px] text-zinc-700">not started</div>}
+                      </div>
+                      <div className="hidden items-center gap-2 text-[13px] capitalize text-zinc-400 md:flex"><span className={cn('h-1.5 w-1.5 rounded-full', DIFF_DOT[p.difficulty])} />{p.difficulty}</div>
+                      <button onClick={(e) => toggleBookmark(e, p._id)} title="Bookmark" className={cn('flex h-9 w-9 items-center justify-center justify-self-end rounded-full transition-colors', bookmarks.has(p._id) ? 'text-[var(--star)]' : 'text-zinc-700 hover:text-zinc-300')}>{bookmarks.has(p._id) ? <BookmarkCheck className="h-[18px] w-[18px]" /> : <Bookmark className="h-[18px] w-[18px]" />}</button>
+                    </Link>
+                  </motion.li>
+                );
+              })}
+            </ol>
+          )}
+          {pages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-4 text-[13px]">
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-full border border-[var(--line-strong)] px-5 py-2 text-zinc-400 hover:text-zinc-100 disabled:opacity-30">Previous</button>
+              <span className="tnum text-zinc-500">{page} of {pages}</span>
+              <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages} className="rounded-full border border-[var(--line-strong)] px-5 py-2 text-zinc-400 hover:text-zinc-100 disabled:opacity-30">Next</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

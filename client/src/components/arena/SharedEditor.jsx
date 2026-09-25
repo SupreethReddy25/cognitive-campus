@@ -128,7 +128,7 @@ export function SharedEditor({ language = 'javascript', starterCodeMap = null, o
       }
       .arena-name-tag {
         background: var(--signal);
-        color: #0a1410;
+        color: #1a0d07;
         font-size: 10px;
         font-weight: 700;
         padding: 1px 6px;

@@ -1,49 +1,26 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useArena } from '../../context/ArenaContext';
-import { problemsService } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
-import { 
-  Swords, Users, SplitSquareHorizontal, Search, Copy, Check, 
-  ArrowRight, Loader2, Wifi, WifiOff, Crown, Zap, Activity
-} from 'lucide-react';
-import { arenaService } from '../../services/api';
+import { problemsService, arenaService } from '../../services/api';
+import { Copy, Check, ArrowRight, Loader2, Crown, Swords } from 'lucide-react';
+import { Page, PrimaryButton, cn } from '../ui/kit';
 
 const MODES = [
-  {
-    id: 'versus',
-    label: 'Versus',
-    subtitle: 'Race',
-    description: 'Blind competitive mode. You cannot see your opponent\'s code. First to pass all tests wins.',
-    icon: Swords,
-    color: 'rose'
-  },
-  {
-    id: 'coop-shared',
-    label: 'Co-op',
-    subtitle: 'Shared',
-    description: 'Single editor, multi-cursor. Both users edit the same document in real-time.',
-    icon: Users,
-    color: 'signal'
-  },
-  {
-    id: 'coop-split',
-    label: 'Co-op',
-    subtitle: 'Split',
-    description: 'Side-by-side editors. Code independently while watching your partner type live.',
-    icon: SplitSquareHorizontal,
-    color: 'amber'
-  }
+  { id: 'versus', n: '01', label: 'Versus', tag: 'a blind race', description: "You can't see your opponent's code. First to pass every test wins — and rating moves." },
+  { id: 'coop-shared', n: '02', label: 'Together', tag: 'one shared editor', description: 'Two cursors, one document, in real time. Pair-program your way to the solution.' },
+  { id: 'coop-split', n: '03', label: 'Side by side', tag: 'two editors', description: 'Code independently while watching your partner type, live.' }
 ];
+const DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400' };
+const dkey = (d) => String(d || '').toLowerCase();
 
 export function ArenaLobby() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { 
+  const {
     connected, error, createRoom, joinRoom, emitStartMatch,
-    roomCode, matchStatus, room, players, mode,
+    roomCode, matchStatus, players, mode,
     isHost, hasJoinedRoom, joiningInProgress, socketRef,
-    isMatchmaking, matchmakingStatus, findMatch, cancelMatchmaking
+    isMatchmaking, findMatch, cancelMatchmaking
   } = useArena();
 
   const [tab, setTab] = useState('create');
@@ -57,11 +34,10 @@ export function ArenaLobby() {
   const [loading, setLoading] = useState(true);
   const [arenaRating, setArenaRating] = useState(null);
 
-  // Fetch problems & rating
   useEffect(() => {
     Promise.all([
-      problemsService.getProblems().catch(() => ({ data: [] })),
-      arenaService.getRating().catch(() => ({ data: { data: { elo: 1000, rank: 'Bronze' } } }))
+      problemsService.getProblems({ limit: 200 }).catch(() => ({ data: [] })),
+      arenaService.getRating().catch(() => ({ data: { data: { elo: 1000, rank: 'Silver' } } }))
     ]).then(([problemsRes, ratingRes]) => {
       const probs = problemsRes.data?.data?.problems || problemsRes.data?.data || [];
       setProblems(Array.isArray(probs) ? probs : []);
@@ -70,42 +46,23 @@ export function ArenaLobby() {
     });
   }, []);
 
-  // ─── Listen for match_started to navigate BOTH players ───
+  // both players are sent into the room when the host starts the match
   useEffect(() => {
     const socket = socketRef?.current;
-    if (!socket) return;
-    
-    const handleMatchStarted = ({ roomId }) => {
-      console.log('[ArenaLobby] arena:match_started → navigating to /arena/' + roomId);
-      navigate(`/arena/${roomId}`);
-    };
-    
+    if (!socket) return undefined;
+    const handleMatchStarted = ({ roomId }) => navigate(`/arena/${roomId}`);
     socket.on('arena:match_started', handleMatchStarted);
-    return () => {
-      socket.off('arena:match_started', handleMatchStarted);
-    };
-  }, [socketRef?.current, navigate]);
+    return () => { socket.off('arena:match_started', handleMatchStarted); };
+  }, [socketRef?.current, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredProblems = useMemo(() => {
     if (!searchQuery.trim()) return problems.slice(0, 8);
     const q = searchQuery.toLowerCase();
-    return problems.filter(p => 
-      p.title?.toLowerCase().includes(q) || 
-      p.difficulty?.toLowerCase().includes(q) ||
-      p.skillId?.name?.toLowerCase().includes(q)
-    ).slice(0, 8);
+    return problems.filter((p) => p.title?.toLowerCase().includes(q) || p.difficulty?.toLowerCase().includes(q) || p.skillId?.name?.toLowerCase().includes(q)).slice(0, 8);
   }, [problems, searchQuery]);
 
-  const handleCreate = () => {
-    if (!selectedProblem) return;
-    createRoom(selectedMode, selectedProblem._id);
-  };
-
-  const handleJoin = () => {
-    if (!joinCode.trim() || joiningInProgress) return;
-    joinRoom(joinCode.trim());
-  };
-
+  const handleCreate = () => { if (selectedProblem) createRoom(selectedMode, selectedProblem._id); };
+  const handleJoin = () => { if (joinCode.trim() && !joiningInProgress) joinRoom(joinCode.trim()); };
   const copyCode = () => {
     if (!roomCode) return;
     navigator.clipboard.writeText(roomCode);
@@ -113,311 +70,121 @@ export function ArenaLobby() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const diffColor = (d) => d === 'Easy' ? 'text-[var(--signal)]' : d === 'Hard' ? 'text-rose-400' : 'text-amber-400';
-
-  // ════════════════════════════════════════════════════════════
-  // THE PRIMARY UI GATE: hasJoinedRoom drives the view switch
-  // ════════════════════════════════════════════════════════════
   const showWaitingRoom = hasJoinedRoom && matchStatus === 'waiting';
 
-  return <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-    <div className="flex min-h-full flex-col">
-      {/* Top bar */}
-      <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-10 backdrop-blur-md">
-        <div className="flex items-center gap-3 text-[13px] text-zinc-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
-          <span className="font-semibold text-zinc-200">Arena</span>
-          <span className="text-zinc-600">/</span>
-          <span>Lobby</span>
+  return (
+    <Page>
+      <header className="flex flex-wrap items-start justify-between gap-6 pt-14 md:pt-20">
+        <div>
+          <div className="text-[13px] text-zinc-500">Arena · real-time multiplayer</div>
+          <h1 className="display mt-5 text-[clamp(52px,8vw,120px)] text-zinc-50">The <em className="text-[var(--ember)]">arena</em>.</h1>
+          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-zinc-400">Race a friend to the answer, or pair up in a shared editor with live cursors.</p>
         </div>
-        <div className="flex items-center gap-6 text-[12px]">
-          {arenaRating && (
-            <div className="flex items-center gap-2 rounded-full border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-3 py-1 font-mono text-[10px] text-[var(--signal)]">
-              <Activity className="h-3 w-3" />
-              <span>{arenaRating.rank.toUpperCase()} {arenaRating.elo}</span>
-            </div>
-          )}
-
-          {connected ? (
-            <span className="flex items-center gap-1.5 text-[var(--signal)]">
-              <Wifi className="h-3.5 w-3.5" strokeWidth={1.5} /> Connected
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5 text-rose-400">
-              <WifiOff className="h-3.5 w-3.5" strokeWidth={1.5} /> Disconnected
-            </span>
-          )}
+        <div className="flex items-center gap-8 pt-2 text-right">
+          {arenaRating && <div><div className="display text-[64px] leading-none tnum text-zinc-50">{arenaRating.elo}</div><div className="mt-1 text-[13px] text-zinc-500">{arenaRating.rank} rating</div></div>}
+          <div className="flex items-center gap-2 text-[13px]"><span className={cn('h-2 w-2 rounded-full', connected ? 'bg-emerald-400' : 'animate-pulse bg-rose-400')} /><span className={connected ? 'text-zinc-500' : 'text-rose-300'}>{connected ? 'Connected' : 'Connecting…'}</span></div>
         </div>
       </header>
 
-      {/* Error banner */}
-      {error && <div className="mx-10 mt-4 rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-[12px] text-rose-400">
-        {error}
-      </div>}
+      {error && <div className="mt-8 border-l-2 border-rose-400 pl-4 text-[14px] text-rose-300">{error}</div>}
 
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* VIEW A: WAITING ROOM (shown when hasJoinedRoom)   */}
-      {/* ═══════════════════════════════════════════════════ */}
       {showWaitingRoom ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-10 py-20">
-
-          {/* Status message — 3 deterministic states using isHost */}
-          {isHost && players.length < 2 && (
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-[var(--signal)]" />
-              <span className="text-[16px] font-medium text-zinc-200">Waiting for opponent…</span>
-            </div>
-          )}
-
-          {isHost && players.length >= 2 && (
-            <div className="flex items-center gap-3">
-              <span className="text-[16px] font-medium text-[var(--signal)]">✓ Opponent Joined! Ready to start.</span>
-            </div>
-          )}
-
-          {!isHost && (
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-[var(--signal)]" />
-              <span className="text-[16px] font-medium text-zinc-200">Waiting for Host to start match…</span>
-            </div>
-          )}
-
-          {/* Room code card */}
-          <div className="w-full max-w-md rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-            <p className="text-[12px] text-zinc-500 mb-4 font-mono tracking-widest">ROOM CODE</p>
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <span className="font-mono text-[48px] font-bold tracking-[0.2em] text-zinc-100">{roomCode}</span>
-              <button onClick={copyCode} className="flex items-center gap-1 rounded-lg border border-white/[0.08] px-3 py-2 text-[11px] text-zinc-400 transition-colors hover:bg-white/[0.03] hover:text-zinc-200">
-                {copied ? <Check className="h-3.5 w-3.5 text-[var(--signal)]" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <p className="text-[13px] text-zinc-500">Share this code with your partner to join.</p>
-
-            {/* Player list */}
-            <div className="mt-6 space-y-2">
-              {players.map((p, i) => <div key={p.userId || i} className="flex items-center gap-3 rounded-lg border border-white/[0.04] bg-white/[0.01] px-4 py-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2a3441] text-[10px] font-bold text-zinc-200">
-                  {p.name?.[0]?.toUpperCase() || '?'}
-                </div>
-                <span className="text-[13px] font-medium text-zinc-200">{p.name}</span>
-                {i === 0 && <Crown className="h-3 w-3 text-amber-400 ml-auto" strokeWidth={2} />}
-              </div>)}
-            </div>
-
-            {/* Start Match — ONLY visible for Host when room is full */}
-            {isHost && players.length >= 2 && (
-              <button onClick={() => emitStartMatch(roomCode)} className="mt-6 w-full rounded-lg bg-[var(--signal)] py-3 text-[14px] font-semibold text-[#0a1410] transition-all hover:brightness-110">
-                Start Match
-              </button>
-            )}
+        <div className="mx-auto max-w-xl pt-20 text-center">
+          <div className="flex items-center justify-center gap-3 text-[17px] text-zinc-300">
+            {isHost && players.length < 2 && <><Loader2 className="h-5 w-5 animate-spin text-[var(--ember)]" />Waiting for an opponent…</>}
+            {isHost && players.length >= 2 && <span className="text-emerald-400">Your opponent is here. Ready when you are.</span>}
+            {!isHost && <><Loader2 className="h-5 w-5 animate-spin text-[var(--ember)]" />Waiting for the host to start…</>}
           </div>
-
-          {/* Mode badge */}
-          <div className="flex items-center gap-2 text-[12px] text-zinc-500">
-            <span className="font-mono tracking-widest">{mode?.toUpperCase()?.replace('-', ' ')}</span>
-          </div>
+          <div className="mt-10 text-[13px] text-zinc-500">Room code</div>
+          <div className="display mt-2 text-[clamp(72px,14vw,140px)] leading-none tracking-[0.12em] text-zinc-50">{roomCode}</div>
+          <button onClick={copyCode} className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13px] text-zinc-400 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">{copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy code'}</button>
+          <ul className="mx-auto mt-12 max-w-sm text-left">
+            {players.map((p, i) => (
+              <li key={p.userId || i} className="flex items-center gap-4 border-b border-[var(--line)] py-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ember)] text-[14px] font-semibold text-[#1a0d07]">{p.name?.[0]?.toUpperCase() || '?'}</span>
+                <span className="display text-[26px] text-zinc-100">{p.name}</span>
+                {i === 0 && <Crown className="ml-auto h-4 w-4 text-[var(--star)]" strokeWidth={2} />}
+              </li>
+            ))}
+          </ul>
+          {isHost && players.length >= 2 && <div className="mt-10 flex justify-center"><PrimaryButton onClick={() => emitStartMatch(roomCode)} icon={ArrowRight}>Start the match</PrimaryButton></div>}
+          <div className="mt-8 text-[13px] text-zinc-600">{mode?.replace('-', ' ')}</div>
         </div>
       ) : (
-
-        /* ═══════════════════════════════════════════════════ */
-        /* VIEW B: CREATE / JOIN FORM (default landing)      */
-        /* ═══════════════════════════════════════════════════ */
-        <div className="flex-1 px-10 py-10">
-          {/* Hero */}
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-2 text-[12px] text-zinc-500">
-              <Zap className="h-3.5 w-3.5 text-[var(--signal)]" strokeWidth={2} />
-              <span className="font-mono tracking-widest">REAL-TIME MULTIPLAYER</span>
-            </div>
-            <h1 className="text-[42px] font-semibold leading-[1.1] tracking-tight text-zinc-50 mb-3">
-              The Arena.
-            </h1>
-            <p className="max-w-lg text-[14px] leading-relaxed text-zinc-400">
-              Challenge a friend to a coding race, or pair up to solve problems together with live cursors and shared editors.
-            </p>
-          </div>
-
-          {/* Tab switcher */}
-          <div className="flex items-center gap-0.5 rounded-lg border border-white/[0.06] bg-white/[0.02] p-0.5 w-fit mb-8">
-            <button onClick={() => setTab('create')} className={`rounded-md px-6 py-2 text-[13px] font-medium transition-colors ${tab === 'create' ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
-              Create Match
-            </button>
-            <button onClick={() => setTab('join')} className={`rounded-md px-6 py-2 text-[13px] font-medium transition-colors ${tab === 'join' ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
-              Join Match
-            </button>
+        <div className="pt-16">
+          <div className="mb-12 flex gap-1 border-b border-[var(--line-strong)] pb-3">
+            {[['create', 'Create a match'], ['join', 'Join with a code']].map(([k, l]) => (
+              <button key={k} onClick={() => setTab(k)} className={cn('relative rounded-full px-5 py-2 text-[14px] font-medium transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+                {tab === k && <motion.span layoutId="arena-tab" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+                <span className="relative">{l}</span>
+              </button>
+            ))}
           </div>
 
           {tab === 'create' ? (
-            <div className="space-y-8">
-              {/* Mode selection */}
+            <div className="space-y-16">
               <div>
-                <h3 className="text-[14px] font-semibold text-zinc-200 mb-4">Select Mode</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {MODES.map(m => {
-                    const Icon = m.icon;
-                    const active = selectedMode === m.id;
-                    const borderColor = active 
-                      ? m.color === 'signal' ? 'border-[var(--signal)]/50' : m.color === 'rose' ? 'border-rose-500/50' : 'border-amber-500/50'
-                      : 'border-white/[0.06]';
-                    const bgColor = active
-                      ? m.color === 'signal' ? 'bg-[var(--signal)]/5' : m.color === 'rose' ? 'bg-rose-500/5' : 'bg-amber-500/5'
-                      : 'bg-white/[0.01]';
-                    const iconColor = m.color === 'signal' ? 'text-[var(--signal)]' : m.color === 'rose' ? 'text-rose-400' : 'text-amber-400';
-
-                    return <button 
-                      key={m.id}
-                      onClick={() => setSelectedMode(m.id)}
-                      className={`group relative flex flex-col items-start gap-3 rounded-xl border p-5 text-left transition-all ${borderColor} ${bgColor} hover:bg-white/[0.03]`}
-                    >
-                      {active && <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-current" style={{ color: m.color === 'signal' ? 'var(--signal)' : m.color === 'rose' ? 'rgb(244,63,94)' : 'rgb(245,158,11)' }} />}
-                      <Icon className={`h-6 w-6 ${iconColor}`} strokeWidth={1.5} />
-                      <div>
-                        <div className="text-[15px] font-semibold text-zinc-100">{m.label} <span className="text-zinc-500 font-normal">· {m.subtitle}</span></div>
-                        <p className="mt-1 text-[12px] leading-relaxed text-zinc-500">{m.description}</p>
-                      </div>
-                    </button>;
-                  })}
-                </div>
+                <div className="mb-3 text-[13px] text-zinc-500">1 · Choose how you play</div>
+                {MODES.map((m) => {
+                  const active = selectedMode === m.id;
+                  return (
+                    <button key={m.id} onClick={() => setSelectedMode(m.id)} className="group relative flex w-full items-baseline gap-6 border-b border-[var(--line)] py-6 text-left">
+                      <span className="display w-12 text-[30px] leading-none text-zinc-700">{m.n}</span>
+                      <span className={cn('display text-[clamp(38px,5vw,68px)] leading-none transition-all duration-300', active ? 'translate-x-2 text-[var(--ember)]' : 'text-zinc-300 group-hover:text-zinc-100')}>{m.label}</span>
+                      <span className="hidden text-[14px] text-zinc-600 md:inline">{m.tag}</span>
+                      <span className={cn('ml-auto hidden max-w-sm text-right text-[14px] leading-snug text-zinc-500 transition-opacity md:block', active ? 'opacity-100' : 'opacity-0 group-hover:opacity-70')}>{m.description}</span>
+                      {active && <motion.span layoutId="mode-underline" className="absolute inset-x-0 bottom-0 h-[2px] bg-[var(--ember)]" />}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Problem selector */}
               <div>
-                <h3 className="text-[14px] font-semibold text-zinc-200 mb-4">Select Problem</h3>
+                <div className="mb-3 text-[13px] text-zinc-500">2 · Choose the problem</div>
                 <div className="relative">
-                  <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 focus-within:border-[var(--signal)]/40">
-                    <Search className="h-4 w-4 text-zinc-600" strokeWidth={1.5} />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={e => { setSearchQuery(e.target.value); setSearchOpen(true); }}
-                      onFocus={() => setSearchOpen(true)}
-                      placeholder={selectedProblem ? selectedProblem.title : "Search problems by name, difficulty, or topic..."}
-                      className="flex-1 bg-transparent text-[13px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none"
-                    />
-                    {selectedProblem && <span className={`text-[11px] font-mono ${diffColor(selectedProblem.difficulty)}`}>{selectedProblem.difficulty?.toUpperCase()}</span>}
+                  <div className="flex items-center gap-4 border-b border-[var(--line-strong)] pb-3 focus-within:border-[var(--ember)]">
+                    <input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }} onFocus={() => setSearchOpen(true)} placeholder={selectedProblem ? selectedProblem.title : 'Search by name, difficulty or skill…'}
+                      className={cn('display w-full bg-transparent text-[34px] outline-none placeholder:text-zinc-700', selectedProblem ? 'placeholder:text-[var(--ember-soft)]' : '')} />
+                    {selectedProblem && <span className="flex shrink-0 items-center gap-2 text-[13px] capitalize text-zinc-400"><span className={cn('h-1.5 w-1.5 rounded-full', DOT[dkey(selectedProblem.difficulty)])} />{selectedProblem.difficulty}</span>}
                   </div>
-
                   {searchOpen && (
-                    <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-[300px] overflow-y-auto rounded-lg border border-white/[0.06] bg-[#0d1117] shadow-2xl scrollbar-surgical">
-                      {loading ? (
-                        <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin text-zinc-600" /></div>
-                      ) : filteredProblems.length === 0 ? (
-                        <div className="py-6 text-center text-[12px] text-zinc-600">No problems found</div>
-                      ) : filteredProblems.map(p => (
-                        <button 
-                          key={p._id} 
-                          onClick={() => { setSelectedProblem(p); setSearchQuery(''); setSearchOpen(false); }}
-                          className="flex w-full items-center gap-3 border-b border-white/[0.04] px-4 py-3 text-left transition-colors hover:bg-white/[0.03] last:border-b-0"
-                        >
-                          <span className={`h-2 w-2 rounded-full shrink-0 ${p.difficulty === 'Easy' ? 'bg-[var(--signal)]' : p.difficulty === 'Hard' ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[13px] font-medium text-zinc-200 truncate">{p.title}</div>
-                            <div className="text-[11px] text-zinc-600 font-mono">{p.skillId?.name || 'General'} · {p.difficulty}</div>
-                          </div>
-                        </button>
-                      ))}
+                    <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[340px] overflow-y-auto rounded-3xl border border-[var(--line-strong)] bg-[#141418] p-2 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)] scrollbar-surgical">
+                      {loading ? <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-zinc-600" /></div>
+                        : filteredProblems.length === 0 ? <div className="py-8 text-center text-[14px] text-zinc-600">No problems found</div>
+                        : filteredProblems.map((p) => (
+                          <button key={p._id} onClick={() => { setSelectedProblem(p); setSearchQuery(''); setSearchOpen(false); }} className="flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-white/[0.05]">
+                            <span className={cn('h-2 w-2 shrink-0 rounded-full', DOT[dkey(p.difficulty)])} />
+                            <span className="min-w-0 flex-1"><span className="block truncate text-[16px] text-zinc-100">{p.title}</span><span className="text-[12.5px] text-zinc-600">{p.skillId?.name || 'General'}</span></span>
+                            <span className="text-[12.5px] capitalize text-zinc-500">{p.difficulty}</span>
+                          </button>
+                        ))}
                     </div>
                   )}
                 </div>
-
-                {selectedProblem && <div className="mt-3 flex items-center gap-3 rounded-lg border border-[var(--signal)]/20 bg-[var(--signal)]/5 px-4 py-3">
-                  <span className={`h-2 w-2 rounded-full ${selectedProblem.difficulty === 'Easy' ? 'bg-[var(--signal)]' : selectedProblem.difficulty === 'Hard' ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                  <span className="text-[13px] font-medium text-zinc-200">{selectedProblem.title}</span>
-                  <span className="ml-auto text-[11px] text-zinc-500 font-mono">{selectedProblem.difficulty?.toUpperCase()}</span>
-                </div>}
               </div>
 
-              {/* Create button */}
-              <button
-                onClick={handleCreate}
-                disabled={!selectedProblem || !connected}
-                className={`flex items-center gap-2 rounded-lg px-8 py-3 text-[14px] font-semibold transition-all ${
-                  !selectedProblem || !connected
-                    ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                    : 'bg-[var(--signal)] text-[#0a1410] hover:brightness-110'
-                }`}
-              >
-                <Swords className="h-4 w-4" strokeWidth={2} />
-                Create Match
-                <ArrowRight className="h-4 w-4 ml-1" strokeWidth={2} />
-              </button>
+              <PrimaryButton onClick={handleCreate} disabled={!selectedProblem || !connected} icon={Swords}>{selectedProblem ? 'Create the match' : 'Pick a problem first'}</PrimaryButton>
             </div>
           ) : (
-            /* ─── JOIN TAB ─── */
-            <div className="max-w-md space-y-6">
+            <div className="max-w-2xl space-y-16">
               <div>
-                <h3 className="text-[14px] font-semibold text-zinc-200 mb-4">Enter Room Code</h3>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={joinCode}
-                    onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-                    placeholder="e.g. A3F1B2"
-                    maxLength={6}
-                    className="flex-1 rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-3 font-mono text-[20px] font-bold tracking-[0.3em] text-center text-zinc-100 placeholder:text-zinc-700 placeholder:tracking-[0.3em] focus:border-[var(--signal)]/40 focus:outline-none"
-                  />
-                </div>
+                <div className="mb-3 text-[13px] text-zinc-500">Room code</div>
+                <input value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))} placeholder="A3F1B2" maxLength={6}
+                  className="display w-full border-b border-[var(--line-strong)] bg-transparent pb-3 text-[clamp(64px,11vw,120px)] uppercase leading-none tracking-[0.12em] text-zinc-50 outline-none placeholder:text-zinc-800 focus:border-[var(--ember)]" />
+                <div className="mt-8"><PrimaryButton onClick={handleJoin} disabled={joinCode.length < 6 || !connected || joiningInProgress} icon={joiningInProgress ? Loader2 : ArrowRight}>{joiningInProgress ? 'Joining…' : 'Join the match'}</PrimaryButton></div>
               </div>
 
-              <button
-                onClick={handleJoin}
-                disabled={joinCode.length < 6 || !connected || joiningInProgress}
-                className={`flex w-full items-center justify-center gap-2 rounded-lg px-8 py-3 text-[14px] font-semibold transition-all ${
-                  joinCode.length < 6 || !connected || joiningInProgress
-                    ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                    : 'bg-[var(--signal)] text-[#0a1410] hover:brightness-110'
-                }`}
-              >
-                {joiningInProgress ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Joining…
-                  </>
-                ) : (
-                  <>
-                    <ArrowRight className="h-4 w-4" strokeWidth={2} />
-                    Join Match
-                  </>
-                )}
-              </button>
-
-              {/* MATCHMAKING QUEUE (VERSUS MODE) */}
-              <div className="pt-8 border-t border-white/[0.04] mt-8">
-                <h3 className="text-[14px] font-semibold text-zinc-200 mb-2">Automatch Queue</h3>
-                <p className="text-[12px] text-zinc-500 mb-4">Find a random opponent for a Versus match.</p>
-
-                {isMatchmaking ? (
-                  <button
-                    onClick={cancelMatchmaking}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-8 py-3 text-[14px] font-semibold text-rose-400 transition-all hover:bg-rose-500/20"
-                  >
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Searching for opponent... (Cancel)
-                  </button>
-                ) : (
-                  <button
-                    onClick={findMatch}
-                    disabled={!connected}
-                    className={`flex w-full items-center justify-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-8 py-3 text-[14px] font-semibold transition-all ${
-                      !connected ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-300 hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <Search className="h-4 w-4" strokeWidth={2} />
-                    Find Match
-                  </button>
-                )}
+              <div className="border-t border-[var(--line)] pt-10">
+                <div className="display text-[36px] text-zinc-100">No code? Get matched.</div>
+                <p className="mt-2 max-w-md text-[15px] leading-relaxed text-zinc-500">Join the automatch queue and we&apos;ll pair you with a random opponent for a Versus race.</p>
+                {isMatchmaking
+                  ? <button onClick={cancelMatchmaking} className="mt-6 flex items-center gap-3 rounded-full border border-rose-400/40 px-6 py-3 text-[14px] text-rose-300 transition-colors hover:bg-rose-400/10"><Loader2 className="h-4 w-4 animate-spin" />Searching for an opponent… cancel</button>
+                  : <button onClick={findMatch} disabled={!connected} className="mt-6 rounded-full border border-[var(--line-strong)] px-6 py-3 text-[14px] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)] disabled:opacity-40">Find me a match</button>}
               </div>
             </div>
           )}
         </div>
       )}
-
-      {/* Footer */}
-      <div className="mt-auto flex items-center justify-between border-t border-white/[0.04] px-10 py-4 font-mono text-[9px] tracking-[0.24em] text-zinc-700">
-        <span>ARENA · v1.0</span>
-        <span className={connected ? "text-[var(--signal)]" : "text-rose-400"}>{connected ? 'SOCKET OK' : 'OFFLINE'}</span>
-      </div>
-    </div>
-  </div>;
+    </Page>
+  );
 }

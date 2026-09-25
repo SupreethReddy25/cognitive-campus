@@ -11,14 +11,14 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { adminService, companiesService, collegesService, analyticsService } from '../services/api';
-import { Card, Label, SectionTitle, Stat, Pill, DiffPill, Bar, Skeleton, EmptyState, CountUp, CompanyLogo, chartTooltipStyle, cn } from '../components/ui/kit';
+import { Page, Card, Label, SectionTitle, Stat, Pill, DiffPill, Bar, Skeleton, EmptyState, CountUp, CompanyLogo, chartTooltipStyle, cn } from '../components/ui/kit';
 
 const TABS = [
   ['overview', 'Overview', BarChart2], ['curriculum', 'Curriculum', Layers], ['students', 'Students', Users],
   ['experiences', 'Experiences', FileText], ['problems', 'Problems', BookOpen], ['add', 'Add data', Sparkles]
 ];
-const inputCls = 'w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 py-2.5 text-[13px] text-zinc-200 outline-none focus:border-violet-400/50 transition-all placeholder:text-zinc-700';
-const Spinner = () => <div className="flex items-center justify-center gap-3 py-16 text-zinc-600"><Loader2 className="h-5 w-5 animate-spin" /><span className="font-mono text-[10px] uppercase tracking-widest">Loading…</span></div>;
+const inputCls = 'w-full border-b border-[var(--line-strong)] bg-transparent px-0.5 py-2 text-[15px] text-zinc-100 outline-none transition-colors focus:border-[var(--ember)] placeholder:text-zinc-700';
+const Spinner = () => <div className="flex items-center justify-center gap-3 py-16 text-zinc-600"><Loader2 className="h-5 w-5 animate-spin" /><span className="text-[12px] font-medium">Loading…</span></div>;
 const Field = ({ label, children }) => <div className="space-y-1.5"><Label>{label}</Label>{children}</div>;
 const ago = (iso) => { if (!iso) return '—'; const d = Math.floor((Date.now() - new Date(iso)) / 86400000); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d}d ago`; };
 
@@ -31,9 +31,9 @@ function OverviewTab({ onGoto }) {
   return (
     <div className="space-y-6">
       {pending > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.05] px-5 py-3.5">
-          <div className="flex items-center gap-3 text-[13px] text-amber-100"><AlertTriangle className="h-4 w-4 text-amber-300" /> {s.moderation.pendingExperiences} experience{s.moderation.pendingExperiences !== 1 ? 's' : ''} and {s.moderation.waitlistedProblems + s.moderation.quarantinedProblems} problem{s.moderation.waitlistedProblems + s.moderation.quarantinedProblems !== 1 ? 's' : ''} need review</div>
-          <div className="flex gap-2"><button onClick={() => onGoto('experiences')} className="rounded-lg border border-amber-400/30 px-3 py-1.5 font-mono text-[10.5px] uppercase text-amber-200 hover:bg-amber-400/10">Experiences</button><button onClick={() => onGoto('problems')} className="rounded-lg border border-amber-400/30 px-3 py-1.5 font-mono text-[10.5px] uppercase text-amber-200 hover:bg-amber-400/10">Problems</button></div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-[var(--ember)] py-1 pl-5">
+          <div className="flex items-center gap-3 text-[15px] text-zinc-300"><AlertTriangle className="h-4 w-4 text-[var(--ember)]" /> {s.moderation.pendingExperiences} experience{s.moderation.pendingExperiences !== 1 ? 's' : ''} and {s.moderation.waitlistedProblems + s.moderation.quarantinedProblems} problem{s.moderation.waitlistedProblems + s.moderation.quarantinedProblems !== 1 ? 's' : ''} need review</div>
+          <div className="flex gap-2"><button onClick={() => onGoto('experiences')} className="rounded-full border border-[var(--line-strong)] px-4 py-1.5 text-[13px] text-zinc-300 hover:border-[var(--ember)] hover:text-[var(--ember)] font-medium">Experiences</button><button onClick={() => onGoto('problems')} className="rounded-full border border-[var(--line-strong)] px-4 py-1.5 text-[13px] text-zinc-300 hover:border-[var(--ember)] hover:text-[var(--ember)] font-medium">Problems</button></div>
         </div>
       )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -51,12 +51,12 @@ function OverviewTab({ onGoto }) {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <SectionTitle icon={Activity} title="Submissions per day · last 14 days" sub="Bars: submissions. Lines: correct submissions and active students." />
-          <div className="h-64"><ResponsiveContainer><ComposedChart data={s.submissionsPerDay.map((d) => ({ ...d, label: d.date.slice(5) }))} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}><CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} /><XAxis dataKey="label" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} /><YAxis tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} /><Tooltip {...chartTooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><RBar dataKey="submissions" name="Submissions" fill="#38bdf8" radius={[5, 5, 0, 0]} barSize={18} /><Line dataKey="correct" name="Correct" stroke="#34d399" strokeWidth={2} dot={false} /><Line dataKey="activeUsers" name="Active students" stroke="#a78bfa" strokeWidth={2} dot={false} /></ComposedChart></ResponsiveContainer></div>
+          <div className="h-64"><ResponsiveContainer><ComposedChart data={s.submissionsPerDay.map((d) => ({ ...d, label: d.date.slice(5) }))} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}><CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} /><XAxis dataKey="label" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} /><YAxis tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} /><Tooltip {...chartTooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><RBar dataKey="submissions" name="Submissions" fill="#8fbcda" radius={[5, 5, 0, 0]} barSize={18} /><Line dataKey="correct" name="Correct" stroke="#94d6a8" strokeWidth={2} dot={false} /><Line dataKey="activeUsers" name="Active students" stroke="#9aa5dc" strokeWidth={2} dot={false} /></ComposedChart></ResponsiveContainer></div>
         </Card>
         <Card>
           <SectionTitle icon={Flame} title="Most attempted problems" />
-          <div className="space-y-3">{s.topProblems.map((p, i) => <div key={p._id}><div className="mb-1 flex items-center justify-between text-[12.5px]"><span className="flex items-center gap-2 truncate text-zinc-200"><span className="font-mono text-zinc-600">{i + 1}</span>{p.title}<DiffPill difficulty={p.difficulty} className="scale-90" /></span><span className="font-mono text-[10.5px] text-zinc-500">{p.solved}/{p.attempts}</span></div><Bar value={p.solved} max={p.attempts} height={4} color="#34d399" /></div>)}</div>
-          <div className="mt-6"><Label className="mb-2 block">Students by XP</Label><div className="h-24"><ResponsiveContainer><BarChart data={s.xpDistribution.map((b) => ({ name: typeof b.bucket === 'number' ? ['0-50', '50-200', '200-500', '500-1k', '1k+'][[0, 50, 200, 500, 1000].indexOf(b.bucket)] || b.bucket : b.bucket, n: b.students }))}><XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 9 }} tickLine={false} axisLine={false} /><Tooltip {...chartTooltipStyle} /><RBar dataKey="n" name="Students" fill="#fbbf24" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></div>
+          <div className="space-y-3">{s.topProblems.map((p, i) => <div key={p._id}><div className="mb-1 flex items-center justify-between text-[12.5px]"><span className="flex items-center gap-2 truncate text-zinc-200"><span className="font-mono text-zinc-600">{i + 1}</span>{p.title}<DiffPill difficulty={p.difficulty} className="scale-90" /></span><span className="font-mono text-[10.5px] text-zinc-500">{p.solved}/{p.attempts}</span></div><Bar value={p.solved} max={p.attempts} height={4} color="#94d6a8" /></div>)}</div>
+          <div className="mt-6"><Label className="mb-2 block">Students by XP</Label><div className="h-24"><ResponsiveContainer><BarChart data={s.xpDistribution.map((b) => ({ name: typeof b.bucket === 'number' ? ['0-50', '50-200', '200-500', '500-1k', '1k+'][[0, 50, 200, 500, 1000].indexOf(b.bucket)] || b.bucket : b.bucket, n: b.students }))}><XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 9 }} tickLine={false} axisLine={false} /><Tooltip {...chartTooltipStyle} /><RBar dataKey="n" name="Students" fill="#f2c66d" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></div>
         </Card>
       </div>
     </div>
@@ -83,12 +83,12 @@ function CurriculumTab() {
   };
 
   if (!h) return <Spinner />;
-  const BINS = [['<20%', '#fb7185'], ['20–40', '#f97316'], ['40–60', '#fbbf24'], ['60–85', '#38bdf8'], ['Mastered', '#34d399']];
+  const BINS = [['<20%', '#f0728a'], ['20–40', '#f97316'], ['40–60', '#f2c66d'], ['60–85', '#8fbcda'], ['Mastered', '#94d6a8']];
   return (
     <div className="space-y-6">
       <Card>
         <SectionTitle icon={Layers} title="Cohort skill heatmap" sub="Average BKT mastery per skill (lowest first) with the full distribution of students — a direct signal for curriculum planning." action={
-          <select value={college} onChange={(e) => setCollege(e.target.value)} className="rounded-lg border border-white/[0.07] bg-[#0b0f15] px-3 py-2 text-[12px] text-zinc-300 outline-none"><option value="">All colleges</option>{colleges.map((c) => <option key={c._id} value={c._id}>{c.shortName}</option>)}</select>} />
+          <select value={college} onChange={(e) => setCollege(e.target.value)} className="rounded-lg border border-white/[0.07] bg-[#121216] px-3 py-2 text-[12px] text-zinc-300 outline-none"><option value="">All colleges</option>{colleges.map((c) => <option key={c._id} value={c._id}>{c.shortName}</option>)}</select>} />
         {h.recommendation && <div className="mb-5 rounded-xl border border-violet-400/20 bg-violet-400/[0.05] px-4 py-3 text-[12.5px] text-violet-100"><b className="text-violet-300">Insight · </b>{h.recommendation}</div>}
         <div className="space-y-3">
           {h.heatmap.map((row) => {
@@ -109,8 +109,8 @@ function CurriculumTab() {
 
       {model && (
         <Card>
-          <SectionTitle icon={Brain} title="Adaptive knowledge-tracing model" sub="Per-skill BKT parameters learned from real submissions (Bayesian-regularised maximum likelihood). Textbook defaults shown for comparison." action={<button onClick={refit} disabled={refitting} className="flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/10 px-3.5 py-2 font-mono text-[10.5px] uppercase tracking-wider text-violet-300 hover:bg-violet-400/20 disabled:opacity-50">{refitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Refit now</button>} />
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left"><thead><tr className="border-b border-white/[0.06]">{['Skill', 'P(L0)', 'P(T) learn', 'P(S) slip', 'P(G) guess', 'Sequences', 'LL gain'].map((c) => <th key={c} className="pb-2.5 pr-4 font-mono text-[9.5px] font-medium uppercase tracking-[0.18em] text-zinc-600">{c}</th>)}</tr></thead>
+          <SectionTitle icon={Brain} title="Adaptive knowledge-tracing model" sub="Per-skill BKT parameters learned from real submissions (Bayesian-regularised maximum likelihood). Textbook defaults shown for comparison." action={<button onClick={refit} disabled={refitting} className="flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/10 px-3.5 py-2 text-[12px] text-violet-300 hover:bg-violet-400/20 disabled:opacity-50 font-medium">{refitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Refit now</button>} />
+          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left"><thead><tr className="border-b border-white/[0.06]">{['Skill', 'P(L0)', 'P(T) learn', 'P(S) slip', 'P(G) guess', 'Sequences', 'LL gain'].map((c) => <th key={c} className="pb-2.5 pr-4 text-[12px] font-medium text-zinc-600">{c}</th>)}</tr></thead>
             <tbody>{model.skills.map((m) => { const d = model.defaults; const cell = (k) => <td className="py-2.5 pr-4 font-mono text-[12px]"><span className={cn(m.fitted && Math.abs(m.params[k] - d[k]) >= 0.03 ? 'text-violet-300' : 'text-zinc-400')}>{m.params[k].toFixed(2)}</span><span className="ml-1 text-[9px] text-zinc-700">({d[k]})</span></td>; return <tr key={m.skillId} className="border-b border-white/[0.03]"><td className="py-2.5 pr-4 text-[12.5px] text-zinc-200">{m.name}{!m.fitted && <span className="ml-2 font-mono text-[9px] text-zinc-600">default</span>}</td>{cell('pL0')}{cell('pT')}{cell('pS')}{cell('pG')}<td className="py-2.5 pr-4 font-mono text-[11.5px] text-zinc-500">{m.sequences}</td><td className="py-2.5 font-mono text-[11.5px] text-emerald-400">{m.logLikelihoodGain > 0 ? `+${m.logLikelihoodGain}` : '—'}</td></tr>; })}</tbody></table></div>
         </Card>
       )}
@@ -145,7 +145,7 @@ function StudentsTab({ me }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or email…" className="w-full bg-transparent text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600" /></div>
-        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{[['xp', 'Top XP'], ['active', 'Recently active'], ['recent', 'Newest']].map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', sort === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}</button>)}</div>
+        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{[['xp', 'Top XP'], ['active', 'Recently active'], ['recent', 'Newest']].map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-lg px-3 py-1.5 text-[12px] font-medium', sort === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}</button>)}</div>
       </div>
       {loading ? <Spinner /> : rows.length === 0 ? <EmptyState icon={Users} title="No users found" /> : (
         <Card padded={false} className="overflow-hidden">
@@ -157,14 +157,14 @@ function StudentsTab({ me }) {
                 <div className="hidden text-[12px] text-zinc-500 md:block">{s.collegeId?.shortName || '—'}</div>
                 <div className="hidden text-[12px] text-zinc-400 md:block">{s.skillsMastered}/12 <span className="text-zinc-600">mastered</span></div>
                 <div className="hidden font-mono text-[11px] text-zinc-500 md:block">{s.passRate != null ? `${s.passRate}%` : '—'}<div className="text-[9px] text-zinc-700">{ago(s.lastActiveDate)}</div></div>
-                <div className="flex items-center justify-end gap-2"><Pill tone={s.role === 'admin' ? 'violet' : 'zinc'}>{s.role}</Pill><button onClick={() => toggleRole(s)} disabled={!!working[s._id] || s._id === me} title={s._id === me ? "You can't change your own role here" : ''} className={cn('rounded-lg border px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-wider disabled:opacity-40', s.role === 'admin' ? 'border-white/10 text-zinc-500 hover:text-zinc-200' : 'border-violet-400/30 text-violet-300 hover:bg-violet-400/10')}>{working[s._id] ? <Loader2 className="h-3 w-3 animate-spin" /> : s.role === 'admin' ? 'Revoke' : 'Promote'}</button></div>
+                <div className="flex items-center justify-end gap-2"><Pill tone={s.role === 'admin' ? 'violet' : 'zinc'}>{s.role}</Pill><button onClick={() => toggleRole(s)} disabled={!!working[s._id] || s._id === me} title={s._id === me ? "You can't change your own role here" : ''} className={cn('rounded-lg border px-2.5 py-1 text-[12px] disabled:opacity-40 font-medium', s.role === 'admin' ? 'border-white/10 text-zinc-500 hover:text-zinc-200' : 'border-violet-400/30 text-violet-300 hover:bg-violet-400/10')}>{working[s._id] ? <Loader2 className="h-3 w-3 animate-spin" /> : s.role === 'admin' ? 'Revoke' : 'Promote'}</button></div>
               </div>
               <AnimatePresence initial={false}>
                 {open === s._id && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden bg-black/20">
                     {!detail ? <Spinner /> : (
                       <div className="grid gap-6 px-5 py-5 lg:grid-cols-2">
-                        <div><Label className="mb-3 block">Skill mastery</Label><div className="space-y-2">{detail.skills.map((k) => <div key={k.name} className="flex items-center gap-3 text-[12px]"><span className="w-36 truncate text-zinc-400">{k.name}</span><Bar value={k.masteryP} max={1} height={5} color={k.masteryP >= 0.85 ? '#34d399' : k.masteryP >= 0.5 ? '#38bdf8' : '#fbbf24'} className="flex-1" /><span className="w-10 text-right font-mono text-zinc-500">{Math.round(k.masteryP * 100)}%</span></div>)}</div></div>
+                        <div><Label className="mb-3 block">Skill mastery</Label><div className="space-y-2">{detail.skills.map((k) => <div key={k.name} className="flex items-center gap-3 text-[12px]"><span className="w-36 truncate text-zinc-400">{k.name}</span><Bar value={k.masteryP} max={1} height={5} color={k.masteryP >= 0.85 ? '#94d6a8' : k.masteryP >= 0.5 ? '#8fbcda' : '#f2c66d'} className="flex-1" /><span className="w-10 text-right font-mono text-zinc-500">{Math.round(k.masteryP * 100)}%</span></div>)}</div></div>
                         <div><Label className="mb-3 block">Recent submissions · {detail.totals.submissions} total · {detail.totals.passRate ?? '—'}% pass</Label><div className="space-y-1.5">{detail.recentSubmissions.map((x) => <div key={x._id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2 text-[12px]"><span className="flex items-center gap-2 truncate"><span className={cn('h-1.5 w-1.5 rounded-full', x.isCorrect ? 'bg-emerald-400' : 'bg-rose-400')} /><span className="truncate text-zinc-300">{x.problemId?.title}</span></span><span className="font-mono text-[10px] text-zinc-600">{ago(x.createdAt)}</span></div>)}{!detail.recentSubmissions.length && <p className="text-[12px] text-zinc-600">No submissions yet.</p>}</div><div className="mt-3 font-mono text-[10.5px] text-zinc-600">{detail.user.collegeId?.name || 'No college'} · target: {detail.user.targetCompanyId?.name || '—'} / {detail.user.targetRole || '—'} · streak {detail.user.streak}</div></div>
                       </div>
                     )}
@@ -202,7 +202,7 @@ function ExperiencesTab() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{FILTERS.map(([k, l, n]) => <button key={k} onClick={() => setStatus(k)} className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}<span className="text-zinc-600">{n ?? 0}</span></button>)}</div>
+        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{FILTERS.map(([k, l, n]) => <button key={k} onClick={() => setStatus(k)} className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}<span className="text-zinc-600">{n ?? 0}</span></button>)}</div>
         <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] px-3.5 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company or role…" className="w-full bg-transparent text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600" /></div>
         <button onClick={() => { setData(null); load(); }} className="rounded-lg border border-white/[0.07] p-2.5 text-zinc-500 hover:text-zinc-200"><RefreshCw className="h-4 w-4" /></button>
       </div>
@@ -247,7 +247,7 @@ function ProblemsTab() {
     <div className="space-y-4">
       <p className="text-[12.5px] text-zinc-500">Community-proposed problems flow <b className="text-zinc-300">quarantine → waitlisted → approved</b>. Only approved problems appear in the coding judge; approving a proposal awards its author 150 XP.</p>
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{[['waitlisted', 'Waitlisted'], ['quarantine', 'Quarantine'], ['approved', 'Approved'], ['all', 'All']].map(([k, l]) => <button key={k} onClick={() => setStatus(k)} className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}<span className="text-zinc-600">{k === 'all' ? Object.values(counts).reduce((a, b) => a + b, 0) : counts[k] || 0}</span></button>)}</div>
+        <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] p-[3px]">{[['waitlisted', 'Waitlisted'], ['quarantine', 'Quarantine'], ['approved', 'Approved'], ['all', 'All']].map(([k, l]) => <button key={k} onClick={() => setStatus(k)} className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium', status === k ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>{l}<span className="text-zinc-600">{k === 'all' ? Object.values(counts).reduce((a, b) => a + b, 0) : counts[k] || 0}</span></button>)}</div>
         <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl border border-white/[0.07] px-3.5 py-2"><Search className="h-3.5 w-3.5 text-zinc-600" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search problems…" className="w-full bg-transparent text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600" /></div>
       </div>
       {!data ? <Spinner /> : data.problems.length === 0 ? <EmptyState icon={BookOpen} title="Nothing in this queue" /> : (
@@ -319,7 +319,7 @@ function AddDataTab() {
 
       <Card>
         <SectionTitle icon={FileText} title="Recent placement records" sub="Latest 100 across all colleges" />
-        <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left"><thead><tr className="border-b border-white/[0.06]">{['Year', 'College', 'Company', 'Hired', 'Package', 'Roles', ''].map((h) => <th key={h} className="pb-2.5 pr-4 font-mono text-[9.5px] font-medium uppercase tracking-[0.18em] text-zinc-600">{h}</th>)}</tr></thead>
+        <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left"><thead><tr className="border-b border-white/[0.06]">{['Year', 'College', 'Company', 'Hired', 'Package', 'Roles', ''].map((h) => <th key={h} className="pb-2.5 pr-4 text-[12px] font-medium text-zinc-600">{h}</th>)}</tr></thead>
           <tbody>{records.slice(0, 30).map((r) => <tr key={r._id} className="border-b border-white/[0.03] text-[12.5px]"><td className="py-2.5 pr-4 font-mono text-zinc-300">{r.hiringYear}</td><td className="pr-4 text-zinc-400">{r.collegeId?.shortName}</td><td className="pr-4 text-zinc-200">{r.companyId?.name}</td><td className="pr-4 font-mono text-zinc-400">{r.studentsHired ?? '—'}</td><td className="pr-4 font-mono text-zinc-400">{r.packageOffered?.ctc || '—'}</td><td className="pr-4 text-zinc-500">{(r.roles || []).slice(0, 2).join(', ')}</td><td className="text-right"><button onClick={async () => { await adminService.deletePlacementRecord(r._id); toast.info('Record removed'); loadAll(); }} className="text-zinc-700 hover:text-rose-400"><Trash2 className="h-3.5 w-3.5" /></button></td></tr>)}</tbody></table></div>
       </Card>
     </div>
@@ -333,15 +333,20 @@ export default function AdminPage() {
   if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-      <header className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-white/[0.04] bg-background/80 px-6 backdrop-blur-xl md:px-10">
-        <div className="flex items-center gap-3"><Shield className="h-3.5 w-3.5 text-violet-400" strokeWidth={1.6} /><span className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-200">Admin</span><span className="mx-1 hidden h-3 w-px bg-white/[0.06] sm:block" /><span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600 sm:block">Placement cell control room</span></div>
-        <div className="flex items-center gap-2 font-mono text-[10px]"><span className="text-zinc-600">signed in as</span><span className="text-violet-400">{user.name}</span><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" /></div>
+    <Page wide>
+      <header className="pt-14 md:pt-20">
+        <div className="text-[13px] text-zinc-500">Admin · signed in as {user.name}</div>
+        <h1 className="display mt-5 text-[clamp(46px,7vw,96px)] text-zinc-50">The <em className="text-[var(--ember)]">control</em> room.</h1>
+        <nav className="mt-10 flex gap-1 overflow-x-auto border-b border-[var(--line-strong)] pb-3">
+          {TABS.map(([k, l]) => (
+            <button key={k} onClick={() => setTab(k)} className={cn('relative shrink-0 rounded-full px-5 py-2 text-[14px] font-medium transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+              {tab === k && <motion.span layoutId="admin-tab" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+              <span className="relative">{l}</span>
+            </button>
+          ))}
+        </nav>
       </header>
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-white/[0.04] bg-black/10 px-6 py-3 md:px-10">
-        {TABS.map(([k, l, I]) => <button key={k} onClick={() => setTab(k)} className={cn('flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all', tab === k ? 'border border-violet-500/20 bg-violet-500/10 text-violet-300' : 'text-zinc-600 hover:bg-white/[0.03] hover:text-zinc-300')}><I className="h-3.5 w-3.5" strokeWidth={1.6} />{l}</button>)}
-      </div>
-      <div className="max-w-[1400px] px-6 py-8 md:px-10">
+      <div className="pt-10">
         {tab === 'overview' && <OverviewTab onGoto={setTab} />}
         {tab === 'curriculum' && <CurriculumTab />}
         {tab === 'students' && <StudentsTab me={user._id} />}
@@ -349,6 +354,6 @@ export default function AdminPage() {
         {tab === 'problems' && <ProblemsTab />}
         {tab === 'add' && <AddDataTab />}
       </div>
-    </div>
+    </Page>
   );
 }

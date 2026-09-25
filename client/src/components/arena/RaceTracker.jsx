@@ -32,14 +32,14 @@ export function RaceTracker() {
     {/* Header */}
     <div className="flex items-center gap-2 mb-4">
       <Swords className="h-3 w-3 text-zinc-600" strokeWidth={1.5} />
-      <span className="font-mono text-[9px] tracking-[0.24em] text-zinc-600 uppercase">
+      <span className="text-[12px] text-zinc-600 font-medium">
         Versus · Race
       </span>
       {isActive && <span className="ml-auto flex items-center gap-1.5">
         <span className="status-dot h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
         <span className="font-mono text-[9px] tracking-[0.2em] text-[var(--signal)]">LIVE</span>
       </span>}
-      {isFinished && <span className="ml-auto flex items-center gap-1.5 font-mono text-[10px] font-medium tracking-[0.15em] text-amber-400 uppercase">
+      {isFinished && <span className="ml-auto flex items-center gap-1.5 text-[12px] font-medium text-amber-400">
         <Crown className="h-3 w-3" strokeWidth={2} />
         {iWon ? 'Victory' : `${winner?.name?.split(' ')[0]} wins`}
       </span>}
@@ -82,8 +82,8 @@ function RaceLine({ label, progress, total, pct, color, glowColor, isMe, finishe
   return <div className="flex items-center gap-3">
     {/* Label */}
     <span
-      className="w-10 text-right font-mono text-[10px] tracking-[0.12em] truncate uppercase"
-      style={{ color: isMe ? 'var(--signal)' : '#fb7185' }}
+      className="w-10 text-right text-[12px] truncate font-medium"
+      style={{ color: isMe ? 'var(--signal)' : '#f0728a' }}
     >
       {label}
     </span>
@@ -125,7 +125,7 @@ function RaceLine({ label, progress, total, pct, color, glowColor, isMe, finishe
 
     {/* Finished indicator */}
     {finished && <span
-      className="font-mono text-[8px] tracking-[0.2em] uppercase"
+      className="text-[12px] font-medium"
       style={{ color }}
     >
       ✓

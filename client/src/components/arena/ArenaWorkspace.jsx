@@ -272,7 +272,7 @@ export function ArenaWorkspace() {
       </p>
       <div className="flex items-center gap-4 mt-4">
         <Link to="/arena" className="rounded-lg border border-white/[0.08] px-6 py-2.5 text-[13px] font-medium text-zinc-300 hover:bg-white/[0.03]">Back to Lobby</Link>
-        <Link to={`/problems/${room?.problemId}`} className="rounded-lg bg-[var(--signal)] px-6 py-2.5 text-[13px] font-semibold text-[#0a1410] hover:brightness-110">Practice Solo</Link>
+        <Link to={`/problems/${room?.problemId}`} className="rounded-lg bg-[var(--signal)] px-6 py-2.5 text-[13px] font-semibold text-[#1a0d07] hover:brightness-110">Practice Solo</Link>
       </div>
     </div>;
   }
@@ -430,7 +430,7 @@ export function ArenaWorkspace() {
           </button>
 
           <button onClick={handleSubmit} disabled={running || submitting}
-            className={`press flex items-center gap-2 px-5 py-1.5 font-mono text-[11px] tracking-widest transition-colors duration-300 ${submitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[var(--signal)] text-[#0a1410] hover:brightness-110'}`}>
+            className={`press flex items-center gap-2 px-5 py-1.5 font-mono text-[11px] tracking-widest transition-colors duration-300 ${submitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[var(--signal)] text-[#1a0d07] hover:brightness-110'}`}>
             {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
             <span>SUBMIT</span>
           </button>

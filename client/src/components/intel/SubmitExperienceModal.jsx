@@ -26,7 +26,7 @@ const emptyRound = () => ({ type: 'Technical', duration: '', vibe: '', topics: [
 const inputCls = 'w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-[13px] text-zinc-200 outline-none transition-all placeholder:text-zinc-700 hover:border-white/[0.14] focus:border-[var(--signal)]/50 focus:bg-[var(--signal)]/[0.04]';
 const Field = ({ label, required, hint, children, className }) => (
   <div className={cn('space-y-1.5', className)}>
-    <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">{label}{required && <span className="text-[var(--signal)]">*</span>}{hint && <span className="normal-case tracking-normal text-zinc-700">— {hint}</span>}</div>
+    <div className="flex items-center gap-1.5 text-[12px] text-zinc-500 font-medium">{label}{required && <span className="text-[var(--signal)]">*</span>}{hint && <span className="normal-case tracking-normal text-zinc-700">— {hint}</span>}</div>
     {children}
   </div>
 );
@@ -42,7 +42,7 @@ function ChipInput({ value, onChange, suggestions = [], placeholder = 'Add a top
         {value.map((t) => <span key={t} className="flex items-center gap-1 rounded-md bg-[var(--signal)]/10 px-2 py-0.5 text-[11px] text-[var(--signal)]">{t}<button onClick={() => onChange(value.filter((x) => x !== t))}><X className="h-3 w-3 opacity-60 hover:opacity-100" /></button></span>)}
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ',') && draft.trim()) { e.preventDefault(); add(draft); } if (e.key === 'Backspace' && !draft && value.length) onChange(value.slice(0, -1)); }} placeholder={value.length ? '' : placeholder} className="min-w-[90px] flex-1 bg-transparent text-[12.5px] text-zinc-200 outline-none placeholder:text-zinc-700" />
       </div>
-      {matches.length > 0 && <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-white/[0.1] bg-[#0d1218] shadow-xl">{matches.map((m) => <button key={m} onClick={() => add(m)} className="block w-full px-3 py-2 text-left text-[12px] text-zinc-300 hover:bg-white/[0.05]">{m}</button>)}</div>}
+      {matches.length > 0 && <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-white/[0.1] bg-[#121216] shadow-xl">{matches.map((m) => <button key={m} onClick={() => add(m)} className="block w-full px-3 py-2 text-left text-[12px] text-zinc-300 hover:bg-white/[0.05]">{m}</button>)}</div>}
       {!draft && value.length === 0 && <div className="mt-1.5 flex flex-wrap gap-1">{suggestions.slice(0, 6).map((s) => <button key={s} onClick={() => add(s)} className="rounded-md border border-white/[0.06] px-1.5 py-0.5 text-[10.5px] text-zinc-600 hover:text-zinc-300">+ {s}</button>)}</div>}
     </div>
   );
@@ -72,7 +72,7 @@ function RoundEditor({ round, index, onChange, onRemove, canRemove }) {
             <div key={i} className="rounded-xl border border-white/[0.06] bg-black/20 p-3">
               <textarea rows={2} className={cn(inputCls, 'resize-none')} value={q.text} onChange={(e) => setQ(i, { text: e.target.value })} placeholder="e.g. Given a grid with obstacles, find the shortest path to the target…" />
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <select value={q.questionType} onChange={(e) => setQ(i, { questionType: e.target.value })} className="rounded-lg border border-white/[0.08] bg-[#0b0f15] px-2 py-1 text-[11px] text-zinc-400 outline-none">{Q_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
+                <select value={q.questionType} onChange={(e) => setQ(i, { questionType: e.target.value })} className="rounded-lg border border-white/[0.08] bg-[#121216] px-2 py-1 text-[11px] text-zinc-400 outline-none">{Q_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
                 <div className="min-w-[160px] flex-1"><ChipInput value={q.topicTags || []} onChange={(v) => setQ(i, { topicTags: v })} suggestions={TOPIC_SUGGESTIONS} placeholder="tags" /></div>
                 {round.questions.length > 1 && <button onClick={() => set('questions', round.questions.filter((_, j) => j !== i))} className="text-zinc-600 hover:text-rose-400"><Trash2 className="h-3.5 w-3.5" /></button>}
               </div>
@@ -88,7 +88,7 @@ function RoundEditor({ round, index, onChange, onRemove, canRemove }) {
 
 // ─── side panel ──────────────────────────────────────────────────────────────
 function QualityPanel({ quality, xp }) {
-  const color = quality.score >= 75 ? '#34d399' : quality.score >= 45 ? '#fbbf24' : '#fb7185';
+  const color = quality.score >= 75 ? '#94d6a8' : quality.score >= 45 ? '#f2c66d' : '#f0728a';
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
@@ -121,7 +121,7 @@ function QualityPanel({ quality, xp }) {
 function Preview({ form, companyName }) {
   const q = form.rounds.flatMap((r) => r.questions).filter((x) => x.text.trim());
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#0b0f15] p-5">
+    <div className="rounded-2xl border border-white/[0.08] bg-[#121216] p-5">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[16px] font-semibold text-zinc-100">{companyName || 'Company'}</span><span className="text-zinc-600">·</span><span className="text-[14px] text-zinc-300">{form.role || 'Role'}</span>
         <Pill tone={form.offerReceived === 'Yes' ? 'green' : form.offerReceived === 'No' ? 'red' : 'amber'}>{form.offerReceived === 'Yes' ? 'Offer' : form.offerReceived === 'No' ? 'No offer' : 'Pending'}</Pill>

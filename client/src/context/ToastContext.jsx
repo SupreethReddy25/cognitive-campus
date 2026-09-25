@@ -28,12 +28,12 @@ const KIND = {
 };
 
 const TONE = {
-  amber: 'border-amber-400/25 bg-amber-400/[0.08] text-amber-300',
-  orange: 'border-orange-400/25 bg-orange-400/[0.08] text-orange-300',
-  sky: 'border-sky-400/25 bg-sky-400/[0.08] text-sky-300',
-  violet: 'border-violet-400/25 bg-violet-400/[0.08] text-violet-300',
-  emerald: 'border-emerald-400/25 bg-emerald-400/[0.08] text-emerald-300',
-  rose: 'border-rose-400/25 bg-rose-400/[0.08] text-rose-300'
+  amber: ['#f2c66d', 'text-amber-300'],
+  orange: ['#ff7a4d', 'text-orange-300'],
+  sky: ['#8fbcda', 'text-sky-300'],
+  violet: ['#f2c66d', 'text-amber-300'],
+  emerald: ['#94d6a8', 'text-emerald-300'],
+  rose: ['#f0728a', 'text-rose-300']
 };
 
 export const useToast = () => {
@@ -75,7 +75,7 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed bottom-5 right-5 z-[100] flex w-[340px] max-w-[calc(100vw-2rem)] flex-col gap-2.5">
+      <div className="pointer-events-none fixed bottom-24 right-5 z-[100] flex w-[340px] max-w-[calc(100vw-2rem)] flex-col gap-2.5">
         <AnimatePresence initial={false}>
           {toasts.map((t) => {
             const kind = KIND[t.type] || KIND.info;
@@ -88,14 +88,15 @@ export function ToastProvider({ children }) {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 40, scale: 0.96 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                className={`pointer-events-auto flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl shadow-black/50 backdrop-blur-xl ${TONE[kind.tone]}`}
+                className="pointer-events-auto relative flex items-start gap-3.5 overflow-hidden rounded-2xl border border-[var(--line-strong)] bg-[#16161b] py-3.5 pl-5 pr-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.85)]"
               >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/25"><Icon className="h-4 w-4" strokeWidth={1.8} /></span>
+                <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: TONE[kind.tone][0] }} />
+                <Icon className={`mt-0.5 h-[18px] w-[18px] shrink-0 ${TONE[kind.tone][1]}`} strokeWidth={1.7} />
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-semibold leading-snug text-zinc-100">{t.title}</div>
-                  {t.message && <div className="mt-0.5 text-[12px] leading-snug text-zinc-400">{t.message}</div>}
+                  <div className="text-[14px] font-medium leading-snug text-zinc-50">{t.title}</div>
+                  {t.message && <div className="mt-0.5 text-[12.5px] leading-snug text-zinc-500">{t.message}</div>}
                 </div>
-                <button onClick={() => dismiss(t.id)} className="mt-0.5 text-zinc-500 transition-colors hover:text-zinc-200"><X className="h-3.5 w-3.5" /></button>
+                <button onClick={() => dismiss(t.id)} className="mt-0.5 text-zinc-600 transition-colors hover:text-zinc-200"><X className="h-3.5 w-3.5" /></button>
               </motion.div>
             );
           })}

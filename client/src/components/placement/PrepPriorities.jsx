@@ -1,153 +1,56 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, AlertCircle, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowUpRight } from 'lucide-react';
+import { cn } from '../ui/kit';
 
-const PRIORITY_CONFIG = {
-  high:   { color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', dot: 'bg-rose-500', label: 'HIGH PRIORITY' },
-  medium: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500', label: 'REVIEW' },
-  low:    { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', dot: 'bg-emerald-500', label: 'STRONG' },
+const PRIORITY = {
+  high: { label: 'High priority', tone: 'text-rose-400' },
+  medium: { label: 'Worth a review', tone: 'text-amber-400' },
+  low: { label: 'Already strong', tone: 'text-emerald-400' }
 };
 
 /**
- * PrepPriorities
- *
- * Renders the BKT × Intel preparation priorities panel.
- * Shows tracked skills (with BKT mastery) and untracked topics (self-study).
- *
- * Props:
- *   prepPriorities — the prepPriorities object from getCollegeCompanyIntel
- *   companyName    — string, for the summary line
- *   collegeName    — string
+ * PrepPriorities — BKT mastery × what this company asked at this college.
+ * `prepPriorities` is the object from getCollegeCompanyIntel.
  */
 export function PrepPriorities({ prepPriorities, companyName, collegeName }) {
   if (!prepPriorities) return null;
-
-  const { tracked = [], untracked = [], summary, dataConfidence, totalReports } = prepPriorities;
-
+  const { tracked = [], untracked = [], summary } = prepPriorities;
   const hasData = tracked.length > 0 || untracked.length > 0;
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-white/[0.06] flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-[var(--signal)]/10 shrink-0 mt-0.5">
-          <TrendingUp className="h-4 w-4 text-[var(--signal)]" strokeWidth={1.6} />
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-100">What to Prepare</h3>
-          <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">
-            {summary || `Topics reported for ${companyName} at ${collegeName}, ranked by frequency and your current mastery.`}
-          </p>
-        </div>
-      </div>
+    <div>
+      <p className="max-w-2xl text-[16px] leading-relaxed text-zinc-400">{summary || `Topics reported for ${companyName} at ${collegeName}, ranked by how often they appear and how well you know them.`}</p>
+      {!hasData && <p className="mt-6 text-[15px] text-zinc-600">Not enough data yet to generate preparation priorities.</p>}
 
-      <div className="p-5 space-y-3">
-        {!hasData && (
-          <div className="flex items-center gap-3 text-zinc-500 text-sm py-2">
-            <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.6} />
-            <span>Not enough data yet to generate preparation priorities.</span>
-          </div>
-        )}
-
-        {/* Tracked skills with BKT mastery */}
-        {tracked.map(item => {
-          const cfg = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.medium;
-          const masteryPct = item.mastery !== null ? Math.round(item.mastery * 100) : null;
-
+      <div className="mt-6">
+        {tracked.map((item, i) => {
+          const cfg = PRIORITY[item.priority] || PRIORITY.medium;
+          const m = item.mastery !== null && item.mastery !== undefined ? Math.round(item.mastery * 100) : null;
           return (
-            <div
-              key={item.skillName}
-              className={`rounded-xl border p-4 ${cfg.bg} ${cfg.border} transition-all duration-200`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  {/* Priority label */}
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
-                    <span className={`text-[9px] font-mono tracking-[0.15em] ${cfg.color}`}>
-                      {cfg.label}
-                    </span>
-                  </div>
-                  {/* Skill name */}
-                  <p className="text-sm font-semibold text-zinc-100">{item.skillName}</p>
-                  {/* Sub-topics */}
-                  {item.relatedTopics?.length > 0 && (
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                      via: {item.relatedTopics.slice(0, 4).join(', ')}
-                    </p>
-                  )}
-                  {/* Frequency */}
-                  <p className="text-[11px] text-zinc-600 mt-1">{item.frequencyLabel}</p>
-                </div>
-
-                <div className="text-right shrink-0">
-                  {/* Mastery ring — only show if we have BKT data */}
-                  {masteryPct !== null && (
-                    <div className="flex flex-col items-end gap-1">
-                      <span className={`text-lg font-bold tabular-nums ${cfg.color}`}>
-                        {masteryPct}%
-                      </span>
-                      <span className="text-[10px] text-zinc-600">mastery</span>
-                      {/* Mastery bar */}
-                      <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            item.priority === 'high' ? 'bg-rose-500' :
-                            item.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
-                          }`}
-                          style={{ width: `${masteryPct}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {masteryPct === null && (
-                    <span className="text-[11px] text-zinc-600">No practice data</span>
-                  )}
-                </div>
+            <motion.div key={item.skillName} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i * 0.04, 0.3) }} className="grid items-center gap-x-10 gap-y-2 border-b border-[var(--line)] py-6 md:grid-cols-[1.1fr_1fr_auto]">
+              <div>
+                <div className="display text-[34px] leading-none text-zinc-100">{item.skillName}</div>
+                <div className="mt-2 text-[12.5px] text-zinc-500"><span className={cn('font-medium', cfg.tone)}>{cfg.label}</span>{item.relatedTopics?.length > 0 && <> · via {item.relatedTopics.slice(0, 3).join(', ')}</>} · {item.frequencyLabel}</div>
               </div>
-
-              {/* Recommendation + link */}
-              <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                <p className="text-[11px] text-zinc-500 italic">{item.recommendation}</p>
-                <Link
-                  to="/problems"
-                  className={`flex items-center gap-1 text-[11px] font-medium ${cfg.color} hover:opacity-80 transition-opacity`}
-                >
-                  <BookOpen className="h-3 w-3" strokeWidth={2} />
-                  Practice
-                  <ArrowRight className="h-3 w-3" strokeWidth={2} />
-                </Link>
+              <div>
+                {m !== null ? (
+                  <><div className="mb-1 flex justify-between text-[12px] text-zinc-500"><span>your mastery</span><span className="tnum text-zinc-300">{m}%</span></div><div className="h-[3px] rounded-full bg-white/[0.07]"><div className="h-full rounded-full bg-[var(--star)]" style={{ width: `${m}%` }} /></div></>
+                ) : <span className="text-[13px] text-zinc-600">no practice data yet</span>}
+                <p className="mt-2 text-[12.5px] italic leading-snug text-zinc-600">{item.recommendation}</p>
               </div>
-            </div>
+              <Link to={`/problems?skill=${encodeURIComponent(item.skillName)}`} className="flex items-center gap-1.5 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13.5px] text-zinc-300 transition-colors hover:border-[var(--ember)] hover:text-[var(--ember)]">Practise <ArrowUpRight className="h-4 w-4" /></Link>
+            </motion.div>
           );
         })}
-
-        {/* Untracked topics */}
-        {untracked.length > 0 && (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="h-3.5 w-3.5 text-zinc-500" strokeWidth={1.6} />
-              <span className="text-[10px] font-mono tracking-[0.15em] text-zinc-500 uppercase">
-                Self-Study Topics
-              </span>
-            </div>
-            <div className="space-y-2">
-              {untracked.map(item => (
-                <div key={item.topic} className="flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-sm text-zinc-300">{item.topic}</span>
-                    <p className="text-[11px] text-zinc-600">{item.frequencyLabel}</p>
-                  </div>
-                  <span className="text-[10px] text-zinc-600 shrink-0">Not in adaptive system</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-zinc-700 mt-3 pt-3 border-t border-white/[0.04]">
-              These topics are not tracked by CognitiveCampus's adaptive learning — use external resources for self-study.
-            </p>
-          </div>
-        )}
       </div>
+
+      {untracked.length > 0 && (
+        <div className="mt-10">
+          <div className="mb-3 text-[13px] text-zinc-500">Self-study topics (not tracked by the model)</div>
+          <div className="flex flex-wrap gap-2">{untracked.map((item) => <span key={item.topic} title={item.frequencyLabel} className="rounded-full border border-[var(--line-strong)] px-4 py-1.5 text-[14px] text-zinc-300">{item.topic}</span>)}</div>
+        </div>
+      )}
     </div>
   );
 }

@@ -85,12 +85,9 @@ export function CollegeSelector({ value, onChange, placeholder = 'Search your co
   if (value) {
     const tierClass = TIER_COLORS[value.tier] || TIER_COLORS.Other;
     return (
-      <div className="flex items-center gap-2 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 py-2.5">
-        <GraduationCap className="h-4 w-4 text-[var(--signal)] shrink-0" strokeWidth={1.6} />
-        <span className="text-sm text-zinc-200 font-medium flex-1 truncate">{value.name}</span>
-        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${tierClass}`}>
-          {value.tier}
-        </span>
+      <div className="flex items-center gap-2 border-b border-dashed border-[var(--ember)] px-1 pb-0.5">
+        <span className="display flex-1 truncate text-[1em] text-[var(--ember-soft)]">{value.shortName || value.name}</span>
+        <span className="hidden text-[11px] text-zinc-500 sm:inline">{value.tier}</span>
         {!disabled && (
           <button
             onClick={handleClear}
@@ -107,7 +104,7 @@ export function CollegeSelector({ value, onChange, placeholder = 'Search your co
   return (
     <div ref={wrapperRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" strokeWidth={1.6} />
+        <Search className="absolute left-1 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 pointer-events-none" strokeWidth={1.6} />
         {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full border-2 border-zinc-600 border-t-[var(--signal)] animate-spin" />
         )}
@@ -118,12 +115,12 @@ export function CollegeSelector({ value, onChange, placeholder = 'Search your co
           onFocus={() => query.length >= 2 && setOpen(true)}
           disabled={disabled}
           placeholder={placeholder}
-          className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.14] pl-9 pr-4 py-2.5 text-sm text-zinc-200 outline-none focus:border-[var(--signal)]/40 focus:bg-[var(--signal)]/5 transition-all duration-200 placeholder:text-zinc-600 disabled:opacity-50"
+          className="w-full bg-transparent border-b border-[var(--line-strong)] pl-7 pr-6 py-2 text-[17px] text-zinc-100 outline-none focus:border-[var(--ember)] transition-colors placeholder:text-zinc-700 disabled:opacity-50"
         />
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-xl bg-[#0d0d0d] border border-white/[0.08] shadow-2xl overflow-hidden">
+        <div className="absolute top-full mt-2 left-0 right-0 z-50 rounded-2xl bg-[#141418] border border-[var(--line-strong)] shadow-[0_24px_60px_-16px_rgba(0,0,0,0.9)] overflow-hidden">
           {results.map(college => {
             const tierClass = TIER_COLORS[college.tier] || TIER_COLORS.Other;
             return (
@@ -150,7 +147,7 @@ export function CollegeSelector({ value, onChange, placeholder = 'Search your co
       )}
 
       {open && results.length === 0 && query.length >= 2 && !loading && (
-        <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-xl bg-[#0d0d0d] border border-white/[0.08] shadow-2xl px-4 py-3">
+        <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-xl bg-[#141418] border border-white/[0.08] shadow-2xl px-4 py-3">
           <p className="text-sm text-zinc-500">No college found for "{query}".</p>
           <p className="text-xs text-zinc-700 mt-0.5">Contact admin to add your institution.</p>
         </div>

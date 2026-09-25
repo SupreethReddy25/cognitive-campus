@@ -33,7 +33,7 @@ const AdminPage = lazy(() => import('./pages/AdminPage'));
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <LoadingScreen />;
-  if (isAuthenticated) return <Navigate to="/intel" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return children;
 };
 

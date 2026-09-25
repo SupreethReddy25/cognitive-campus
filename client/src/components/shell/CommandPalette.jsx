@@ -1,253 +1,179 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { companiesService, problemsService, sheetsService } from '../../services/api';
-import {
-  Search, Shield, Terminal, BookOpen, LayoutDashboard,
-  User, ArrowRight, Loader2, Building2, FileText
-} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Home, Code2, Swords, Compass, GraduationCap, Layers, User, KeyRound, Award, Bookmark, Flame, LogOut, Plus, CornerDownLeft } from 'lucide-react';
+import { companiesService, problemsService, sheetsService, engagementService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { cn } from '../ui/kit';
 
-const STATIC_ACTIONS = [
-  { id: 'nav-intel',     label: 'Go to Intel Hub',      icon: Shield,         action: '/intel',     group: 'Navigation' },
-  { id: 'nav-dashboard', label: 'Go to Dashboard',       icon: LayoutDashboard,action: '/dashboard', group: 'Navigation' },
-  { id: 'nav-workspace', label: 'Go to Workspace',       icon: Terminal,       action: '/problems',  group: 'Navigation' },
-  { id: 'nav-sheets',    label: 'Go to Sheets',          icon: BookOpen,       action: '/sheets',    group: 'Navigation' },
-  { id: 'nav-profile',   label: 'Go to Profile',         icon: User,           action: '/profile',   group: 'Navigation' },
+const NAV = [
+  { id: 'n-home', label: 'Home', hint: '1', icon: Home, action: '/dashboard', kw: 'dashboard sky mission' },
+  { id: 'n-practice', label: 'Practice', hint: '2', icon: Code2, action: '/problems', kw: 'problems workspace code' },
+  { id: 'n-arena', label: 'Arena', hint: '3', icon: Swords, action: '/arena', kw: 'versus multiplayer race' },
+  { id: 'n-intel', label: 'Intel — interview atlas', hint: '4', icon: Compass, action: '/intel', kw: 'companies experiences' },
+  { id: 'n-placement', label: 'Placement', hint: '5', icon: GraduationCap, action: '/placement', kw: 'college hiring recruiters' },
+  { id: 'n-sheets', label: 'Sheets', hint: '6', icon: Layers, action: '/sheets', kw: 'blind 75 striver lists' }
 ];
 
-function highlight(text, query) {
-  if (!query) return text;
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
-  return (
-    <>
-      {text.slice(0, idx)}
-      <mark className="bg-[var(--signal)]/20 text-[var(--signal)] rounded-sm not-italic">{text.slice(idx, idx + query.length)}</mark>
-      {text.slice(idx + query.length)}
-    </>
-  );
+const ACTIONS = [
+  { id: 'a-profile', label: 'Open profile', icon: User, action: '/profile', kw: 'account me settings' },
+  { id: 'a-badges', label: 'See my achievements', icon: Award, action: '/profile#badges', kw: 'badges trophies' },
+  { id: 'a-bookmarks', label: 'My bookmarks', icon: Bookmark, action: '/profile#bookmarks', kw: 'saved' },
+  { id: 'a-ai', label: 'Add or change my Gemini key', icon: KeyRound, action: '/profile#ai', kw: 'ai api byok' },
+  { id: 'a-share', label: 'Share an interview experience', icon: Plus, action: '/intel', kw: 'submit add review' }
+];
+
+const DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400' };
+
+/** Cheap fuzzy match: every query character appears in order. Returns a score (lower is better) or -1. */
+const fuzzy = (text, q) => {
+  const t = text.toLowerCase();
+  const direct = t.indexOf(q);
+  if (direct >= 0) return direct;
+  let i = 0; let gaps = 0; let last = -1;
+  for (const ch of q) {
+    const at = t.indexOf(ch, i);
+    if (at < 0) return -1;
+    if (last >= 0) gaps += at - last - 1;
+    last = at; i = at + 1;
+  }
+  return 40 + gaps;
+};
+
+function Mark({ text, q }) {
+  const i = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
+  if (i < 0) return text;
+  return <>{text.slice(0, i)}<span className="text-[var(--ember-soft)]">{text.slice(i, i + q.length)}</span>{text.slice(i + q.length)}</>;
 }
 
 export function CommandPalette({ open, onClose }) {
-  const navigate              = useNavigate();
-  const inputRef              = useRef(null);
-  const listRef               = useRef(null);
-  const [query, setQuery]     = useState('');
-  const [cursor, setCursor]   = useState(0);
-  const [companies, setCompanies]   = useState([]);
-  const [problems, setProblems]     = useState([]);
-  const [sheets, setSheets]         = useState([]);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+  const [query, setQuery] = useState('');
+  const [cursor, setCursor] = useState(0);
+  const [companies, setCompanies] = useState([]);
+  const [problems, setProblems] = useState([]);
+  const [sheets, setSheets] = useState([]);
+  const [daily, setDaily] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
-  // Load data once on first open
   useEffect(() => {
-    if (!open || dataLoaded) return;
+    if (!open || loaded) return;
     Promise.all([
-      companiesService.getCompanies().then(r => setCompanies(r.data?.data || [])).catch(() => {}),
-      problemsService.getProblems().then(r => {
-        const probs = r.data?.data?.problems || r.data?.data || [];
-        setProblems(Array.isArray(probs) ? probs : []);
-      }).catch(() => {}),
-      sheetsService.getSheets().then(r => setSheets(r.data?.data || [])).catch(() => {}),
-    ]).then(() => setDataLoaded(true));
-  }, [open]);
+      companiesService.getCompanies().then((r) => setCompanies(r.data?.data || [])).catch(() => {}),
+      problemsService.getProblems({ limit: 200 }).then((r) => { const p = r.data?.data?.problems || r.data?.data || []; setProblems(Array.isArray(p) ? p : []); }).catch(() => {}),
+      sheetsService.getSheets().then((r) => setSheets(r.data?.data || [])).catch(() => {}),
+      engagementService.getDaily().then((r) => setDaily(r.data?.data || null)).catch(() => {})
+    ]).then(() => setLoaded(true));
+  }, [open, loaded]);
 
-  // Focus input on open
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-      setQuery('');
-      setCursor(0);
-    }
-  }, [open]);
-
-  // ESC to close
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    setQuery(''); setCursor(0);
+    const t = setTimeout(() => inputRef.current?.focus(), 40);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, [open, onClose]);
 
-  const items = useMemo(() => {
+  const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const results = [];
+    const rank = (list, fields) => list
+      .map((it) => { const scores = fields(it).map((f) => (f ? fuzzy(f, q) : -1)).filter((s) => s >= 0); return scores.length ? { it, s: Math.min(...scores) } : null; })
+      .filter(Boolean).sort((a, b) => a.s - b.s).map((x) => x.it);
 
-    // Static navigation (always show if query empty or matches)
-    const navMatches = STATIC_ACTIONS.filter(a =>
-      !q || a.label.toLowerCase().includes(q)
-    );
-    if (navMatches.length) {
-      results.push({ group: 'Navigation', items: navMatches.map(a => ({
-        id: a.id, label: a.label, icon: a.icon, type: 'nav', action: a.action, group: a.group
-      }))});
+    const out = [];
+    const dailyItem = daily?.problem ? [{ id: 'daily', label: `Today's challenge — ${daily.problem.title}`, sub: `+${daily.totalXp} XP${daily.solvedToday ? ' · done' : ''}`, icon: Flame, action: `/problems/${daily.problem._id}` }] : [];
+
+    if (!q) {
+      out.push({ name: 'Go to', items: NAV });
+      out.push({ name: 'Quick actions', items: [...dailyItem, ...ACTIONS.slice(0, 4), { id: 'a-out', label: 'Sign out', icon: LogOut, run: () => logout() }] });
+      return out;
     }
 
-    if (q) {
-      // Companies
-      const compMatches = companies.filter(c =>
-        c.name.toLowerCase().includes(q) || c.tier?.toLowerCase().includes(q)
-      ).slice(0, 5).map(c => ({
-        id: 'company-' + c.slug, label: c.name, sub: c.tier + ' · ' + c.avgCTC,
-        icon: Building2, type: 'company', action: '/companies/' + c.slug, group: 'Companies'
-      }));
-      if (compMatches.length) results.push({ group: 'Companies', items: compMatches });
+    const nav = rank(NAV, (n) => [n.label, n.kw]);
+    if (nav.length) out.push({ name: 'Go to', items: nav.slice(0, 4) });
+    const acts = rank([...dailyItem, ...ACTIONS], (n) => [n.label, n.kw]);
+    if (acts.length) out.push({ name: 'Actions', items: acts.slice(0, 3) });
+    const co = rank(companies, (c) => [c.name, c.tier]).slice(0, 5).map((c) => ({ id: `c-${c.slug}`, label: c.name, sub: `${c.tier}${c.experienceCount ? ` · ${c.experienceCount} reports` : ''}`, icon: Compass, action: `/companies/${c.slug}` }));
+    if (co.length) out.push({ name: 'Companies', items: co });
+    const pr = rank(problems, (p) => [p.title, ...(p.tags || []), ...(p.companies || [])]).slice(0, 6).map((p) => ({ id: `p-${p._id}`, label: p.title, sub: p.skillId?.name, dot: DOT[p.difficulty], icon: Code2, action: `/problems/${p._id}` }));
+    if (pr.length) out.push({ name: 'Problems', items: pr });
+    const sh = rank(sheets, (s) => [s.name, s.source]).slice(0, 3).map((s) => ({ id: `s-${s.slug}`, label: s.name, sub: `${s.totalProblems} problems`, icon: Layers, action: `/sheets/${s.slug}` }));
+    if (sh.length) out.push({ name: 'Sheets', items: sh });
+    return out;
+  }, [query, companies, problems, sheets, daily, logout]);
 
-      // Problems
-      const probMatches = problems.filter(p =>
-        p.title?.toLowerCase().includes(q) || p.difficulty?.toLowerCase().includes(q)
-      ).slice(0, 5).map(p => ({
-        id: 'problem-' + p._id, label: p.title, sub: p.difficulty,
-        icon: Terminal, type: 'problem', action: '/problems/' + p._id, group: 'Problems'
-      }));
-      if (probMatches.length) results.push({ group: 'Problems', items: probMatches });
-
-      // Sheets
-      const sheetMatches = sheets.filter(s =>
-        s.name.toLowerCase().includes(q) || s.source?.toLowerCase().includes(q)
-      ).slice(0, 3).map(s => ({
-        id: 'sheet-' + s.slug, label: s.name, sub: s.source + ' · ' + s.totalProblems + ' problems',
-        icon: FileText, type: 'sheet', action: '/sheets/' + s.slug, group: 'Sheets'
-      }));
-      if (sheetMatches.length) results.push({ group: 'Sheets', items: sheetMatches });
-    }
-
-    return results;
-  }, [query, companies, problems, sheets]);
-
-  // Flat list for keyboard navigation
-  const flat = useMemo(() => items.flatMap(g => g.items), [items]);
+  const flat = useMemo(() => groups.flatMap((g) => g.items), [groups]);
 
   const execute = useCallback((item) => {
-    if (item.action) navigate(item.action);
     onClose();
+    if (item.run) item.run();
+    else if (item.action) navigate(item.action);
   }, [navigate, onClose]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setCursor(c => Math.min(c + 1, flat.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setCursor(c => Math.max(c - 1, 0));
-    } else if (e.key === 'Enter' && flat[cursor]) {
-      execute(flat[cursor]);
-    }
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setCursor((c) => Math.min(c + 1, flat.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setCursor((c) => Math.max(c - 1, 0)); }
+    else if (e.key === 'Enter' && flat[cursor]) execute(flat[cursor]);
   };
 
-  // Sync cursor into view
-  useEffect(() => {
-    const el = listRef.current?.querySelector(`[data-idx="${cursor}"]`);
-    el?.scrollIntoView({ block: 'nearest' });
-  }, [cursor]);
-
-  if (!open) return null;
+  useEffect(() => { listRef.current?.querySelector(`[data-idx="${cursor}"]`)?.scrollIntoView({ block: 'nearest' }); }, [cursor]);
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]"
-      onClick={onClose}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-      {/* Palette */}
-      <div
-        className="relative w-full max-w-[560px] mx-4 rounded-xl border border-white/[0.08] bg-[#0a0b0e] shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Search input */}
-        <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3.5">
-          <Search className="h-4 w-4 text-zinc-500 shrink-0" strokeWidth={1.6} />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Search companies, problems, sheets..."
-            value={query}
-            onChange={e => { setQuery(e.target.value); setCursor(0); }}
-            onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent font-sans text-[14px] text-zinc-200 outline-none placeholder:text-zinc-600"
-          />
-          {!dataLoaded && query && (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-600 shrink-0" strokeWidth={1.5} />
-          )}
-          <kbd className="font-mono text-[9px] tracking-widest text-zinc-700 border border-white/[0.06] rounded px-1.5 py-0.5">
-            ESC
-          </kbd>
-        </div>
-
-        {/* Results */}
-        <div ref={listRef} className="max-h-[400px] overflow-y-auto scrollbar-surgical py-1">
-          {items.length === 0 && query ? (
-            <div className="py-10 text-center font-mono text-[10px] tracking-[0.2em] text-zinc-700 uppercase">
-              No results for "{query}"
+    <AnimatePresence>
+      {open && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]" onClick={onClose}>
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px]" />
+          <motion.div initial={{ opacity: 0, y: -12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="relative w-full max-w-[680px] overflow-hidden rounded-[28px] border border-[var(--line-strong)] bg-[#131317] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-4 border-b border-[var(--line)] px-7 py-5">
+              <input ref={inputRef} value={query} onChange={(e) => { setQuery(e.target.value); setCursor(0); }} onKeyDown={onKeyDown} placeholder="Jump to anything…" className="display w-full bg-transparent text-[34px] text-zinc-50 outline-none placeholder:text-zinc-700" />
+              <kbd className="shrink-0 rounded-md border border-[var(--line-strong)] px-2 py-1 text-[11px] text-zinc-600">esc</kbd>
             </div>
-          ) : items.length === 0 ? (
-            <div className="py-10 text-center font-mono text-[10px] tracking-[0.2em] text-zinc-700 uppercase">
-              Type to search...
-            </div>
-          ) : null}
 
-          {items.map(group => {
-            let groupCursor = flat.findIndex(f => group.items.includes(f));
-            return (
-              <div key={group.group}>
-                <div className="px-4 pt-3 pb-1 font-mono text-[9px] tracking-[0.24em] text-zinc-700 uppercase">
-                  {group.group}
+            <div ref={listRef} className="max-h-[52vh] overflow-y-auto scrollbar-surgical px-3 py-3">
+              {flat.length === 0 && <div className="py-12 text-center"><div className="display text-[28px] italic text-zinc-600">Nothing for “{query}”.</div></div>}
+              {groups.map((g) => (
+                <div key={g.name} className="mb-2">
+                  <div className="px-4 pb-1.5 pt-3 text-[12px] font-medium text-zinc-600">{g.name}</div>
+                  {g.items.map((item) => {
+                    const idx = flat.indexOf(item);
+                    const active = idx === cursor;
+                    const Icon = item.icon;
+                    return (
+                      <button key={item.id} data-idx={idx} onClick={() => execute(item)} onMouseMove={() => setCursor(idx)}
+                        className={cn('relative flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors', active ? 'bg-white/[0.06]' : '')}>
+                        {active && <motion.span layoutId="cmd-active" className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-[var(--ember)]" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                        <Icon className={cn('h-[18px] w-[18px] shrink-0 transition-colors', active ? 'text-[var(--ember)]' : 'text-zinc-600')} strokeWidth={1.6} />
+                        <span className="min-w-0 flex-1">
+                          <span className={cn('flex items-center gap-2 truncate text-[16px]', active ? 'text-zinc-50' : 'text-zinc-300')}>{item.dot && <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', item.dot)} />}<span className="truncate"><Mark text={item.label} q={query.trim()} /></span></span>
+                          {item.sub && <span className="block truncate text-[12.5px] text-zinc-600">{item.sub}</span>}
+                        </span>
+                        {item.hint && !query && <kbd className="rounded-md border border-[var(--line-strong)] px-2 py-0.5 text-[11px] text-zinc-600">{item.hint}</kbd>}
+                        {active && <CornerDownLeft className="h-4 w-4 shrink-0 text-zinc-600" />}
+                      </button>
+                    );
+                  })}
                 </div>
-                {group.items.map((item, localIdx) => {
-                  const absIdx = flat.indexOf(item);
-                  const Icon   = item.icon;
-                  const active = cursor === absIdx;
-                  return (
-                    <button
-                      key={item.id}
-                      data-idx={absIdx}
-                      onClick={() => execute(item)}
-                      onMouseEnter={() => setCursor(absIdx)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
-                        active ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
-                      }`}
-                    >
-                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${
-                        active ? 'bg-[var(--signal)]/10' : 'bg-white/[0.03]'
-                      }`}>
-                        <Icon className={`h-3.5 w-3.5 ${active ? 'text-[var(--signal)]' : 'text-zinc-500'}`} strokeWidth={1.6} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-sans text-[13px] truncate ${active ? 'text-zinc-100' : 'text-zinc-300'}`}>
-                          {highlight(item.label, query)}
-                        </div>
-                        {item.sub && (
-                          <div className="font-mono text-[9px] text-zinc-700 truncate mt-0.5">{item.sub}</div>
-                        )}
-                      </div>
-                      {active && (
-                        <ArrowRight className="h-3.5 w-3.5 text-zinc-600 shrink-0" strokeWidth={1.6} />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+              ))}
+            </div>
 
-        {/* Footer hint */}
-        <div className="border-t border-white/[0.04] px-4 py-2 flex items-center gap-4">
-          <div className="flex items-center gap-1.5 font-mono text-[9px] text-zinc-700">
-            <kbd className="border border-white/[0.06] rounded px-1 py-0.5">↑↓</kbd>
-            navigate
-          </div>
-          <div className="flex items-center gap-1.5 font-mono text-[9px] text-zinc-700">
-            <kbd className="border border-white/[0.06] rounded px-1 py-0.5">↵</kbd>
-            open
-          </div>
-          <div className="flex items-center gap-1.5 font-mono text-[9px] text-zinc-700">
-            <kbd className="border border-white/[0.06] rounded px-1 py-0.5">esc</kbd>
-            close
-          </div>
-        </div>
-      </div>
-    </div>
+            <div className="flex items-center gap-6 border-t border-[var(--line)] px-7 py-3 text-[12px] text-zinc-600">
+              <span><kbd className="mr-1.5 rounded border border-[var(--line-strong)] px-1.5 py-0.5">↑↓</kbd>move</span>
+              <span><kbd className="mr-1.5 rounded border border-[var(--line-strong)] px-1.5 py-0.5">↵</kbd>open</span>
+              <span className="ml-auto">press 1–6 anywhere to switch sections</span>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

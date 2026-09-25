@@ -1,30 +1,71 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  Flame, Search, Command, Swords, Target, Trophy, CircleCheckBig, Zap, Layers, TrendingUp, Activity, Lightbulb,
-  Users, Award, Repeat, Clock, ArrowUpRight, BarChart3
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, ArrowUpRight, Snowflake } from 'lucide-react';
 import { analyticsService, usersService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useSessionTracker } from '../../hooks/useSessionTracker';
 import { ActivityHeatmap } from '../ui/activity-heatmap';
 import { LeaderboardView } from '../leaderboard/leaderboard-view';
-import { Card, Label, SectionTitle, Stat, Reveal, Skeleton, ErrorNote, Ring, CountUp, DiffPill, Bar, Pill } from '../ui/kit';
-import { SkillRadarChart, MasteryTrendChart, XpProgressChart } from './charts';
-import { MissionHero, StreakWidget, DailyChallengeCard, SkillLedger, InsightsPanel, RecommendationList, AchievementStrip, timeAgo } from './widgets';
+import { CountUp, Reveal, Skeleton, ErrorNote, cn } from '../ui/kit';
+import { MasteryTrendChart } from './charts';
+import { InsightsPanel, AchievementStrip, timeAgo, tierFor } from './widgets';
+import { Constellation } from './constellation';
 
 const QUOTE_CACHE = 'cached_ai_quote_v2';
 
-function DashboardSkeleton() {
+function useCountdown(iso) {
+  const [left, setLeft] = useState('');
+  useEffect(() => {
+    const tick = () => {
+      const ms = Math.max(0, new Date(iso).getTime() - Date.now());
+      const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000);
+      setLeft(`${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [iso]);
+  return left;
+}
+
+const greeting = () => {
+  const h = new Date().getHours();
+  return h < 5 ? 'Still up' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+};
+
+const dayKey = (d) => d.toLocaleDateString('en-CA');
+
+/** The last seven days as a row of small suns — filled when you practised. */
+function WeekDots({ activity = {} }) {
+  const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d; });
   return (
-    <div className="space-y-6 px-6 py-8 md:px-10">
-      <Skeleton className="h-64 w-full rounded-3xl" />
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28" />)}</div>
-      <div className="grid gap-6 lg:grid-cols-3"><Skeleton className="h-96 lg:col-span-1" /><Skeleton className="h-96 lg:col-span-2" /></div>
+    <div className="flex items-end gap-2.5">
+      {days.map((d, i) => {
+        const n = activity[dayKey(d)] || 0;
+        const today = i === 6;
+        const size = n ? 10 + Math.min(n, 6) * 1.5 : 10;
+        return (
+          <div key={i} className="flex flex-col items-center gap-1.5" title={`${d.toLocaleDateString('en', { weekday: 'long' })}: ${n} submission${n === 1 ? '' : 's'}`}>
+            <span className={cn('block rounded-full transition-all', n ? 'bg-[var(--ember)]' : 'border border-[var(--line-strong)]', today && !n && 'border-dashed')} style={{ width: size, height: size }} />
+            <span className={cn('text-[10px]', today ? 'text-zinc-300' : 'text-zinc-600')}>{d.toLocaleDateString('en', { weekday: 'narrow' })}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
+
+function Skeletons() {
+  return (
+    <div className="space-y-10 px-6 py-14 md:px-14">
+      <Skeleton className="h-24 w-2/3" /><Skeleton className="h-8 w-1/2" /><Skeleton className="h-[380px] w-full rounded-3xl" />
+    </div>
+  );
+}
+
+const TABS = [['progress', 'Progress'], ['activity', 'Activity'], ['ranks', 'Leaderboard'], ['badges', 'Badges']];
 
 export function DashboardView() {
   const { user } = useAuth();
@@ -35,6 +76,7 @@ export function DashboardView() {
 
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState('progress');
   const [quote, setQuote] = useState(() => {
     try { const c = JSON.parse(localStorage.getItem(QUOTE_CACHE) || 'null'); return c?.text && c?.highlight ? c : null; } catch { return null; }
   });
@@ -56,182 +98,194 @@ export function DashboardView() {
     return () => { alive = false; };
   }, [lastSession]);
 
-  // one gentle nudge per session when the streak is on the line
   useEffect(() => {
     if (!data?.streak?.atRisk || sessionStorage.getItem('cc_streak_nudge')) return;
     sessionStorage.setItem('cc_streak_nudge', '1');
     toast.push({ type: 'warning', title: `Your ${data.streak.streak}-day streak is on the line`, message: data.streak.hoursLeft != null ? `${data.streak.hoursLeft}h left today — one solved problem keeps it alive.` : 'Solve one problem today to keep it alive.' });
   }, [data, toast]);
 
-  const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const daily = data?.dailyChallenge;
+  const countdown = useCountdown(daily?.resetsAt || new Date(Date.now() + 3600000).toISOString());
 
-  if (!data && !error) return <div className="h-full overflow-y-auto scrollbar-surgical"><DashboardSkeleton /></div>;
+  if (!data && !error) return <div className="h-full overflow-y-auto scrollbar-surgical"><Skeletons /></div>;
   if (error && !data) return <div className="p-10"><ErrorNote>{error}</ErrorNote></div>;
 
-  const { skills, totals, today, rank, peers } = data;
-  const solvedPct = totals.catalogue ? totals.solved / totals.catalogue : 0;
+  const { skills, totals, today, rank, resume, recommendations = [] } = data;
+  const next = resume ? { id: resume._id, title: resume.title, verb: 'Resume', note: `${resume.attempts} attempt${resume.attempts === 1 ? '' : 's'} so far` }
+    : recommendations[0] ? { id: recommendations[0].problem._id, title: recommendations[0].problem.title, verb: 'Start', note: recommendations[0].skill.name } : null;
+  const mastered = skills.filter((s) => s.isMastered).length;
+  const due = skills.filter((s) => s.reviewDue).length;
+  const rawQ = quote || { text: 'Ready when you are, ', highlight: "let's go", highlightColor: '#ff7a4d', suffix: '.' };
+  // the hero already greets by name — drop a leading "Good morning, Aarav." from the AI line
+  const trimmed = (rawQ.text || '').replace(/^\s*(good (morning|afternoon|evening|night)|hey|hi|hello|welcome back|still up)[^.!?]*[.!?]\s*/i, '');
+  const q = { ...rawQ, text: trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : rawQ.text };
+  const level = data.user.level;
 
   return (
     <div className="h-full min-h-0 overflow-y-auto scrollbar-surgical">
-      <div className="flex min-h-full flex-col">
-        {/* ─── Top bar ─── */}
-        <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-white/[0.04] bg-background/80 px-6 backdrop-blur-xl md:px-10">
-          <div className="flex items-center gap-3 text-[13px] text-zinc-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)] shadow-[0_0_8px_var(--signal)]" />
-            <span className="font-semibold text-zinc-200">Mission Control</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 rounded-lg border border-orange-400/20 bg-orange-400/[0.06] px-3 py-1.5" title={`${data.streak.streak} day streak`}>
-              <Flame className={`h-4 w-4 ${data.streak.streak ? 'text-orange-400' : 'text-zinc-600'}`} strokeWidth={2} />
-              <span className="font-mono text-[13px] font-semibold tabular-nums text-zinc-200">{data.streak.streak}</span>
+      <div className="mx-auto max-w-[1320px] px-6 md:px-14">
+        {/* ═══ Hero — one sentence, one action ═══ */}
+        <header className="pt-16 md:pt-24">
+          <Reveal>
+            <div className="text-[13px] text-zinc-500">{new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })} · Level {level}, {tierFor(level)}</div>
+            <h1 className="display mt-5 text-[clamp(56px,9vw,132px)] text-zinc-50">
+              {greeting()},<br /><em className="text-[var(--ember)]">{data.user.firstName || user?.name}</em><span className="text-zinc-600">.</span>
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <p
+              onClick={() => q.contextPath && navigate(q.contextPath)}
+              className={cn('mt-8 max-w-2xl text-[19px] leading-[1.55] text-zinc-400 md:text-[22px]', q.contextPath && 'cursor-pointer hover:text-zinc-300')}
+            >
+              {q.text?.trimEnd()}{' '}
+              <span className="display text-[1.25em] italic" style={{ color: q.highlightColor || 'var(--ember)' }}>{q.highlight}</span>
+              {q.suffix && /^[a-zA-Z]/.test(q.suffix) ? ` ${q.suffix}` : q.suffix}
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
+              {next ? (
+                <Link to={`/problems/${next.id}`} className="group flex items-center gap-4 rounded-full bg-[var(--ember)] py-3 pl-7 pr-3 text-[#1a0d07] transition-[filter,transform] hover:brightness-110 active:scale-[0.98]">
+                  <span className="text-[16px] font-semibold">{next.verb} {next.title}</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)] transition-transform group-hover:translate-x-0.5"><ArrowRight className="h-[18px] w-[18px]" /></span>
+                </Link>
+              ) : (
+                <Link to="/problems" className="rounded-full bg-[var(--ember)] px-7 py-3.5 text-[16px] font-semibold text-[#1a0d07]">Choose a problem</Link>
+              )}
+              {daily && !daily.solvedToday && (
+                <Link to={`/problems/${daily.problem._id}`} className="group text-[14px] text-zinc-400 transition-colors hover:text-zinc-100">
+                  <span className="text-zinc-200">Daily challenge</span> · {daily.problem.title} · <span className="tnum">{countdown}</span> left · <span className="text-[var(--star)]">+{daily.totalXp} XP</span>
+                  <ArrowUpRight className="ml-1 inline h-3.5 w-3.5 opacity-60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </Link>
+              )}
+              {daily?.solvedToday && <span className="text-[14px] text-zinc-500">Daily challenge done — bonus banked.</span>}
             </div>
-            <button onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))} className="hidden items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-1.5 transition-colors hover:bg-white/[0.05] sm:flex">
-              <Search className="h-3.5 w-3.5 text-zinc-600" strokeWidth={1.5} />
-              <span className="text-[12px] text-zinc-600">Search</span>
-              <span className="ml-3 flex items-center gap-0.5 rounded border border-white/[0.08] px-1.5 py-0.5 font-mono text-[9px] text-zinc-600"><Command className="h-2.5 w-2.5" strokeWidth={1.5} />K</span>
-            </button>
-            <span className="hidden font-mono text-[11px] tabular-nums text-zinc-600 md:block">{timeStr}</span>
-          </div>
+            {next?.note && <div className="mt-3 pl-1 text-[12.5px] text-zinc-600">{next.note}</div>}
+          </Reveal>
         </header>
 
-        <div className="flex-1 space-y-6 px-6 py-8 md:px-10">
-          {/* ═══ Hero ═══ */}
-          <Reveal><MissionHero data={data} quote={quote} onQuoteClick={() => quote?.contextPath && navigate(quote.contextPath)} /></Reveal>
-
-          {/* ═══ Quick stats ═══ */}
-          <Reveal delay={0.05}>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-              <Stat label="Solved today" icon={CircleCheckBig} value={<CountUp value={today.solved} />} sub={`${today.attempts} attempt${today.attempts !== 1 ? 's' : ''} · +${today.xp} XP`} />
-              <Stat label="Streak" icon={Flame} accent="amber" value={<><CountUp value={data.streak.streak} /><span className="ml-1 text-[13px] font-normal text-zinc-500">d</span></>} sub={data.streak.multiplier > 1 ? `×${data.streak.multiplier} XP multiplier` : `Best ${data.user.longestStreak}d`} />
-              <Stat label="Leaderboard" icon={Trophy} accent="violet" value={<>#{rank.position}</>} sub={`Top ${Math.max(1, 100 - rank.percentile)}% of ${rank.total}`} />
-              <Stat label="Solved" icon={Target} accent="blue" value={<><CountUp value={totals.solved} /><span className="ml-1 text-[13px] font-normal text-zinc-500">/ {totals.catalogue}</span></>} sub={`${totals.solvedByDifficulty.easy}E · ${totals.solvedByDifficulty.medium}M · ${totals.solvedByDifficulty.hard}H`} />
-              <Stat label="Skills mastered" icon={Layers} value={<><CountUp value={totals.mastered} /><span className="ml-1 text-[13px] font-normal text-zinc-500">/ {totals.skillCount}</span></>} sub="≥ 85% mastery" />
-              <Stat label="Total XP" icon={Zap} accent="amber" value={<CountUp value={data.user.xp} />} sub={`Level ${data.user.level}`} />
+        {/* ═══ Your sky ═══ */}
+        <section className="mt-20 md:mt-28">
+          <Reveal>
+            <div className="mb-2 flex flex-wrap items-end justify-between gap-4">
+              <h2 className="display text-[40px] text-zinc-100 md:text-[52px]">Your <em>sky</em></h2>
+              <div className="max-w-md text-right text-[13px] leading-relaxed text-zinc-500">
+                <span className="text-zinc-300">{mastered}</span> of {skills.length} skills burn white-hot{due > 0 && <>, <span className="text-[var(--ember)]">{due} pulsing</span> — fading, worth a refresh</>}. Hover a star. Brighter means stronger.
+              </div>
             </div>
           </Reveal>
+          <Constellation skills={skills} />
+        </section>
 
-          {/* ═══ Streak · Daily · Radar ═══ */}
-          <div className="grid gap-6 lg:grid-cols-[1fr_1fr_1.25fr]">
-            <Reveal delay={0.05}><StreakWidget streak={{ ...data.streak, longestStreak: data.user.longestStreak }} activity={data.activity} /></Reveal>
-            <Reveal delay={0.1}><DailyChallengeCard daily={data.dailyChallenge} /></Reveal>
-            <Reveal delay={0.15}>
-              <Card className="h-full">
-                <SectionTitle icon={Activity} title="BKT mastery radar" sub="Probability you've learned each skill — dashed line is your cohort average." />
-                <SkillRadarChart skills={skills} height={270} />
-              </Card>
-            </Reveal>
-          </div>
-
-          {/* ═══ Trends ═══ */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Reveal>
-              <Card>
-                <SectionTitle icon={TrendingUp} title="Mastery over time" sub="Average mastery across all 12 skills, replayed from every attempt (forgetting included)." />
-                <MasteryTrendChart timeline={data.masteryTimeline} skills={skills} />
-              </Card>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <Card>
-                <SectionTitle icon={Zap} title="XP progression" sub="Cumulative XP with milestones — level-ups, streaks and first solves." />
-                <XpProgressChart points={data.xpTimeline.points} annotations={data.xpTimeline.annotations} />
-              </Card>
-            </Reveal>
-          </div>
-
-          {/* ═══ Skill ledger ═══ */}
+        {/* ═══ Tonight ═══ */}
+        <section className="mt-16 grid gap-x-14 gap-y-14 border-t border-[var(--line-strong)] pt-12 lg:grid-cols-[1.35fr_1fr_1fr]">
           <Reveal>
-            <Card>
-              <SectionTitle
-                icon={BarChart3}
-                title="Skill progression ledger"
-                sub="Mastery, cohort comparison, learning trend and a model-based estimate of how long each skill will take to master at your current pace."
-                action={<Link to="/profile" className="hidden items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-zinc-500 hover:text-[var(--signal)] sm:flex">Model details <ArrowUpRight className="h-3 w-3" /></Link>}
-              />
-              <SkillLedger skills={skills} />
-            </Card>
+            <h3 className="text-[13px] font-medium text-zinc-500">Up next, and why</h3>
+            <ol className="mt-5">
+              {recommendations.slice(0, 3).map((r, i) => (
+                <li key={r.problem._id} className="border-b border-[var(--line)] last:border-0">
+                  <Link to={`/problems/${r.problem._id}`} className="group flex items-start gap-5 py-4">
+                    <span className="display w-6 pt-0.5 text-[24px] text-zinc-600">{i + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[18px] font-medium text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{r.problem.title}</span>
+                      <span className="mt-1 block text-[13px] leading-snug text-zinc-500">{r.reasons?.[0] || `Builds ${r.skill.name}`}</span>
+                    </span>
+                    <span className="shrink-0 pt-1 text-right"><span className="display block text-[24px] tnum text-zinc-300">{Math.round(r.predictedSuccess * 100)}<span className="text-[13px]">%</span></span><span className="text-[10.5px] text-zinc-600">likely</span></span>
+                  </Link>
+                </li>
+              ))}
+              {!recommendations.length && <li className="py-4 text-[14px] text-zinc-600">Solve one problem and I&apos;ll start recommending.</li>}
+            </ol>
           </Reveal>
 
-          {/* ═══ Recommendations + Insights ═══ */}
-          <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-            <Reveal>
-              <Card>
-                <SectionTitle icon={Target} title="Recommended for you" sub="Ranked by weak spots, review timing, difficulty ramp and what your target company asks." action={<Link to="/problems" className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-zinc-500 hover:text-[var(--signal)]">All <ArrowUpRight className="h-3 w-3" /></Link>} />
-                <RecommendationList recs={data.recommendations} />
-              </Card>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <div className="space-y-6">
-                <Card>
-                  <SectionTitle icon={Lightbulb} title="Insights" />
-                  <InsightsPanel insights={data.insights} />
-                </Card>
-                {peers?.overallPercentile != null && (
-                  <Card>
-                    <SectionTitle icon={Users} title={`You vs ${peers.scope}`} sub={`Anonymised — ${peers.peerCount} peers`} />
-                    <div className="flex items-center gap-5">
-                      <Ring value={peers.overallPercentile / 100} size={84} stroke={8} color="#a78bfa"><span className="text-[15px] font-semibold text-zinc-100">{peers.overallPercentile}<span className="text-[9px] text-zinc-500">th</span></span></Ring>
-                      <div className="space-y-1.5 text-[12px] text-zinc-400">
-                        <div>Your avg mastery <b className="text-zinc-100">{Math.round(peers.myAvgMastery * 100)}%</b></div>
-                        <div>Peer avg <b className="text-zinc-300">{Math.round(peers.peerAvgMastery * 100)}%</b></div>
-                        <Link to="/placement" className="inline-flex items-center gap-1 text-[11px] text-violet-300 hover:text-violet-200">Skill-gap analysis <ArrowUpRight className="h-3 w-3" /></Link>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-              </div>
-            </Reveal>
+          <Reveal delay={0.06}>
+            <h3 className="text-[13px] font-medium text-zinc-500">Streak</h3>
+            <div className="mt-3 flex items-baseline gap-3">
+              <span className="display text-[120px] leading-[0.9] tnum text-zinc-50"><CountUp value={data.streak.streak} /></span>
+              <span className="text-[15px] text-zinc-500">day{data.streak.streak === 1 ? '' : 's'}</span>
+            </div>
+            <div className="mt-6"><WeekDots activity={data.activity} /></div>
+            <p className="mt-5 text-[13px] leading-relaxed text-zinc-500">
+              {data.streak.atRisk
+                ? <span className="text-[var(--ember)]">One solved problem keeps it alive{data.streak.hoursLeft != null ? ` — ${data.streak.hoursLeft}h left` : ''}.</span>
+                : data.streak.multiplier > 1 ? <>Your streak multiplies today&apos;s XP by <span className="text-zinc-200">×{data.streak.multiplier}</span>.</> : 'Reach 3 days for an XP multiplier.'}
+              {data.streak.freeze?.available && <span className="ml-2 inline-flex items-center gap-1 text-zinc-600"><Snowflake className="h-3 w-3" />freeze ready</span>}
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <h3 className="text-[13px] font-medium text-zinc-500">Standing</h3>
+            <div className="mt-3 flex items-baseline gap-3">
+              <span className="display text-[120px] leading-[0.9] tnum text-zinc-50">#{rank.position}</span>
+              <span className="text-[15px] text-zinc-500">of {rank.total}</span>
+            </div>
+            <div className="mt-6">
+              <div className="mb-2 flex justify-between text-[12px] text-zinc-500"><span>Level {level}</span><span className="tnum">{100 - data.user.levelProgress} XP to {level + 1}</span></div>
+              <div className="h-[3px] overflow-hidden rounded-full bg-white/[0.08]"><motion.div className="h-full rounded-full bg-[var(--ember)]" initial={{ width: 0 }} animate={{ width: `${data.user.levelProgress}%` }} transition={{ duration: 1.1, ease: [0.23, 1, 0.32, 1] }} /></div>
+            </div>
+            <p className="mt-5 text-[13px] leading-relaxed text-zinc-500">
+              {today.solved ? <>Today: <span className="text-zinc-200">{today.solved} solved</span>, +{today.xp} XP.</> : 'Nothing solved yet today.'} {totals.solved} of {totals.catalogue} problems overall.
+            </p>
+          </Reveal>
+        </section>
+
+        {/* ═══ Look closer ═══ */}
+        <section className="mt-24">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-strong)]">
+            <h2 className="display pb-3 text-[40px] text-zinc-100 md:text-[52px]">Look <em>closer</em></h2>
+            <div className="flex gap-1 pb-3">
+              {TABS.map(([k, l]) => (
+                <button key={k} onClick={() => setTab(k)} className={cn('relative rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors', tab === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+                  {tab === k && <motion.span layoutId="dash-tab" className="absolute inset-0 rounded-full bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+                  <span className="relative">{l}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* ═══ Activity + Recent ═══ */}
-          <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-            <Reveal>
-              <Card>
-                <SectionTitle icon={Clock} title="Activity" action={<span className="text-[12px] font-semibold text-zinc-100"><span className="text-[var(--signal)]">{Object.values(data.activity).reduce((a, b) => a + b, 0)}</span> submissions this year</span>} />
-                <ActivityHeatmap dateMap={data.activity} />
-              </Card>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <Card className="h-full">
-                <SectionTitle icon={Repeat} title="Recent submissions" />
-                <div className="space-y-2">
-                  {data.recentSubmissions.length === 0 && <p className="py-6 text-center text-[12.5px] text-zinc-600">No submissions yet — pick a problem and start.</p>}
+          <div className="pt-10">
+            {tab === 'progress' && (
+              <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr]">
+                <div>
+                  <div className="mb-4 text-[13px] text-zinc-500">Average mastery, last 30 days — replayed from every attempt, forgetting included.</div>
+                  <MasteryTrendChart timeline={data.masteryTimeline} skills={skills} height={300} />
+                </div>
+                <div>
+                  <div className="mb-4 text-[13px] text-zinc-500">What the model noticed</div>
+                  <InsightsPanel insights={(data.insights || []).slice(0, 4)} />
+                  <Link to="/profile" className="mt-6 inline-flex items-center gap-1.5 text-[13px] text-zinc-400 transition-colors hover:text-[var(--ember)]">Full skill breakdown <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+                </div>
+              </div>
+            )}
+            {tab === 'activity' && (
+              <div className="grid gap-14 lg:grid-cols-[1.6fr_1fr]">
+                <div>
+                  <div className="mb-4 text-[13px] text-zinc-500"><span className="text-zinc-200">{Object.values(data.activity).reduce((a, b) => a + b, 0)}</span> submissions in the last year</div>
+                  <ActivityHeatmap dateMap={data.activity} />
+                </div>
+                <div>
+                  <div className="mb-3 text-[13px] text-zinc-500">Recent</div>
                   {data.recentSubmissions.slice(0, 6).map((s) => (
-                    <Link key={s._id} to={`/problems/${s.problemId?._id}`} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-3.5 py-2.5 transition-colors hover:bg-white/[0.05]">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.isCorrect ? 'bg-[var(--signal)]' : 'bg-rose-500'}`} />
-                        <span className="truncate text-[13px] text-zinc-300">{s.problemId?.title || 'Problem'}</span>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        {s.xpAwarded > 0 && <span className="font-mono text-[10px] text-amber-400">+{s.xpAwarded}</span>}
-                        <span className="font-mono text-[10px] text-zinc-600">{timeAgo(s.createdAt)}</span>
-                      </div>
+                    <Link key={s._id} to={`/problems/${s.problemId?._id}`} className="group flex items-center justify-between gap-3 border-b border-[var(--line)] py-3 last:border-0">
+                      <span className="flex min-w-0 items-center gap-3"><span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', s.isCorrect ? 'bg-emerald-400' : 'bg-zinc-600')} /><span className="truncate text-[14px] text-zinc-300 group-hover:text-zinc-50">{s.problemId?.title || 'Problem'}</span></span>
+                      <span className="shrink-0 text-[12px] text-zinc-600">{timeAgo(s.createdAt)}</span>
                     </Link>
                   ))}
+                  {!data.recentSubmissions.length && <p className="text-[13px] text-zinc-600">Nothing yet.</p>}
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <Link to="/arena" className="group flex items-center justify-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] py-2.5 text-[11px] font-semibold uppercase tracking-wider text-rose-300 transition-colors hover:bg-rose-500/[0.12]"><Swords className="h-3.5 w-3.5" /> Arena</Link>
-                  <Link to="/sheets" className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] py-2.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-300 transition-colors hover:bg-white/[0.07]"><Layers className="h-3.5 w-3.5" /> Sheets</Link>
-                </div>
-              </Card>
-            </Reveal>
+              </div>
+            )}
+            {tab === 'ranks' && <LeaderboardView />}
+            {tab === 'badges' && <AchievementStrip achievements={data.achievements} />}
           </div>
+        </section>
 
-          {/* ═══ Badges ═══ */}
-          <Reveal>
-            <Card>
-              <SectionTitle icon={Award} title="Achievements" />
-              <AchievementStrip achievements={data.achievements} />
-            </Card>
-          </Reveal>
-
-          {/* ═══ Leaderboard ═══ */}
-          <LeaderboardView />
-        </div>
-
-        <div className="mt-auto flex items-center justify-between border-t border-white/[0.04] px-6 py-4 font-mono text-[9px] tracking-[0.24em] text-zinc-800 md:px-10">
-          <span>COGNITIVE · CAMPUS / 2026</span>
-          <span className="text-[var(--signal)]/50">OK</span>
-        </div>
+        <footer className="mt-28 flex items-center justify-between border-t border-[var(--line)] py-8 text-[12px] text-zinc-700">
+          <span className="display text-[18px] italic text-zinc-600">cogni.</span>
+          <span>Bayesian knowledge tracing · every solve moves a star</span>
+        </footer>
       </div>
     </div>
   );

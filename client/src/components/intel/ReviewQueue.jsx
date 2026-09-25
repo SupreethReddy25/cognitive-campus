@@ -97,7 +97,7 @@ export function ReviewQueue() {
             Help verify crowd-sourced problems. Problems with +3 net votes get published to the global workspace.
           </p>
         </div>
-        <div className="font-mono text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+        <div className="text-[12px] text-zinc-600 font-medium">
           {totalCount} Pending
         </div>
       </div>
@@ -110,7 +110,7 @@ export function ReviewQueue() {
       ) : problems.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-zinc-600">
           <CheckCircle2 className="h-8 w-8 mb-3 opacity-50" strokeWidth={1.5} />
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase">Queue is empty</span>
+          <span className="text-[12px] font-medium">Queue is empty</span>
           <span className="mt-1 text-[12px]">All intel has been processed.</span>
         </div>
       ) : (
@@ -128,9 +128,9 @@ export function ReviewQueue() {
                   <div>
                     <h3 className="text-[16px] font-medium text-zinc-100">{prob.title}</h3>
                     <div className="mt-1 flex items-center gap-3 font-mono text-[10px] text-zinc-500">
-                      <span className="uppercase text-[var(--signal)]">{prob.difficulty}</span>
+                      <span className="text-[var(--signal)]">{prob.difficulty}</span>
                       <span>•</span>
-                      <span className="uppercase">{prob.skillId?.name}</span>
+                      <span className="">{prob.skillId?.name}</span>
                       {prob.company && (
                         <>
                           <span>•</span>
@@ -186,7 +186,7 @@ export function ReviewQueue() {
               <button 
                 onClick={() => setPage(p => Math.max(1, p - 1))} 
                 disabled={page === 1}
-                className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 hover:text-zinc-200 disabled:opacity-30 uppercase"
+                className="text-[12px] text-zinc-500 hover:text-zinc-200 disabled:opacity-30 font-medium"
               >
                 Prev
               </button>
@@ -194,7 +194,7 @@ export function ReviewQueue() {
               <button 
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
                 disabled={page === totalPages}
-                className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 hover:text-zinc-200 disabled:opacity-30 uppercase"
+                className="text-[12px] text-zinc-500 hover:text-zinc-200 disabled:opacity-30 font-medium"
               >
                 Next
               </button>

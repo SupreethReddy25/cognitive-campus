@@ -1,12 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, ArrowRight, Zap, Flame, TrendingUp, Award, BookOpen, Sparkles, Unlock, Star, X } from 'lucide-react';
-import { Bar, CountUp, achievementIcon, rarityStyle, cn } from '@/components/ui/kit';
+import { ArrowRight, X } from 'lucide-react';
+import { CountUp, cn } from '@/components/ui/kit';
+import { starColor } from '@/components/dashboard/constellation';
 
-const COLORS = ['#34d399', '#38bdf8', '#a78bfa', '#fbbf24', '#fb7185', '#f97316'];
-
-/** Two-note "success" chime via Web Audio (silent if the browser blocks audio). */
+/** Three-note "success" chime via Web Audio (silent if the browser blocks audio). */
 function chime() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -25,15 +24,15 @@ function chime() {
 }
 
 /**
- * SuccessOverlay — the reward moment after an accepted submission.
- * Shows XP breakdown (streak multiplier + daily bonus), animated mastery movement for the skill,
- * level-ups, unlocked skills, new badges, and the recommended next problem.
+ * SuccessOverlay — the reward moment: the skill's star is lit a little brighter.
+ * XP breakdown, mastery movement, level-ups, unlocked skills, badges and the recommended next problem.
  */
 export function SuccessOverlay({ show, onDismiss, result, problem, onOpenEditorial }) {
   const navigate = useNavigate();
 
-  const pieces = useMemo(
-    () => Array.from({ length: 46 }, (_, i) => ({ id: i, x: Math.random() * 100, delay: Math.random() * 0.4, dur: 1.6 + Math.random() * 1.6, size: 4 + Math.random() * 6, color: COLORS[i % COLORS.length], rot: Math.random() * 360, drift: (Math.random() - 0.5) * 120 })),
+  // a burst of sparks radiating from the star
+  const sparks = useMemo(
+    () => Array.from({ length: 28 }, (_, i) => { const a = (i / 28) * Math.PI * 2 + Math.random() * 0.4; const d = 120 + Math.random() * 150; return { id: i, x: Math.cos(a) * d, y: Math.sin(a) * d, s: 2 + Math.random() * 3.5, delay: Math.random() * 0.25 }; }),
     [show] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
@@ -54,92 +53,64 @@ export function SuccessOverlay({ show, onDismiss, result, problem, onOpenEditori
   const badges = r.achievements || [];
   const leveledUp = (r.notifications || []).some((n) => n.type === 'level_up');
   const alreadySolved = xp.alreadySolved;
+  const rBefore = 8 + before * 16;
+  const rAfter = 8 + after * 16;
+  const col = starColor(after, 1);
+
+  const lines = [];
+  if (leveledUp) lines.push(<>You reached <b className="text-zinc-50">level {r.newLevel}</b>.</>);
+  if (r.streak?.value > 0) lines.push(<><b className="text-[var(--ember-soft)]">{r.streak.value}-day streak</b>{r.streak.freezeUsed ? ' — a freeze saved it' : ''}.</>);
+  unlocked.forEach((s) => lines.push(<>New skill unlocked: <b className="text-zinc-50">{s}</b>.</>));
+  badges.forEach((b) => lines.push(<>Badge earned — <b className="text-[var(--star)]">{b.title}</b> <span className="text-zinc-600">(+{b.xp} XP)</span>.</>));
 
   return (
     <AnimatePresence>
       {show && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="absolute inset-0 z-50 flex items-center justify-center p-4" onClick={onDismiss}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          {pieces.map((p) => (
-            <motion.span key={p.id} initial={{ y: -20, x: 0, opacity: 0, rotate: 0 }} animate={{ y: 520, x: p.drift, opacity: [0, 1, 1, 0], rotate: p.rot + 360 }} transition={{ duration: p.dur, delay: p.delay, ease: 'easeIn' }} className="pointer-events-none absolute top-0 rounded-sm" style={{ left: `${p.x}%`, width: p.size, height: p.size * 0.5, background: p.color }} />
-          ))}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 z-50 flex items-center justify-center p-4" onClick={onDismiss}>
+          <div className="absolute inset-0 bg-[#0c0c10]/[0.93] backdrop-blur-md" />
 
-          <motion.div
-            initial={{ scale: 0.85, opacity: 0, y: 24 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative z-10 w-full max-w-[460px] overflow-hidden rounded-3xl border border-emerald-400/20 bg-[#0a0f14]/95 shadow-[0_0_80px_rgba(52,211,153,0.15)] backdrop-blur-xl"
-          >
-            <button onClick={onDismiss} className="absolute right-4 top-4 z-10 text-zinc-600 transition-colors hover:text-zinc-300"><X className="h-4 w-4" /></button>
-            <div className="pointer-events-none absolute -top-20 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-emerald-400/20 blur-[70px]" />
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }} onClick={(e) => e.stopPropagation()} className="relative z-10 w-full max-w-[560px] text-center">
+            <button onClick={onDismiss} className="absolute -top-2 right-0 text-zinc-600 transition-colors hover:text-zinc-300" aria-label="Close"><X className="h-5 w-5" /></button>
 
-            <div className="relative px-7 pb-6 pt-7 text-center">
-              <motion.div initial={{ rotate: -20, scale: 0 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.15 }} className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10">
-                <Trophy className="h-8 w-8 text-emerald-300" strokeWidth={1.4} />
-              </motion.div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-emerald-300/70">{alreadySolved ? 'Solved again' : 'Accepted'}</div>
-              <div className="mt-1 text-[24px] font-semibold tracking-tight text-zinc-100">{problem?.title}</div>
-              <div className="mt-1 text-[12px] text-zinc-500">{r.submission?.passedTestCases}/{r.submission?.totalTestCases} tests · {problem?.skillId?.name}</div>
+            {/* the star */}
+            <div className="relative mx-auto h-[260px] w-[260px]">
+              {sparks.map((p) => (
+                <motion.span key={p.id} initial={{ x: 0, y: 0, opacity: 0, scale: 1 }} animate={{ x: p.x, y: p.y, opacity: [0, 1, 0], scale: [1, 1, 0.3] }} transition={{ duration: 1.5, delay: 0.25 + p.delay, ease: 'easeOut' }} className="pointer-events-none absolute left-1/2 top-1/2 rounded-full" style={{ width: p.s, height: p.s, background: col }} />
+              ))}
+              <svg viewBox="-130 -130 260 260" className="absolute inset-0 h-full w-full overflow-visible">
+                <defs><radialGradient id="ov-halo"><stop offset="0%" stopColor={col} stopOpacity="0.6" /><stop offset="100%" stopColor={col} stopOpacity="0" /></radialGradient></defs>
+                <motion.circle cx="0" cy="0" fill="url(#ov-halo)" initial={{ r: rBefore * 3 }} animate={{ r: rAfter * 4.2 }} transition={{ duration: 1.4, delay: 0.3, ease: [0.23, 1, 0.32, 1] }} />
+                <motion.g initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.8 }} stroke={col} strokeWidth="1.2" strokeLinecap="round" style={{ transformOrigin: '0px 0px' }}>
+                  <line x1={-rAfter - 30} x2={rAfter + 30} y1="0" y2="0" /><line y1={-rAfter - 30} y2={rAfter + 30} x1="0" x2="0" />
+                </motion.g>
+                <motion.circle cx="0" cy="0" fill={col} initial={{ r: rBefore }} animate={{ r: rAfter }} transition={{ duration: 1.3, delay: 0.3, ease: [0.23, 1, 0.32, 1] }} />
+              </svg>
             </div>
 
-            <div className="space-y-4 px-7 pb-6">
-              {/* XP */}
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
-                <div className="flex items-baseline justify-between">
-                  <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500"><Zap className="h-3 w-3 text-amber-400" /> XP earned</span>
-                  <span className="text-[28px] font-semibold tabular-nums text-amber-300">+<CountUp value={r.xpEarned || 0} /></span>
-                </div>
-                {(xp.base > 0 || xp.dailyBonus > 0) ? (
-                  <div className="mt-2 space-y-1 font-mono text-[11px] text-zinc-500">
-                    <div className="flex justify-between"><span>Problem ({problem?.difficulty})</span><span className="text-zinc-300">+{xp.base}</span></div>
-                    {xp.streakMultiplier > 1 && <div className="flex justify-between"><span className="flex items-center gap-1"><Flame className="h-3 w-3 text-orange-400" /> Streak ×{xp.streakMultiplier}</span><span className="text-orange-300">+{xp.boosted - xp.base}</span></div>}
-                    {xp.dailyBonus > 0 && <div className="flex justify-between"><span className="flex items-center gap-1"><Sparkles className="h-3 w-3 text-amber-400" /> Daily challenge bonus</span><span className="text-amber-300">+{xp.dailyBonus}</span></div>}
-                  </div>
-                ) : <p className="mt-1.5 text-[11.5px] text-zinc-600">XP is awarded once per problem — but every solve still sharpens your mastery estimate.</p>}
-              </div>
+            <div className="-mt-6 text-[14px] text-zinc-500">{alreadySolved ? 'Solved again' : 'Accepted'} · {r.submission?.passedTestCases}/{r.submission?.totalTestCases} tests</div>
+            <h2 className="display mt-2 text-[clamp(44px,7vw,72px)] text-zinc-50">{problem?.title}</h2>
 
-              {/* Mastery */}
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
-                <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  <span className="flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-sky-400" /> {problem?.skillId?.name} mastery</span>
-                  <span className="text-zinc-300">{Math.round(before * 100)}% → <b className="text-emerald-300">{Math.round(after * 100)}%</b></span>
-                </div>
-                <div className="relative">
-                  <Bar value={before} max={1} height={8} color="rgba(255,255,255,0.18)" animate={false} />
-                  <div className="absolute inset-0"><Bar value={after} max={1} height={8} color="linear-gradient(90deg,#34d399,#38bdf8)" marker={0.85} /></div>
-                </div>
-                <div className="mt-1.5 flex justify-between font-mono text-[9px] text-zinc-600"><span>0%</span><span>mastery line 85%</span></div>
-              </div>
+            <div className="mt-8 flex items-end justify-center gap-10">
+              <div><div className="display text-[64px] leading-none tnum text-[var(--star)]">+<CountUp value={r.xpEarned || 0} /></div><div className="mt-1 text-[13px] text-zinc-500">XP{xp.streakMultiplier > 1 ? ` · streak ×${xp.streakMultiplier}` : ''}{xp.dailyBonus > 0 ? ` · daily +${xp.dailyBonus}` : ''}</div></div>
+              <div><div className="display text-[64px] leading-none tnum text-zinc-50">{Math.round(before * 100)}<span className="text-[26px] text-zinc-600"> → </span><span style={{ color: col }}>{Math.round(after * 100)}</span><span className="text-[26px] text-zinc-600">%</span></div><div className="mt-1 text-[13px] text-zinc-500">{problem?.skillId?.name} mastery</div></div>
+            </div>
+            {xp.alreadySolved && <p className="mx-auto mt-4 max-w-sm text-[13px] text-zinc-600">XP is awarded once per problem — every solve still sharpens your mastery estimate.</p>}
 
-              {/* events */}
-              {(leveledUp || unlocked.length > 0 || r.streak?.value > 0 || badges.length > 0) && (
-                <div className="space-y-2">
-                  {leveledUp && <Chip icon={Star} tone="amber">Level up! You reached level {r.newLevel}</Chip>}
-                  {r.streak?.value > 0 && <Chip icon={Flame} tone="orange">{r.streak.value}-day streak{r.streak.freezeUsed ? ' — freeze used, streak saved' : ''}</Chip>}
-                  {unlocked.map((s) => <Chip key={s} icon={Unlock} tone="emerald">Skill unlocked: {s}</Chip>)}
-                  {badges.map((b) => { const I = achievementIcon(b.icon); return <div key={b.key} className={cn('flex items-center gap-3 rounded-xl border px-3.5 py-2.5', rarityStyle(b.rarity).ring)}><I className="h-4 w-4" /><div className="text-left"><div className="text-[12.5px] font-semibold">Badge: {b.title}</div><div className="text-[11px] opacity-70">{b.desc} · +{b.xp} XP</div></div></div>; })}
-                </div>
+            {lines.length > 0 && <ul className="mx-auto mt-8 max-w-md space-y-2 text-[15px] text-zinc-400">{lines.map((l, i) => <li key={i}>{l}</li>)}</ul>}
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              {next && (
+                <button onClick={() => { onDismiss?.(); navigate(`/problems/${next.problem._id}`); }} className="group flex items-center gap-4 rounded-full bg-[var(--ember)] py-2.5 pl-7 pr-2.5 text-left text-[#1a0d07] transition-[filter] hover:brightness-110">
+                  <span className="min-w-0"><span className="block text-[11.5px] font-medium opacity-70">Next · {Math.round(next.predictedSuccess * 100)}% likely</span><span className="block max-w-[240px] truncate text-[15px] font-semibold">{next.problem.title}</span></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a0d07] text-[var(--ember)]"><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+                </button>
               )}
-
-              {/* actions */}
-              <div className="flex gap-2.5 pt-1">
-                {next && (
-                  <button onClick={() => { onDismiss?.(); navigate(`/problems/${next.problem._id}`); }} className="group flex flex-1 items-center justify-between rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-left text-[12.5px] font-semibold text-black transition-all hover:brightness-110">
-                    <span className="min-w-0"><span className="block text-[9px] font-medium uppercase tracking-wider opacity-70">Next up · {Math.round(next.predictedSuccess * 100)}% success</span><span className="block truncate">{next.problem.title}</span></span>
-                    <ArrowRight className="ml-2 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
-                  </button>
-                )}
-                <button onClick={() => { onDismiss?.(); onOpenEditorial?.(); }} className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] px-4 py-3 text-[12px] font-medium text-zinc-300 transition-colors hover:bg-white/[0.05]"><BookOpen className="h-3.5 w-3.5" /> Editorial</button>
-              </div>
+              <button onClick={() => { onDismiss?.(); onOpenEditorial?.(); }} className="rounded-full border border-[var(--line-strong)] px-6 py-3 text-[14px] text-zinc-300 transition-colors hover:border-zinc-400">Read the editorial</button>
+              <button onClick={onDismiss} className={cn('text-[14px] text-zinc-600 transition-colors hover:text-zinc-300')}>Keep going</button>
             </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
-}
-
-function Chip({ icon: Icon, tone, children }) {
-  const t = { amber: 'border-amber-400/25 bg-amber-400/[0.07] text-amber-200', orange: 'border-orange-400/25 bg-orange-400/[0.07] text-orange-200', emerald: 'border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-200' }[tone];
-  return <div className={cn('flex items-center gap-2.5 rounded-xl border px-3.5 py-2 text-left text-[12.5px] font-medium', t)}><Icon className="h-4 w-4 shrink-0" />{children}</div>;
 }

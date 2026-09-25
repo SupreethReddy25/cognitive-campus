@@ -6,6 +6,41 @@ import { initVimMode } from "monaco-vim";
 // Lazy load Monaco Editor
 const Editor = lazy(() => import('@monaco-editor/react'));
 
+
+/** Warm ink editor theme — same palette as the rest of the product. */
+const defineObservatory = (monaco) => {
+  monaco.editor.defineTheme('observatory', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: '', foreground: 'ece6d8' },
+      { token: 'comment', foreground: '6b6558', fontStyle: 'italic' },
+      { token: 'keyword', foreground: 'ff8253' },
+      { token: 'keyword.control', foreground: 'ff8253' },
+      { token: 'string', foreground: 'f2c66d' },
+      { token: 'number', foreground: '94d6a8' },
+      { token: 'type', foreground: '8fbcda' },
+      { token: 'identifier', foreground: 'ece6d8' },
+      { token: 'delimiter', foreground: '9a9384' },
+      { token: 'function', foreground: 'fff1cf' }
+    ],
+    colors: {
+      'editor.background': '#0c0c10',
+      'editor.foreground': '#ece6d8',
+      'editorLineNumber.foreground': '#4a463e',
+      'editorLineNumber.activeForeground': '#9a9384',
+      'editor.lineHighlightBackground': '#15151b',
+      'editor.selectionBackground': '#ff6a3d33',
+      'editorCursor.foreground': '#ff7a4d',
+      'editorIndentGuide.background1': '#1c1c22',
+      'editorWidget.background': '#141418',
+      'editorSuggestWidget.background': '#141418',
+      'editorSuggestWidget.selectedBackground': '#ff6a3d22',
+      'scrollbarSlider.background': '#ffffff10'
+    }
+  });
+};
+
 export function CenterPane() {
   const { 
     code, setCode, setUserTyped,
@@ -140,7 +175,7 @@ export function CenterPane() {
           <span className="text-zinc-800">·</span>
           <span>LF</span>
           <span className="text-zinc-800">·</span>
-          <span className="uppercase">{keybindings === 'standard' ? 'STD' : keybindings}</span>
+          <span className="">{keybindings === 'standard' ? 'STD' : keybindings}</span>
         </div>
       </div>
 
@@ -152,7 +187,7 @@ export function CenterPane() {
           <Editor 
             height="100%" 
             language={monacoLang} 
-            theme="vs-dark" 
+            theme="observatory" beforeMount={defineObservatory} 
             value={code} 
             onChange={val => { setCode(val || ''); setUserTyped(true); }}
             onMount={(editor, monaco) => { 
@@ -228,7 +263,7 @@ export function CenterPane() {
         </Suspense>
 
         {lighthouse && citedLines && citedLines.length > 0 && <div className="pointer-events-none absolute right-8 top-4 z-[2] border border-[var(--signal)]/30 bg-[var(--signal)]/5 px-3 py-1.5 font-mono text-[9px] tracking-[0.2em] text-[var(--signal)] backdrop-blur-sm shadow-[0_0_15px_rgba(74,124,89,0.2)] fade-in-up">
-            LIGHTHOUSE · PIVOT LOCKED
+            Lighthouse · line locked
         </div>}
       </div>
 
@@ -241,7 +276,7 @@ export function CenterPane() {
       </div>
 
       {/* ─── Bottom Action Bar (V4: Format, Clear, Reset, RUN, SUBMIT) ─── */}
-      <div className="flex shrink-0 items-center justify-center gap-2 border-t border-white/[0.06] bg-[#0c0f14]/90 px-4 py-2 backdrop-blur-sm">
+      <div className="flex shrink-0 items-center justify-center gap-2 border-t border-[var(--line)] bg-[var(--background)] px-4 py-2.5">
         <GhostBtn label="Format" onClick={handleFormat}>
           <AlignLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           <span>Format</span>
@@ -261,12 +296,12 @@ export function CenterPane() {
         <button 
           onClick={handleRun} 
           disabled={running || submitting} 
-          className={`press ease-signature flex items-center gap-2 px-4 py-1.5 font-mono text-[11px] tracking-widest transition-colors duration-300 border border-white/[0.08] ${running ? "text-zinc-600 cursor-not-allowed" : "text-zinc-200 hover:bg-white/[0.04] hover:border-white/[0.15]"}`}
+          className={`press flex items-center gap-2 rounded-full border border-[var(--line-strong)] px-5 py-2 text-[13.5px] font-medium transition-colors duration-300 ${running ? "text-zinc-600 cursor-not-allowed" : "text-zinc-200 hover:border-zinc-400"}`}
         >
           {running ? <span className="flex h-3 w-3 items-center justify-center">
               <span className="h-1.5 w-1.5 animate-ping rounded-full bg-[var(--signal)]" />
             </span> : <Play className="h-3.5 w-3.5" strokeWidth={1.5} />}
-          <span>RUN</span>
+          <span>Run</span>
           <span className="flex items-center gap-0.5 border border-white/[0.08] px-1 py-0 text-[9px] text-zinc-600">
             <Command className="h-2 w-2" strokeWidth={1.5} />
             <span>'</span>
@@ -277,10 +312,10 @@ export function CenterPane() {
         <button 
           onClick={handleSubmit} 
           disabled={running || submitting}
-          className={`press ease-signature flex items-center gap-2 px-5 py-1.5 font-mono text-[11px] tracking-widest transition-colors duration-300 ${submitting ? "bg-zinc-800 text-zinc-500 cursor-not-allowed" : "bg-[var(--signal)] text-[#0a1410] hover:brightness-110"}`}
+          className={`press flex items-center gap-2 rounded-full px-6 py-2 text-[13.5px] font-semibold transition-[filter] duration-300 ${submitting ? "bg-zinc-800 text-zinc-500 cursor-not-allowed" : "bg-[var(--ember)] text-[#1a0d07] hover:brightness-110"}`}
         >
           {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
-          <span>SUBMIT</span>
+          <span>Submit</span>
         </button>
       </div>
     </section>;
@@ -305,7 +340,7 @@ function LangSelector({ lang, displayLang, langs, onSelect, open, setOpen }) {
 }
 
 function GhostBtn({ children, label, onClick }) {
-  return <button aria-label={label} onClick={onClick} className="press ease-signature flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-[11px] tracking-widest text-zinc-500 transition-colors duration-300 hover:bg-white/[0.03] hover:text-zinc-200 border border-transparent hover:border-white/[0.06]">
+  return <button aria-label={label} onClick={onClick} className="press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-zinc-500 transition-colors duration-300 hover:bg-white/[0.05] hover:text-zinc-200">
       {children}
     </button>;
 }

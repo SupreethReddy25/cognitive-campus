@@ -62,16 +62,16 @@ export function TestTiles({ running, results, onRun, selected, onSelect, stats, 
     <section className="relative flex shrink-0 flex-col border-t border-white/[0.06]" style={{ height: 268 }}>
       {/* Header */}
       <div className="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.05] px-4">
-        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+        <div className="flex items-center gap-3 text-[12px] text-zinc-500 font-medium">
           <span>Test cases</span>
           <span className="h-3 w-px bg-white/[0.06]" />
           <Summary stats={stats} running={running} total={tiles.length} />
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setCustomMode(!customMode)} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors', customMode ? 'border border-[var(--signal)]/25 bg-[var(--signal)]/10 text-[var(--signal)]' : 'text-zinc-500 hover:text-zinc-200')}>
+          <button onClick={() => setCustomMode(!customMode)} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] transition-colors font-medium', customMode ? 'border border-[var(--signal)]/25 bg-[var(--signal)]/10 text-[var(--signal)]' : 'text-zinc-500 hover:text-zinc-200')}>
             {customMode ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />} Custom
           </button>
-          <button onClick={customMode ? () => customInput.trim() && handleCustomRun(customInput) : onRun} disabled={running} className={cn('flex items-center gap-1.5 rounded-md border border-white/[0.08] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors', running ? 'cursor-not-allowed text-zinc-600' : 'text-zinc-200 hover:bg-white/[0.05]')}>
+          <button onClick={customMode ? () => customInput.trim() && handleCustomRun(customInput) : onRun} disabled={running} className={cn('flex items-center gap-1.5 rounded-md border border-white/[0.08] px-3 py-1 text-[12px] transition-colors font-medium', running ? 'cursor-not-allowed text-zinc-600' : 'text-zinc-200 hover:bg-white/[0.05]')}>
             {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
             {running ? 'Running' : customMode ? 'Run custom' : 'Run all'}
           </button>
@@ -81,11 +81,11 @@ export function TestTiles({ running, results, onRun, selected, onSelect, stats, 
       {customMode ? (
         <div className="flex min-h-0 flex-1">
           <div className="flex flex-1 flex-col border-r border-white/[0.05]">
-            <div className="border-b border-white/[0.05] px-4 py-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">stdin · one argument per line</div>
+            <div className="border-b border-white/[0.05] px-4 py-2 text-[12px] text-zinc-600 font-medium">stdin · one argument per line</div>
             <textarea value={customInput} onChange={(e) => setCustomInput(e.target.value)} placeholder={'[1,2,3]\n5'} spellCheck="false" className="flex-1 resize-none bg-transparent p-4 font-mono text-[12px] leading-relaxed text-zinc-200 placeholder:text-zinc-700 focus:outline-none scrollbar-surgical" />
           </div>
           <div className="flex flex-1 flex-col">
-            <div className="flex items-center border-b border-white/[0.05] px-4 py-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600"><Terminal className="mr-1.5 h-3 w-3" /> output {results?.customInputRun && <span className="ml-auto text-[var(--signal)]">custom run</span>}</div>
+            <div className="flex items-center border-b border-white/[0.05] px-4 py-2 text-[12px] text-zinc-600 font-medium"><Terminal className="mr-1.5 h-3 w-3" /> output {results?.customInputRun && <span className="ml-auto text-[var(--signal)]">custom run</span>}</div>
             <div className="min-h-0 flex-1 overflow-y-auto p-4 scrollbar-surgical">
               {running ? <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-500"><Loader2 className="h-3 w-3 animate-spin text-[var(--signal)]" /> Executing…</div>
                 : results?.customInputRun && results?.testResults?.results?.[0] ? <pre className={cn('whitespace-pre-wrap break-all font-mono text-[12px] leading-relaxed', String(results.testResults.results[0].actualOutput).startsWith('[ERROR]') ? 'text-rose-300' : 'text-emerald-300')}>{results.testResults.results[0].actualOutput || '(no output)'}</pre>
@@ -104,7 +104,7 @@ export function TestTiles({ running, results, onRun, selected, onSelect, stats, 
                 <button key={t.id} onClick={() => onSelect(t.id)} className={cn('relative flex min-w-[132px] flex-shrink-0 flex-col items-start justify-center gap-1 px-3.5 text-left transition-colors', isSel ? 'bg-white/[0.035]' : 'hover:bg-white/[0.02]')}>
                   <div className="flex w-full items-center gap-2">
                     <StatusDot status={t.status} />
-                    <span className="font-mono text-[11px] uppercase tracking-widest text-zinc-300">{t.name}</span>
+                    <span className="text-[12px] text-zinc-300 font-medium">{t.name}</span>
                     {t.hidden && <EyeOff className="ml-auto h-3 w-3 text-zinc-600" />}
                   </div>
                   <div className="w-full truncate pl-4 font-mono text-[10px] text-zinc-600">
@@ -119,7 +119,7 @@ export function TestTiles({ running, results, onRun, selected, onSelect, stats, 
           {/* detail */}
           {runtimeError ? (
             <div className="min-h-0 flex-1 overflow-y-auto bg-rose-500/[0.05] p-4 scrollbar-surgical">
-              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-widest text-rose-300"><AlertOctagon className="h-3.5 w-3.5" /> Runtime / compilation error</div>
+              <div className="mb-2 flex items-center gap-2 text-[12px] font-bold text-rose-300"><AlertOctagon className="h-3.5 w-3.5" /> Runtime / compilation error</div>
               <pre className="whitespace-pre-wrap font-mono text-[11.5px] leading-relaxed text-rose-200">{String(runtimeError).replace(/^\[ERROR\]\s*/, '')}</pre>
             </div>
           ) : sel.hidden ? (
@@ -147,7 +147,7 @@ export function TestTiles({ running, results, onRun, selected, onSelect, stats, 
 }
 
 function StatusDot({ status }) {
-  const cls = status === 'pass' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : status === 'fail' ? 'bg-rose-400 shadow-[0_0_8px_#fb7185]' : status === 'running' ? 'animate-pulse bg-amber-400' : 'bg-zinc-700';
+  const cls = status === 'pass' ? 'bg-emerald-400 shadow-[0_0_8px_#94d6a8]' : status === 'fail' ? 'bg-rose-400 shadow-[0_0_8px_#f0728a]' : status === 'running' ? 'animate-pulse bg-amber-400' : 'bg-zinc-700';
   return <span className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', cls)} />;
 }
 
@@ -161,7 +161,7 @@ function Summary({ stats, running, total }) {
 function Block({ label, children, tone }) {
   return (
     <div className="flex min-h-0 flex-col px-4 py-3">
-      <div className="mb-2 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">
+      <div className="mb-2 flex items-center gap-2 text-[12px] text-zinc-600 font-medium">
         <span className={tone === 'good' ? 'text-emerald-500/80' : tone === 'bad' ? 'text-rose-400/80' : ''}>{label}</span>
         <span className="h-px flex-1 bg-white/[0.05]" />
       </div>

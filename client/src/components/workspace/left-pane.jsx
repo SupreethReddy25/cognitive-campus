@@ -52,54 +52,35 @@ export function LeftPane() {
           {/* Title block */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <DiffPill difficulty={problem.difficulty} />
-                {problem.skillId?.name && <Pill tone="zinc">{problem.skillId.name}</Pill>}
-                {problem.userSolved && <Pill tone="green" icon={Check}>Solved</Pill>}
+              <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-zinc-500">
+                <span className="flex items-center gap-1.5 capitalize"><span className={cn('h-1.5 w-1.5 rounded-full', problem.difficulty === 'easy' ? 'bg-emerald-400' : problem.difficulty === 'medium' ? 'bg-amber-400' : 'bg-rose-400')} />{problem.difficulty}</span>
+                {problem.skillId?.name && <span>{problem.skillId.name}</span>}
+                {problem.userSolved && <span className="flex items-center gap-1 text-emerald-400"><Check className="h-3.5 w-3.5" />solved</span>}
               </div>
-              <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-zinc-100">{problem.title}</h1>
+              <h1 className="display text-[44px] leading-[0.98] text-zinc-50">{problem.title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <button onClick={toggleBookmark} title={bookmarked ? 'Remove bookmark' : 'Bookmark for later'} className={cn('flex h-8 w-8 items-center justify-center rounded-lg border transition-colors', bookmarked ? 'border-amber-400/30 bg-amber-400/10 text-amber-300' : 'border-white/[0.07] text-zinc-500 hover:text-zinc-200')}>
-                {bookmarked ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+              <button onClick={toggleBookmark} title={bookmarked ? 'Remove bookmark' : 'Bookmark for later'} className={cn('flex h-9 w-9 items-center justify-center rounded-full transition-colors', bookmarked ? 'text-[var(--star)]' : 'text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-200')}>
+                {bookmarked ? <BookmarkCheck className="h-[18px] w-[18px]" /> : <Bookmark className="h-[18px] w-[18px]" />}
               </button>
-              <button onClick={share} title="Copy link" className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] text-zinc-500 transition-colors hover:text-zinc-200"><Link2 className="h-4 w-4" /></button>
+              <button onClick={share} title="Copy link" className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"><Link2 className="h-[18px] w-[18px]" /></button>
             </div>
           </div>
 
           {/* meta */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[10.5px] text-zinc-500">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-zinc-500">
             {stats.acceptance != null && <span title={`${stats.attempts} submissions`}>{stats.acceptance}% acceptance</span>}
             {stats.solvers > 0 && <span>{stats.solvers} solver{stats.solvers !== 1 ? 's' : ''}</span>}
-            <span>{problem.xpReward || 10} XP</span>
-            {problem.frequency > 0 && <span title="How often this appears in interviews (0-100)">freq {problem.frequency}</span>}
+            <span className="text-[var(--star)]">{problem.xpReward || 10} XP</span>
+            {problem.companies?.length > 0 && <span>asked at {problem.companies.slice(0, 4).join(', ')}{problem.companies.length > 4 ? ` +${problem.companies.length - 4}` : ''}</span>}
           </div>
-          {problem.companies?.length > 0 && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {problem.companies.slice(0, 6).map((c) => <span key={c} className="rounded-md border border-white/[0.07] bg-white/[0.03] px-2 py-0.5 text-[10.5px] text-zinc-400">{c}</span>)}
-              {problem.companies.length > 6 && <span className="px-1 text-[10.5px] text-zinc-600">+{problem.companies.length - 6}</span>}
-            </div>
-          )}
-
-          {mastery != null && (
-            <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
-              <div className="mb-1.5 flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.18em] text-zinc-500">
-                <span>{problem.skillId?.name || 'Skill'} mastery</span>
-                <span className={result?.masteryDelta > 0 ? 'text-emerald-400' : result?.masteryDelta < 0 ? 'text-rose-400' : 'text-zinc-400'}>
-                  {Math.round(mastery * 100)}%{result?.masteryDelta ? ` (${result.masteryDelta > 0 ? '+' : ''}${(result.masteryDelta * 100).toFixed(1)})` : ''}
-                </span>
-              </div>
-              <Bar value={mastery} max={1} height={5} marker={0.85} color={mastery >= 0.85 ? '#34d399' : mastery >= 0.6 ? '#38bdf8' : '#fbbf24'} />
-            </div>
-          )}
 
           {/* Tabs */}
-          <div className="mt-6 flex items-center gap-5 border-b border-white/[0.06]">
+          <div className="mt-7 flex items-center gap-1 border-b border-[var(--line)] pb-3">
             {tabs.map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={cn('relative pb-2.5 text-[12.5px] font-medium tracking-tight transition-colors', tab === t ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300')}>
+              <button key={t} onClick={() => setTab(t)} className={cn('rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors', tab === t ? 'bg-white/[0.08] text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
                 {t}
-                {t === 'Editorial' && editorialUnlocked && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-                {tab === t && <span className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full bg-[var(--signal)]" />}
+                {t === 'Editorial' && editorialUnlocked && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />}
               </button>
             ))}
           </div>
@@ -117,16 +98,16 @@ export function LeftPane() {
 function Description({ problem }) {
   return (
     <div className="mt-5 space-y-7">
-      <RichText text={problem.description || ''} className="text-[13.5px]" />
+      <RichText text={problem.description || ''} className="text-[15px] leading-[1.7]" />
 
       {(problem.examples || []).length > 0 && (
         <div className="space-y-4">
           {problem.examples.map((ex, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-              <Label className="mb-2.5 block text-zinc-600">Example {i + 1}</Label>
+            <div key={i} className="border-l-2 border-[var(--line-strong)] pl-5">
+              <div className="mb-2.5 text-[13px] text-zinc-500">Example {i + 1}</div>
               <div className="space-y-1.5 font-mono text-[12px] leading-relaxed">
                 <div className="flex gap-3"><span className="w-14 shrink-0 text-zinc-600">Input</span><span className="break-all text-zinc-200">{ex.input}</span></div>
-                <div className="flex gap-3"><span className="w-14 shrink-0 text-zinc-600">Output</span><span className="break-all text-emerald-300">{ex.output}</span></div>
+                <div className="flex gap-3"><span className="w-14 shrink-0 text-zinc-600">Output</span><span className="break-all text-[var(--star)]">{ex.output}</span></div>
                 {ex.explanation && <div className="flex gap-3 pt-1"><span className="w-14 shrink-0 text-zinc-700">Why</span><span className="font-sans text-[12.5px] italic leading-relaxed text-zinc-500">{ex.explanation}</span></div>}
               </div>
             </div>
@@ -136,7 +117,7 @@ function Description({ problem }) {
 
       {problem.constraints && (
         <div>
-          <Label className="mb-2 block text-zinc-600">Constraints</Label>
+          <div className="mb-2 text-[13px] text-zinc-500">Constraints</div>
           <ul className="space-y-1 font-mono text-[11.5px] text-zinc-400">
             {String(problem.constraints).split('\n').filter(Boolean).map((c, i) => <li key={i} className="flex gap-2"><span className="mt-1 text-zinc-700">›</span><span>{c}</span></li>)}
           </ul>
@@ -203,7 +184,7 @@ function Editorial({ id, problem, unlockedHint }) {
         <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.04]"><Lock className="h-5 w-5 text-zinc-500" /></span>
         <div className="text-[14px] font-medium text-zinc-200">Editorial locked</div>
         <p className="mx-auto mt-1 max-w-xs text-[12.5px] leading-relaxed text-zinc-500">Solve the problem, or make {state.attemptsNeeded || 3} attempts, to unlock the optimal approach, complexity analysis and a code walkthrough.</p>
-        <div className="mx-auto mt-4 max-w-[200px]"><Bar value={Math.min(n, 3)} max={3} height={5} color="#fbbf24" /><div className="mt-1.5 font-mono text-[10px] text-zinc-600">{Math.min(n, 3)} / 3 attempts</div></div>
+        <div className="mx-auto mt-4 max-w-[200px]"><Bar value={Math.min(n, 3)} max={3} height={5} color="#f2c66d" /><div className="mt-1.5 font-mono text-[10px] text-zinc-600">{Math.min(n, 3)} / 3 attempts</div></div>
       </div>
     );
   }
@@ -257,7 +238,7 @@ function Editorial({ id, problem, unlockedHint }) {
           <div className="mb-2 flex items-center justify-between">
             <Label className="text-zinc-600">Reference solution</Label>
             <div className="flex items-center gap-1">
-              {langs.map((l) => <button key={l} onClick={() => setLang(l)} className={cn('rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors', (ed.code[lang] ? lang : langs[0]) === l ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-300')}>{l === 'javascript' ? 'JS' : 'PY'}</button>)}
+              {langs.map((l) => <button key={l} onClick={() => setLang(l)} className={cn('rounded-md px-2 py-1 text-[12px] transition-colors font-medium', (ed.code[lang] ? lang : langs[0]) === l ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-500 hover:text-zinc-300')}>{l === 'javascript' ? 'JS' : 'PY'}</button>)}
               <button onClick={copy} className="ml-1 flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[10px] text-zinc-500 hover:text-zinc-200">{copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}{copied ? 'Copied' : 'Copy'}</button>
             </div>
           </div>
@@ -323,9 +304,9 @@ function IntelTab({ problem }) {
   const conf = problem.confidenceLevel || 0;
   return (
     <div className="mt-6 space-y-6">
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em]"><Shield className="h-3.5 w-3.5 text-[var(--signal)]" /><span className="text-[var(--signal)]">Community intel</span><span className="h-px flex-1 bg-white/[0.05]" /></div>
+      <div className="flex items-center gap-2 text-[12px] font-medium"><Shield className="h-3.5 w-3.5 text-[var(--signal)]" /><span className="text-[var(--signal)]">Community intel</span><span className="h-px flex-1 bg-white/[0.05]" /></div>
       {(problem.company || problem.round) && <div className="flex items-center gap-2 text-[13px] text-zinc-200"><Building2 className="h-4 w-4 text-zinc-500" />{problem.company}{problem.company && problem.round && <span className="text-zinc-700">|</span>}<span className="text-zinc-400">{problem.round}</span></div>}
-      {conf > 0 && <div><div className="mb-1.5 flex items-center justify-between font-mono text-[10px] text-zinc-500"><span>MEMORY CONFIDENCE</span><span>{conf}%</span></div><Bar value={conf} max={100} height={4} color="#34d399" /></div>}
+      {conf > 0 && <div><div className="mb-1.5 flex items-center justify-between font-mono text-[10px] text-zinc-500"><span>MEMORY CONFIDENCE</span><span>{conf}%</span></div><Bar value={conf} max={100} height={4} color="#94d6a8" /></div>}
       {problem.warStory && <blockquote className="border-l-2 border-[var(--signal)]/30 py-1 pl-4 text-[13.5px] italic leading-relaxed text-zinc-400">“{problem.warStory}”</blockquote>}
       <div className="flex items-center gap-3 border-t border-white/[0.05] pt-4"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1a2332] text-[10px] font-semibold text-zinc-300">{authorName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}</div><div><div className="font-mono text-[10px] text-zinc-500">Reported by</div><div className="text-[12.5px] text-zinc-200">{authorName}</div></div></div>
     </div>

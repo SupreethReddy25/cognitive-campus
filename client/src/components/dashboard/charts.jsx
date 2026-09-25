@@ -32,8 +32,8 @@ export function SkillRadarChart({ skills = [], height = 320 }) {
           <PolarGrid stroke="rgba(255,255,255,0.08)" />
           <PolarAngleAxis dataKey="skill" tick={{ fill: '#a1a1aa', fontSize: 10.5, fontFamily: 'JetBrains Mono, monospace' }} />
           <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-          {hasCohort && <Radar name="Cohort avg" dataKey="cohort" stroke="#a78bfa" strokeDasharray="4 4" fill="#a78bfa" fillOpacity={0.06} isAnimationActive animationDuration={1200} />}
-          <Radar name="You" dataKey="mastery" stroke="#34d399" fill="#34d399" fillOpacity={0.28} strokeWidth={2} isAnimationActive animationDuration={1400} animationEasing="ease-out" dot={{ r: 3, fill: '#34d399' }} />
+          {hasCohort && <Radar name="Cohort avg" dataKey="cohort" stroke="#9aa5dc" strokeDasharray="4 4" fill="#9aa5dc" fillOpacity={0.06} isAnimationActive animationDuration={1200} />}
+          <Radar name="You" dataKey="mastery" stroke="#ff7a4d" fill="#ff7a4d" fillOpacity={0.28} strokeWidth={2} isAnimationActive animationDuration={1400} animationEasing="ease-out" dot={{ r: 3, fill: '#ff7a4d' }} />
           <Tooltip {...chartTooltipStyle} formatter={(v, n) => [`${v}%`, n]} labelFormatter={(l, p) => p?.[0]?.payload?.full || l} />
           <Legend wrapperStyle={{ fontSize: 11, color: '#a1a1aa' }} iconType="plainline" />
         </RadarChart>
@@ -58,7 +58,7 @@ export function MasteryTrendChart({ timeline = [], skills = [], height = 260 }) 
 
   const first = data[0]?.avg ?? 0;
   const last = data[data.length - 1]?.avg ?? 0;
-  const palette = ['#38bdf8', '#a78bfa', '#fbbf24', '#fb7185'];
+  const palette = ['#8fbcda', '#9aa5dc', '#f2c66d', '#f0728a'];
   const movers = useMemo(() => [...skills].filter((s) => s.attempts > 0).sort((a, b) => b.attempts - a.attempts).slice(0, 6), [skills]);
 
   return (
@@ -90,15 +90,15 @@ export function MasteryTrendChart({ timeline = [], skills = [], height = 260 }) 
           <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id="avgFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#34d399" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                <stop offset="0%" stopColor="#ff7a4d" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#ff7a4d" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis dataKey="date" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} interval={4} />
             <YAxis domain={[0, 100]} tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
             <Tooltip {...chartTooltipStyle} formatter={(v, n) => [`${v}%`, n === 'avg' ? 'Overall' : short(skillById.get(n)?.name || n)]} />
-            <Area type="monotone" dataKey="avg" stroke="#34d399" strokeWidth={2.2} fill="url(#avgFill)" isAnimationActive animationDuration={1300} />
+            <Area type="monotone" dataKey="avg" stroke="#ff7a4d" strokeWidth={2.2} fill="url(#avgFill)" isAnimationActive animationDuration={1300} />
             {selected.map((id, i) => (
               <Line key={id} type="monotone" dataKey={id} stroke={palette[i]} strokeWidth={1.8} dot={false} connectNulls isAnimationActive animationDuration={900} />
             ))}
@@ -126,23 +126,23 @@ export function XpProgressChart({ points = [], annotations = [], height = 240 })
           <AreaChart data={data} margin={{ top: 14, right: 12, left: -12, bottom: 0 }}>
             <defs>
               <linearGradient id="xpFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.32} />
-                <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
+                <stop offset="0%" stopColor="#8fbcda" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="#8fbcda" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis dataKey="label" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} interval={4} />
             <YAxis tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} domain={['dataMin - 20', 'dataMax + 20']} />
             <Tooltip {...chartTooltipStyle} formatter={(v, n, p) => [`${v} XP${p?.payload?.xp ? ` (+${p.payload.xp} that day)` : ''}`, 'Total']} />
-            <Area type="monotone" dataKey="cumulative" stroke="#38bdf8" strokeWidth={2.2} fill="url(#xpFill)" isAnimationActive animationDuration={1300} />
+            <Area type="monotone" dataKey="cumulative" stroke="#8fbcda" strokeWidth={2.2} fill="url(#xpFill)" isAnimationActive animationDuration={1300} />
             {annos.map((a, i) => (
               <ReferenceDot
                 key={`${a.date}-${i}`}
                 x={a.point.label}
                 y={a.point.cumulative}
                 r={5}
-                fill={a.type === 'level' ? '#fbbf24' : a.type === 'streak' ? '#f97316' : '#a78bfa'}
-                stroke="#0b0f15"
+                fill={a.type === 'level' ? '#f2c66d' : a.type === 'streak' ? '#f97316' : '#9aa5dc'}
+                stroke="#121216"
                 strokeWidth={2}
                 ifOverflow="extendDomain"
               />

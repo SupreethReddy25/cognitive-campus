@@ -28,7 +28,7 @@ const inline = (text, keyBase = '') => {
 export function CodeBlock({ code, lang, className = '' }) {
   return (
     <pre className={`overflow-x-auto rounded-xl border border-white/[0.07] bg-[#070a0e] p-4 font-mono text-[12px] leading-relaxed text-zinc-300 scrollbar-surgical ${className}`}>
-      {lang && <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">{lang}</div>}
+      {lang && <div className="mb-2 text-[12px] text-zinc-600 font-medium">{lang}</div>}
       <code>{code}</code>
     </pre>
   );

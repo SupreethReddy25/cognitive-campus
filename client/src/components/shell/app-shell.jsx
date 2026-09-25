@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
-import { GlobalNav } from "./global-nav";
-import { CommandPalette } from "./CommandPalette";
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { GlobalNav } from './global-nav';
+import { CommandPalette } from './CommandPalette';
 
 /**
- * AppShell — Root layout for all authenticated pages.
- *
- * Global keyboard shortcut: Ctrl+K / ⌘K → opens CommandPalette.
+ * AppShell — full-bleed canvas + the floating Dock.
+ * Ctrl/⌘ K opens the command palette from anywhere.
  */
 export function AppShell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const { pathname } = useLocation();
+  const focus = /^\/problems\/[^/]+/.test(pathname) || /^\/arena\/[^/]+/.test(pathname);
 
   useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setPaletteOpen(prev => !prev);
+        setPaletteOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handler);
@@ -23,12 +24,13 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className="flex h-screen min-h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
       <div className="ambient-mesh" />
-      <GlobalNav />
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      {/* content clears the floating dock on scrolling pages; editors stay full-bleed */}
+      <main className={`relative z-10 flex h-full min-w-0 flex-col overflow-hidden ${focus ? '' : '[&>div]:pb-28'}`}>
         <Outlet />
       </main>
+      <GlobalNav />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );

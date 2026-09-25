@@ -1,54 +1,86 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import '@fontsource/instrument-serif/latin-400.css';
+@import '@fontsource/instrument-serif/latin-400-italic.css';
+@import '@fontsource-variable/geist/wght.css';
+@import '@fontsource-variable/geist-mono/wght.css';
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════
+   OBSERVATORY — warm ink, bone type, one ember accent.
+   The whole product is a night sky of your own knowledge: stars = skills.
+   ═══════════════════════════════════════════════════════════════════════ */
 :root {
-  /* ═══ Lifted Dark Palette — enough contrast for cards to breathe ═══ */
-  --background: #080b10;
-  --foreground: #f4f4f5;
-  --card: #0d1117;
-  --card-foreground: #f4f4f5;
-  --popover: #0d1117;
-  --popover-foreground: #f4f4f5;
-  --primary: #f4f4f5;
-  --primary-foreground: #080b10;
-  --secondary: #151b23;
-  --secondary-foreground: #e4e4e7;
-  --muted: #121820;
-  --muted-foreground: #71717a;
-  --accent: #131a22;
-  --accent-foreground: #e4e4e7;
-  --destructive: #b91c1c;
-  --destructive-foreground: #fca5a5;
-  --border: rgba(255, 255, 255, 0.07);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: rgba(255, 255, 255, 0.15);
-  --radius: 0.5rem;
+  --background: #0c0c10;
+  --foreground: #ece6d8;
+  --card: #121216;
+  --card-foreground: #ece6d8;
+  --popover: #141418;
+  --popover-foreground: #ece6d8;
+  --primary: #ece6d8;
+  --primary-foreground: #0c0c10;
+  --secondary: #17171c;
+  --secondary-foreground: #d9d2c2;
+  --muted: #131317;
+  --muted-foreground: #7a7466;
+  --accent: #17171c;
+  --accent-foreground: #d9d2c2;
+  --destructive: #b4322d;
+  --destructive-foreground: #f4a19b;
+  --border: rgba(236, 230, 216, 0.08);
+  --input: rgba(236, 230, 216, 0.09);
+  --ring: rgba(255, 106, 61, 0.35);
+  --radius: 0.75rem;
 
-  /* Vibrant Emerald Signal — slightly brighter */
-  --signal: #34d399;
-  --signal-muted: #10b981;
-  --signal-foreground: #ffffff;
-  --signal-glow: rgba(52, 211, 153, 0.15);
+  /* ember = the single accent; star = mastery light; the rest is bone + ink */
+  --ember: #ff6a3d;
+  --ember-soft: #ff8253;
+  --star: #f2c66d;
+  --signal: #ff7a4d;
+  --signal-muted: #e9582a;
+  --signal-foreground: #14100d;
+  --signal-glow: rgba(255, 106, 61, 0.14);
+  --bone: #ece6d8;
+  --ink: #0c0c10;
+  --ink-2: #121216;
+  --ink-3: #1a1a20;
+  --line: rgba(236, 230, 216, 0.09);
+  --line-strong: rgba(236, 230, 216, 0.16);
 
-  /* Accent palette for variety */
-  --accent-blue: #38bdf8;
-  --accent-violet: #a78bfa;
-  --accent-amber: #fbbf24;
-  --accent-rose: #fb7185;
+  --accent-blue: #8fbcda;
+  --accent-violet: #9aa5dc;
+  --accent-amber: #f2c66d;
+  --accent-rose: #f0728a;
 
-  --chart-1: #34d399;
-  --chart-2: #38bdf8;
-  --chart-3: #a78bfa;
-  --chart-4: #fbbf24;
-  --chart-5: #fb7185;
+  --chart-1: #ff7a4d;
+  --chart-2: #f2c66d;
+  --chart-3: #8fbcda;
+  --chart-4: #94d6a8;
+  --chart-5: #f0728a;
+}
+
+/* Re-tint Tailwind's palette so every existing utility inherits the new mood. */
+@theme {
+  --color-zinc-50: #f7f3ea;  --color-zinc-100: #ece6d8; --color-zinc-200: #d9d2c2; --color-zinc-300: #bdb6a6;
+  --color-zinc-400: #9a9384; --color-zinc-500: #7a7466; --color-zinc-600: #5b564b; --color-zinc-700: #423e36;
+  --color-zinc-800: #2b2924; --color-zinc-900: #1a1916; --color-zinc-950: #0f0e0c;
+
+  --color-emerald-200: #cfe9d4; --color-emerald-300: #b4e0bd; --color-emerald-400: #94d6a8; --color-emerald-500: #6fbf8b; --color-emerald-600: #4f9d6c;
+  --color-teal-300: #b4e0bd; --color-teal-400: #94d6a8; --color-teal-500: #6fbf8b;
+  --color-violet-200: #d3d8f0; --color-violet-300: #b7bfe6; --color-violet-400: #9aa5dc; --color-violet-500: #7c88c8;
+  --color-purple-300: #b7bfe6; --color-purple-400: #9aa5dc; --color-purple-500: #7c88c8;
+  --color-sky-300: #b5d3e8; --color-sky-400: #8fbcda; --color-sky-500: #6aa2c8;
+  --color-blue-300: #b5d3e8; --color-blue-400: #8fbcda; --color-blue-500: #6aa2c8;
+  --color-amber-200: #fae6b5; --color-amber-300: #f7d78f; --color-amber-400: #f2c66d; --color-amber-500: #e0a93e;
+  --color-orange-300: #ff9e7a; --color-orange-400: #ff8253; --color-orange-500: #ff6a3d;
+  --color-rose-300: #f7a3b3; --color-rose-400: #f0728a; --color-rose-500: #e0506c;
 }
 
 @theme inline {
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
-  --font-display: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -70,37 +102,59 @@
   --color-ring: var(--ring);
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
+  --color-ember: var(--ember);
+  --color-star: var(--star);
+  --color-bone: var(--bone);
+  --color-ink: var(--ink);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
 @layer base {
   * {
     @apply border-border;
-    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+    outline-color: color-mix(in oklab, var(--ember) 55%, transparent);
   }
   html,
   body {
     @apply bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    font-feature-settings: 'ss01' on, 'cv01' on, 'cv11' on, 'kern' on;
+    font-family: 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-feature-settings: 'ss01' on, 'kern' on;
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  ::selection {
-    background: rgba(52, 211, 153, 0.2);
-    color: #fafafa;
-  }
+  ::selection { background: rgba(255, 106, 61, 0.32); color: #fff7ec; }
 }
+
+/* ── signature pieces ───────────────────────────────────────────────── */
+.display { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.025em; line-height: 0.98; }
+.display em { font-style: italic; }
+.tnum { font-variant-numeric: tabular-nums; }
+.hair { border-color: var(--line); }
+
+/* film grain + a faint horizon of warm light — the only "background effects" in the product */
+.ambient-mesh {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(120% 60% at 50% 118%, rgba(255, 106, 61, 0.075), transparent 60%),
+    radial-gradient(60% 40% at 8% -8%, rgba(242, 198, 109, 0.045), transparent 70%);
+}
+.ambient-mesh::after {
+  content: ''; position: absolute; inset: 0; opacity: 0.055; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* legacy page header bars become quiet crumbs instead of chrome */
+.page-bar { position: static !important; height: auto !important; border: 0 !important; background: transparent !important; backdrop-filter: none !important; padding-top: 26px !important; padding-bottom: 0 !important; }
 
 /* ──────────────────────────────────────────────────────────
    Surgical Scrollbar — 4px, zinc-800 thumb, transparent track
@@ -126,14 +180,8 @@
   }
 
   /* ── Premium font utility classes ── */
-  .font-display {
-    font-family: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
-    font-feature-settings: 'kern' on;
-    letter-spacing: -0.02em;
-  }
-  .font-jakarta {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  }
+  .font-display { font-family: var(--font-display); letter-spacing: -0.02em; font-weight: 400; }
+  .font-jakarta { font-family: var(--font-sans); }
 
   .grid-micro {
     background-image:
@@ -148,60 +196,10 @@
     background-size: 8px 8px;
   }
   
-  /* ═══ Ambient mesh — VISIBLE emerald wash behind all pages ═══ */
-  .ambient-mesh {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    background: 
-      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(52, 211, 153, 0.06), transparent 70%),
-      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(56, 189, 248, 0.04), transparent 60%),
-      radial-gradient(ellipse 40% 40% at 60% 80%, rgba(167, 139, 250, 0.03), transparent 50%);
-  }
-
-  /* ═══ Card glow — subtle emerald top-border glow on hover ═══ */
-  .card-glow {
-    position: relative;
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-  .card-glow::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-      180deg,
-      rgba(52, 211, 153, 0.15) 0%,
-      rgba(52, 211, 153, 0.03) 30%,
-      transparent 60%
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .card-glow:hover::before {
-    opacity: 1;
-  }
-  .card-glow:hover {
-    border-color: rgba(52, 211, 153, 0.12);
-    box-shadow: 0 8px 32px -8px rgba(52, 211, 153, 0.08);
-  }
-
-  /* ═══ Card-elevated — slight lift from the dark ═══ */
-  .card-elevated {
-    background: linear-gradient(
-      165deg,
-      rgba(13, 17, 23, 0.9) 0%,
-      rgba(13, 17, 23, 0.7) 100%
-    );
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(12px);
-  }
+  /* interactive surfaces: a hairline that warms to ember on hover — no glow, no gradient */
+  .card-glow { position: relative; transition: border-color .3s ease, background-color .3s ease, transform .3s cubic-bezier(.23,1,.32,1); }
+  .card-glow:hover { border-color: rgba(255, 122, 77, 0.35); }
+  .card-elevated { background: var(--ink-2); border: 1px solid var(--line); }
 
   @keyframes shimmer {
     100% {
@@ -433,7 +431,7 @@
 .march {
   background-image: repeating-linear-gradient(
     90deg,
-    rgba(52, 211, 153, 0.7) 0 6px,
+    rgba(255, 122, 77, 0.7) 0 6px,
     transparent 6px 12px
   );
   background-size: 24px 1px;
@@ -521,7 +519,7 @@
 
 /* ═══ NEW: Gradient text utility ═══ */
 .text-gradient-signal {
-  background: linear-gradient(135deg, #34d399, #38bdf8);
+  background: linear-gradient(135deg, #ff7a4d, #f2c66d);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -532,8 +530,8 @@
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 .row-interactive:hover {
-  background: rgba(52, 211, 153, 0.03);
-  border-color: rgba(52, 211, 153, 0.08);
+  background: rgba(255, 122, 77, 0.04);
+  border-color: rgba(255, 122, 77, 0.12);
 }
 
 /* ═══ NEW: Stat card with left accent border ═══ */
@@ -541,3 +539,13 @@
   border-left: 2px solid var(--signal);
   padding-left: 12px;
 }
+/* constellation */
+@keyframes twinkle { 0%, 100% { opacity: var(--o, 0.3); } 50% { opacity: calc(var(--o, 0.3) * 0.25); } }
+.twinkle { animation: twinkle 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .twinkle { animation: none; } }
+
+/* ticker */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee { animation: marquee 38s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }

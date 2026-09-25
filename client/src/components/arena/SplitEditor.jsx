@@ -186,7 +186,7 @@ export function SplitEditor({ language = 'javascript', starterCodeMap = null, on
       </Panel>
 
       {/* ═══ TACTILE Resize Handle ═══ */}
-      <PanelResizeHandle className="group relative flex w-2 flex-shrink-0 cursor-col-resize items-center justify-center bg-[#0d1117] transition-colors duration-150 hover:bg-[var(--signal)]/20 z-10">
+      <PanelResizeHandle className="group relative flex w-2 flex-shrink-0 cursor-col-resize items-center justify-center bg-[#0e0e12] transition-colors duration-150 hover:bg-[var(--signal)]/20 z-10">
         {/* Visual grip dots */}
         <div className="flex flex-col gap-[3px] opacity-40 group-hover:opacity-100 transition-opacity">
           <GripVertical className="h-4 w-4 text-zinc-600 group-hover:text-[var(--signal)] transition-colors" strokeWidth={1.5} />
