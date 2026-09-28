@@ -34,3 +34,4 @@ server/fixSmartQuotes.js
 server/seeds/fixStatus.js
 server/seeds/*.tmp.js
 AuthPage2.jsx
+server/seeds/logs/

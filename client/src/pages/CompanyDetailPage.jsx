@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResponsiveContainer, ComposedChart, Bar as RBar, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { ArrowLeft, ArrowUpRight, ChevronDown, Info, KeyRound, Loader2, Plus, Search, ShieldCheck, ThumbsDown, ThumbsUp } from 'lucide-react';
@@ -87,11 +87,14 @@ const TASK_LABEL = { practice: 'Practise', review: 'Review', mock: 'Mock', behav
 
 function PrepPlan({ slug, companyName }) {
   const toast = useToast();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [days, setDays] = useState(30);
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const generate = async () => {
+    if (!isAuthenticated) { navigate('/register'); return; }
     setLoading(true);
     try { const r = await companiesService.generatePrepPlan(slug, days); setPlan(r.data.data); }
     catch (e) { toast.error('Could not build the plan', e.response?.data?.error); }
@@ -162,7 +165,9 @@ function PrepPlan({ slug, companyName }) {
 export default function CompanyDetailPage() {
   const { slug } = useParams();
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const requireAccount = (fn) => (isAuthenticated ? fn() : navigate('/register'));
   const college = typeof user?.collegeId === 'object' ? user.collegeId : null;
   const sections = college ? [SECTIONS[0], ['campus', `At ${college.shortName || 'campus'}`], ...SECTIONS.slice(1)] : SECTIONS;
 
@@ -186,7 +191,7 @@ export default function CompanyDetailPage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([companiesService.getCompany(slug), companiesService.getCompanyStats(slug), companiesService.getCompanyExperiences(slug), companiesService.getRelatedProblems(slug), skillsService.getMySkillStates()])
+    Promise.all([companiesService.getCompany(slug), companiesService.getCompanyStats(slug), companiesService.getCompanyExperiences(slug), companiesService.getRelatedProblems(slug), skillsService.getMySkillStates().catch(() => ({ data: { data: { skillStates: [] } } }))])
       .then(([c, s, e, rel, st]) => {
         setCompany(c.data.data); setStats(s.data.data); setExperiences(e.data.data); setRelated(rel.data);
         const m = {}; st.data.data.skillStates.forEach((x) => { if (x.skillId?.name) m[x.skillId.name] = x.masteryP; }); setMastery(m);
@@ -207,6 +212,7 @@ export default function CompanyDetailPage() {
   }, [loading, company]);
 
   const vote = async (exp, v) => {
+    if (!isAuthenticated) { navigate('/register'); return; }
     try {
       const r = await experiencesService.vote(exp._id, v);
       setExperiences((list) => list.map((e) => (e._id === exp._id ? { ...e, ...r.data.data } : e)));
@@ -244,7 +250,7 @@ export default function CompanyDetailPage() {
             <h1 className="display mt-6 text-[clamp(64px,11vw,168px)] leading-[0.9] text-zinc-50">{company.name}</h1>
             {company.description && <p className="mt-8 max-w-xl text-[18px] leading-relaxed text-zinc-400">{company.description}</p>}
             <div className="mt-8 flex flex-wrap items-center gap-6">
-              <PrimaryButton onClick={() => setShowSubmit(true)} icon={Plus}>Share your interview</PrimaryButton>
+              <PrimaryButton onClick={() => requireAccount(() => setShowSubmit(true))} icon={Plus}>Share your interview</PrimaryButton>
               <button onClick={() => go('prep')} className="text-[14px] text-zinc-400 transition-colors hover:text-[var(--ember)]">Build a prep plan for {company.name} →</button>
             </div>
           </div>
@@ -402,7 +408,7 @@ export default function CompanyDetailPage() {
             {filteredExps.length > expLimit && <button onClick={() => setExpLimit((n) => n + 6)} className="mt-8 rounded-sm border border-[var(--line-strong)] px-6 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-400 hover:text-zinc-100">Show {Math.min(6, filteredExps.length - expLimit)} more</button>}
           </>
         ) : (
-          <div className="py-16 text-center"><div className="display text-[27.2px] italic text-zinc-500">No accounts match.</div><button onClick={() => setShowSubmit(true)} className="mt-4 text-[14px] text-[var(--ember)] hover:underline">Be the first to share how yours went</button></div>
+          <div className="py-16 text-center"><div className="display text-[27.2px] italic text-zinc-500">No accounts match.</div><button onClick={() => requireAccount(() => setShowSubmit(true))} className="mt-4 text-[14px] text-[var(--ember)] hover:underline">Be the first to share how yours went</button></div>
         )}
       </Section>
 

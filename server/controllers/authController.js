@@ -1,10 +1,17 @@
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Skill = require('../models/Skill');
 const SkillState = require('../models/SkillState');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const logger = require('../utils/logger');
+const AppError = require('../utils/AppError');
+const asyncHandler = require('../utils/asyncHandler');
+const { signToken, publicUser } = require('../utils/token');
+const { loadConfig } = require('../config/env');
+
+// compared against when the email is unknown, so "no such user" and "wrong password" take equally long
+const DUMMY_HASH = bcrypt.hashSync('cogni-timing-guard', 10);
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * @desc    Register a new user account
@@ -52,25 +59,7 @@ const register = async (req, res, next) => {
 
     logger.info(`New user registered: ${user.email}`);
 
-    // Sign JWT — include role for admin authorization
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
-    );
-
-    return sendSuccess(res, {
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        xp: user.xp,
-        level: user.level,
-        streak: user.streak,
-        role: user.role
-      }
-    }, 201);
+    return sendSuccess(res, { token: signToken(user), user: publicUser(user) }, 201);
   } catch (error) {
     next(error);
   }
@@ -90,37 +79,14 @@ const login = async (req, res, next) => {
 
     // Find user by email (include passwordHash for comparison)
     const user = await User.findOne({ email });
-    if (!user) {
-      return sendError(res, 'Invalid credentials', 401);
-    }
-
-    // Compare password
-    const isPasswordMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordMatch) {
+    const isPasswordMatch = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
+    if (!user || !isPasswordMatch) {
       return sendError(res, 'Invalid credentials', 401);
     }
 
     logger.info(`User logged in: ${user.email}`);
 
-    // Sign JWT — include role for admin authorization
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
-    );
-
-    return sendSuccess(res, {
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        xp: user.xp,
-        level: user.level,
-        streak: user.streak,
-        role: user.role
-      }
-    });
+    return sendSuccess(res, { token: signToken(user), user: publicUser(user) });
   } catch (error) {
     next(error);
   }
@@ -152,4 +118,53 @@ const getMe = async (req, res, next) => {
 };
 
 
-module.exports = { register, login, getMe };
+/**
+ * @desc    Live prefix search — the first name behind an email as it is typed, for the greeting on the login screen
+ * @route   GET /api/auth/search-name?q=supr
+ * @access  Public (rate limited)
+ * @returns {{ found: boolean, firstName: string|null, email?: string, exact: boolean }}
+ */
+const searchName = asyncHandler(async (req, res) => {
+  const none = { found: false, firstName: null, exact: false };
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase().slice(0, 254) : '';
+  if (!q) return res.json(none);
+
+  // anchored prefix — uses the email index
+  const user = await User.findOne({ email: { $regex: `^${escapeRegex(q)}`, $options: 'i' } }, { name: 1, email: 1, _id: 0 }).lean();
+  if (!user?.name) return res.json(none);
+  return res.json({ found: true, firstName: user.name.trim().split(/\s+/)[0], email: user.email, exact: user.email === q });
+});
+
+/**
+ * @desc    Exact email lookup — the first name behind a complete email
+ * @route   GET /api/auth/peek?email=user@example.com
+ * @access  Public (rate limited)
+ */
+const peek = asyncHandler(async (req, res) => {
+  const { email } = req.query;
+  if (typeof email !== 'string' || !email.includes('@')) return res.json({ found: false, firstName: null });
+  const user = await User.findOne({ email: email.toLowerCase().trim() }, { name: 1, _id: 0 }).lean();
+  if (!user?.name) return res.json({ found: false, firstName: null });
+  return res.json({ found: true, firstName: user.name.trim().split(/\s+/)[0] });
+});
+
+/**
+ * @desc    Promote the caller to admin. Allowed for first-time setup (no admin exists yet) or, outside production, when
+ *          ALLOW_ADMIN_BOOTSTRAP=true (powers the "Become admin" button in Profile). Returns a fresh token because the
+ *          role is embedded in it.
+ * @route   POST /api/auth/bootstrap-admin
+ * @access  Protected
+ */
+const bootstrapAdmin = asyncHandler(async (req, res) => {
+  const { allowAdminBootstrap } = loadConfig();
+  const adminExists = (await User.countDocuments({ role: 'admin' })) > 0;
+  if (adminExists && !allowAdminBootstrap) {
+    throw new AppError('An admin already exists. Ask them to promote you from the admin panel.', 403);
+  }
+  const user = await User.findByIdAndUpdate(req.user.userId, { role: 'admin' }, { new: true, select: 'name email role xp level streak' });
+  if (!user) throw new AppError('User not found', 404);
+  logger.info(`User ${user.email} promoted to admin via bootstrap`);
+  return res.json({ success: true, data: { user, token: signToken(user) }, message: 'You are now an admin.' });
+});
+
+module.exports = { register, login, getMe, searchName, peek, bootstrapAdmin };

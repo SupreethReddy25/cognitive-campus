@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import { TransitionProvider } from './context/TransitionContext';
 import { AppShell } from './components/shell/app-shell';
 import ProtectedRoute from './components/ProtectedRoute';
+import { PreviewShell } from './components/shell/preview-shell';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 import ErrorBoundary from './components/ErrorBoundary';
@@ -38,6 +39,13 @@ const PublicRoute = ({ children }) => {
 };
 
 
+/** Interviews is open to visitors: signed-in users get the full shell, everyone else a lighter one around the same pages. */
+const OpenRoute = () => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  return isAuthenticated ? <AppShell /> : <PreviewShell />;
+};
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -52,6 +60,13 @@ const App = () => {
           <Route path="/register" element={<PublicRoute><AuthPage /></PublicRoute>} />
           <Route path="/landing" element={<ErrorBoundary><LandingPage /></ErrorBoundary>} />
 
+          {/* Open to visitors — the Interviews atlas and company dossiers read the public API */}
+          <Route element={<OpenRoute />}>
+            <Route path="/intel" element={<IntelHubPage />} />
+            <Route path="/companies" element={<Navigate to="/intel" replace />} />
+            <Route path="/companies/:slug" element={<CompanyDetailPage />} />
+          </Route>
+
           {/* Protected routes — AppShell (sidebar + Outlet) */}
           <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
             <Route path="/dashboard" element={<DashboardView />} />
@@ -60,12 +75,6 @@ const App = () => {
             <Route path="/profile" element={<ProfileView />} />
             <Route path="/arena" element={<ArenaProvider><ArenaLobby /></ArenaProvider>} />
             <Route path="/arena/:roomId" element={<ArenaProvider><ArenaWorkspace /></ArenaProvider>} />
-
-            {/* Intel Hub — replaces separate /intel and /companies listing */}
-            <Route path="/intel" element={<IntelHubPage />} />
-            {/* Keep /companies redirect to /intel for backward compat */}
-            <Route path="/companies" element={<Navigate to="/intel" replace />} />
-            <Route path="/companies/:slug" element={<CompanyDetailPage />} />
 
             {/* Placement Intelligence — college-scoped view */}
             <Route path="/placement" element={<PlacementDashboardPage />} />

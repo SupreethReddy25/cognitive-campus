@@ -3,11 +3,8 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const authenticateToken = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
-const { register, login, getMe } = require('../controllers/authController');
+const { register, login, getMe, searchName, peek, bootstrapAdmin } = require('../controllers/authController');
 const rateLimit = require('express-rate-limit');
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger');
 
 // Strict limiter for login/register (brute-force protection)
 // nameLimiter for public read-only name endpoints
@@ -73,110 +70,13 @@ router.post(
 // GET /api/auth/me
 router.get('/me', authenticateToken, getMe);
 
-/**
- * GET /api/auth/search-name?q=supr
- *
- * LIVE PREFIX SEARCH — fires on every keystroke, no @ required.
- * Finds the best-matching user whose email starts with `q`.
- * Returns first name for real-time greeting as the user types.
- *
- * Min query length: 3 chars (avoids trivial single-char matches)
- * Uses the indexed `email` field with anchored regex (efficient).
- *
- * Response:
- *   { found: true,  firstName: "Supreeth", exact: false }  ← partial prefix match
- *   { found: true,  firstName: "Supreeth", exact: true  }  ← full email matched
- *   { found: false, firstName: null,        exact: false }  ← no match
- */
-router.get('/search-name', searchLimiter, async (req, res) => {
-  try {
-    const q = (req.query.q || '').trim().toLowerCase();
+// GET /api/auth/search-name?q=supr — live first-name greeting while the email is typed
+router.get('/search-name', searchLimiter, searchName);
 
-    // Enforce minimum to prevent empty queries
-    if (!q || q.length < 1) {
-      return res.json({ found: false, firstName: null, exact: false });
-    }
+// GET /api/auth/peek?email=… — exact-email variant
+router.get('/peek', nameLimiter, peek);
 
-    // Escape regex special characters in the query
-    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    const User = require('../models/User');
-
-    // Anchored prefix regex — uses the email index efficiently
-    const user = await User.findOne(
-      { email: { $regex: '^' + escaped, $options: 'i' } },
-      { name: 1, email: 1, _id: 0 }
-    ).lean();
-
-    if (!user?.name) {
-      return res.json({ found: false, firstName: null, exact: false });
-    }
-
-    const firstName = user.name.trim().split(/\s+/)[0];
-    const exact = user.email === q;
-
-    return res.json({ found: true, firstName, email: user.email, exact });
-  } catch (err) {
-    return res.status(500).json({ found: false, firstName: null, exact: false });
-  }
-});
-
-/**
- * GET /api/auth/peek?email=user@example.com
- *
- * Exact email lookup — kept for any direct full-email confirmations.
- * Response: { found: true, firstName: "Supreeth" }
- */
-router.get('/peek', nameLimiter, async (req, res) => {
-  try {
-    const { email } = req.query;
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return res.json({ found: false, firstName: null });
-    }
-
-    const User = require('../models/User');
-    const user = await User.findOne(
-      { email: email.toLowerCase().trim() },
-      { name: 1, _id: 0 }
-    ).lean();
-
-    if (!user?.name) return res.json({ found: false, firstName: null });
-
-    const firstName = user.name.trim().split(/\s+/)[0];
-    return res.json({ found: true, firstName });
-  } catch (err) {
-    return res.status(500).json({ found: false, firstName: null });
-  }
-});
-
-/**
- * POST /api/auth/bootstrap-admin
- * Promotes the requesting user to admin.
- *
- * Allowed when (a) the app is not running in production (dev convenience — this powers the
- * "Become admin" button in Profile), or (b) no admin exists yet (first-time setup).
- * Returns a fresh JWT because the role is embedded in the token.
- */
-router.post('/bootstrap-admin', authenticateToken, async (req, res) => {
-  try {
-    const adminCount = await User.countDocuments({ role: 'admin' });
-    if (process.env.NODE_ENV === 'production' && adminCount > 0) {
-      return res.status(403).json({ success: false, message: 'An admin already exists. Ask them to promote you from the admin panel.' });
-    }
-    const updated = await User.findByIdAndUpdate(req.user.userId, { role: 'admin' }, { new: true, select: 'name email role xp level streak' });
-    if (!updated) return res.status(404).json({ success: false, message: 'User not found' });
-
-    const token = jwt.sign(
-      { userId: updated._id, email: updated.email, role: updated.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
-    );
-    logger.info(`User ${updated.email} promoted to admin via bootstrap`);
-    return res.json({ success: true, data: { user: updated, token }, message: 'You are now an admin.' });
-  } catch (err) {
-    logger.error('Bootstrap admin failed', { error: err.message });
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+// POST /api/auth/bootstrap-admin — first-time setup / dev convenience (see controller)
+router.post('/bootstrap-admin', authenticateToken, bootstrapAdmin);
 
 module.exports = router;

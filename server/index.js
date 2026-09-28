@@ -1,103 +1,77 @@
+/**
+ * Server bootstrap: validate the environment, connect the database, attach sockets, listen, and shut down cleanly.
+ * The application itself lives in app.js.
+ */
+
 require('dotenv').config();
 
-const express = require('express');
 const http = require('http');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
-const { Server } = require('socket.io');
 const mongoose = require('mongoose');
+const { Server } = require('socket.io');
 const logger = require('./utils/logger');
+const { loadConfig } = require('./config/env');
+
+let config;
+try {
+  config = loadConfig();
+} catch (error) {
+  logger.error(error.message);
+  process.exit(1);
+}
+
 const connectDB = require('./utils/connectDB');
-const routes = require('./routes');
-const errorHandler = require('./middleware/errorHandler');
-const { generalLimiter } = require('./middleware/rateLimiter');
+const { createApp } = require('./app');
 const { initSocket } = require('./socket/socketHandler');
 const { initArenaSocket } = require('./socket/arenaHandler');
 
-// ─── Uncaught Exception Handler ───
+const app = createApp(config);
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: config.corsOrigin, methods: ['GET', 'POST'] } });
+initSocket(io);
+initArenaSocket(io);
+app.set('io', io); // controllers reach the socket server through req.app.get('io')
+
+// ─── Process-level safety nets ───
 process.on('uncaughtException', (error) => {
   logger.error('UNCAUGHT EXCEPTION — shutting down', { error: error.message, stack: error.stack });
   process.exit(1);
 });
 
-// Create Express app and HTTP server
-const app = express();
-const server = http.createServer(app);
-
-// Socket.io attached to HTTP server with CORS config
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
-});
-
-// Initialise Socket.io connection handling
-initSocket(io);
-initArenaSocket(io);
-
-// Make io accessible to controllers via app
-app.set('io', io);
-
-// --------------- Middleware Stack ---------------
-app.use(helmet());
-app.use(compression());
-app.use(cors({ origin: process.env.NODE_ENV === 'production' && process.env.CLIENT_URL ? process.env.CLIENT_URL : true }));
-app.use(express.json({ limit: '512kb' }));
-app.use(morgan('dev', { stream: { write: (msg) => logger.info(msg.trim()) } }));
-
-// General rate limiter — before all API routes
-app.use('/api', generalLimiter);
-
-// --------------- Routes ---------------
-app.use('/api', routes);
-
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Cogni API running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
-  });
-});
-
-// Global error handler — must be AFTER all routes
-app.use(errorHandler);
-
-// --------------- Start Server ---------------
-const PORT = process.env.PORT || 5000;
-
-connectDB().then(async () => {
-  server.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-  });
-
-  // Warm the learned BKT parameters so the first dashboard request is fast.
-  try {
-    await require('./services/knowledgeService').getParamsMap();
-  } catch (e) {
-    logger.warn('BKT parameter warm-up skipped: ' + e.message);
-  }
-});
-
-
-// ─── Unhandled Rejection Handler ───
+// A stray rejected promise should not take a development API down; in production the supervisor restarts us.
 process.on('unhandledRejection', (reason) => {
-  logger.error('UNHANDLED REJECTION — shutting down', { reason: reason?.message || reason });
-  server.close(() => {
+  logger.error('UNHANDLED REJECTION', { reason: reason?.message || String(reason), stack: reason?.stack });
+  if (config.isProd) shutdown('unhandledRejection', 1);
+});
+
+let closing = false;
+/** Stops accepting connections, lets in-flight work finish, closes the database, then exits. */
+function shutdown(signal, code = 0) {
+  if (closing) return;
+  closing = true;
+  logger.info(`${signal} received — shutting down gracefully`);
+  const force = setTimeout(() => { logger.error('Shutdown timed out — forcing exit'); process.exit(1); }, 10000);
+  force.unref();
+  io.close(() => server.close(async () => {
+    await mongoose.connection.close().catch(() => {});
+    logger.info('MongoDB connection closed');
+    process.exit(code);
+  }));
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+connectDB(config.mongoUri)
+  .then(async () => {
+    server.listen(config.port, () => logger.info(`Server running on port ${config.port} in ${config.nodeEnv} mode`));
+    try {
+      await require('./services/knowledgeService').getParamsMap(); // warm the learned BKT parameters
+    } catch (e) {
+      logger.warn(`BKT parameter warm-up skipped: ${e.message}`);
+    }
+  })
+  .catch((error) => {
+    logger.error(error.message);
     process.exit(1);
   });
-});
 
-// ─── Graceful Shutdown ───
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received — shutting down gracefully');
-  server.close(async () => {
-    await mongoose.connection.close();
-    logger.info('MongoDB connection closed');
-    process.exit(0);
-  });
-});
-
-// Export app and io for testing and controller access
-module.exports = { app, io };
+module.exports = { app, io, server };

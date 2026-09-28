@@ -1,8 +1,10 @@
 # Cognitive Campus
 
-> Adaptive DSA learning powered by Bayesian Knowledge Tracing
+> Interview intelligence for campus placements — what the companies that visit your college actually ask, and how ready you are.
 
-Cognitive Campus is a full-stack MERN application that models student knowledge using **Bayesian Knowledge Tracing (BKT)**, analyses code structure through **AST parsing**, and delivers **personalized problem recommendations** — combining the rigour of cognitive science with a gamified learning experience.
+Cognitive Campus is a full-stack MERN application built around one loop: **see** what companies ask (interview reports, placement history, per-college recruiter patterns), **prepare** on exactly that (an adaptive practice engine driven by Bayesian Knowledge Tracing), **prove it** under pressure (a real-time multiplayer arena with company rounds), and **contribute** your own experience back (AI-structured, moderated submissions).
+
+It is useful to anyone — the Interviews atlas is open without an account — and becomes sharp once you choose your college: likely visitors for the coming season, past packages, and the skills to close the gap on.
 
 ---
 
@@ -19,32 +21,13 @@ Cognitive Campus is a full-stack MERN application that models student knowledge 
 
 ## What Makes This Different
 
-Most coding platforms score you with simple *"X of Y tests passed"* ratios. Cognitive Campus goes deeper. The platform maintains a **probabilistic knowledge model** for each skill using Bayesian Knowledge Tracing — a proven algorithm from intelligent tutoring systems research. Instead of a flat percentage, the system estimates `P(Ln)`, the probability that you've actually learned a concept, accounting for slip and guess probabilities. Mastery isn't declared until `P(Ln) >= 0.85`, and the model updates after every single submission.
+**College-scoped intelligence.** Generic platforms cannot tell you which companies visit *your* campus. Here, every college has a placement history (NIRF rank, sourced placement summaries, per-season visits and hires), and the app turns it into a Bayesian-smoothed forecast of next season's visitors and a skill-gap analysis against what those companies test.
 
-Every code submission is parsed into an **Abstract Syntax Tree** using Acorn.js. The AST analyser detects loop types, nesting depth (which signals O(n²) or O(n³) brute-force approaches), recursion patterns, and auxiliary data structure usage (Maps, Sets, Arrays). This structural feedback tells you *how* you solved it — not just *whether* you solved it. If you use a nested loop where a hash map would suffice, the system knows.
+**An honest data engine.** Interview reports are crowdsourced and structured by an AI parser, then moderated. Anything illustrative is labelled as such in the UI, every percentage carries a confidence interval, and the README's "real data vs illustrative" table says which is which.
 
-The **recommendation engine** combines BKT mastery probabilities with a skill prerequisite DAG. It identifies your weakest unlocked skill, selects problems of the right difficulty, and avoids recommending problems you've already solved. The result: every user gets a different learning path, tailored to their actual knowledge state, not just a static problem list.
+**Practice that follows the intelligence.** Problems are ranked by what your target companies ask *and* where your knowledge is weakest. Mastery is a probabilistic estimate — **Bayesian Knowledge Tracing** with forgetting and learned parameters — not a pass-rate, and code is analysed structurally with an AST so feedback covers *how* you solved it.
 
-Multi-language support (JavaScript, Python, Java, C++) is powered by the **Piston API** for sandboxed execution. A gamification layer (XP, levels, streaks, badges) and a real-time Socket.io leaderboard keep motivation high.
-
----
-
-## Tech Stack
-
-| Layer            | Technology                                      |
-|------------------|--------------------------------------------------|
-| **Frontend**     | React 19 (Vite), Tailwind CSS v4, React Router v7, Recharts, Monaco Editor |
-| **Backend**      | Node.js 18, Express.js, Socket.io                |
-| **Database**     | MongoDB (Mongoose ODM)                           |
-| **Caching**      | Redis (Upstash) via ioredis                      |
-| **Auth**         | JWT (jsonwebtoken) + bcryptjs                    |
-| **Code Execution** | Piston API (sandboxed, multi-language)         |
-| **AST Analysis** | Acorn.js (JavaScript)                            |
-| **Real-time**    | Socket.io (XP updates, leaderboard, skill unlocks) |
-| **Testing**      | Jest (27 unit tests covering BKT + AST)          |
-| **DevOps**       | Docker, GitHub Actions CI/CD, Render, Vercel     |
-
----
+**Pressure practice.** The arena runs rated 1v1 races (Elo), shared-editor pair sessions and split-editor sessions over Socket.io, with company-round problem selection.
 
 ## Architecture
 
@@ -229,56 +212,82 @@ Runs **27 unit tests** across 2 test suites:
 
 ```
 cognitive-campus/
-├── client/                      # React Vite frontend
-│   ├── src/
-│   │   ├── components/          # Layout, SkillBadge, DifficultyBadge, Toast, etc.
-│   │   ├── pages/               # 8 route-level pages
-│   │   ├── hooks/               # useSocket custom hook
-│   │   ├── context/             # AuthContext (JWT state management)
-│   │   ├── services/            # Axios API client
-│   │   └── index.css            # Design system (Inter + JetBrains Mono)
-│   ├── eslint.config.js
-│   ├── tailwind.config.js
-│   └── package.json
-├── server/                      # Express backend
-│   ├── controllers/             # Auth, Problem, Submission, Skill, Leaderboard, User, Admin
-│   ├── models/                  # User, Skill, Problem, SkillState, Submission
-│   ├── routes/                  # Express routers (MVC — no logic in routes)
-│   ├── middleware/              # Auth (JWT), error handler, rate limiter
-│   ├── services/                # BKT engine, AST analyser, code execution, recommendations, nudge
-│   ├── socket/                  # Socket.io handler
-│   ├── seeds/                   # Skill + Problem seed scripts, starter code maps
-│   ├── tests/                   # Jest unit tests
-│   ├── utils/                   # Logger (Winston), connectDB (retry), response helpers
-│   ├── Dockerfile
-│   ├── .dockerignore
-│   ├── .eslintrc.json
-│   └── package.json
+├── client/                      # React 19 + Vite + Tailwind v4 + framer-motion
+│   └── src/
+│       ├── pages/               # route-level pages (landing, auth, practice, interviews, placement, sheets, admin)
+│       ├── components/          # dashboard (sky, campus radar), arena, intel, workspace (Monaco), shell, ui kit
+│       ├── context/             # Auth, Arena (socket state), Toast, Transition
+│       └── services/api.js      # every HTTP call, grouped by domain
+├── server/
+│   ├── index.js                 # bootstrap only: validate env → connect DB → sockets → listen → graceful shutdown
+│   ├── app.js                   # the Express app (importable from tests — no port, no DB)
+│   ├── config/env.js            # validated, typed configuration (fails fast on missing/unsafe values)
+│   ├── routes/                  # thin routers: paths + middleware, no logic
+│   ├── controllers/             # request handling; responses are { success, data } / { success: false, message }
+│   ├── services/                # BKT engine, recommendations, placement analytics, AI layer, code runners, …
+│   ├── models/                  # Mongoose schemas (timestamps on all)
+│   ├── middleware/              # auth, admin, rate limits, request id, NoSQL-injection sanitiser, 404, error handler
+│   ├── socket/                  # general + arena (rooms, Yjs sync, Elo)
+│   ├── seeds/                   # idempotent master seed + curated data (colleges, companies, problems, placements)
+│   ├── utils/                   # logger (Winston), connectDB (retry/back-off), AppError, asyncHandler, token
+│   └── tests/                   # Jest: BKT, AST, adaptive engine, platform (config, errors, HTTP surface)
 ├── .github/workflows/           # CI (test → lint → build) + Deploy (Render + Vercel)
 ├── docker-compose.yml
-├── AGENT.md                     # Agent context document
 └── README.md
 ```
+
+### Backend conventions
+
+- **Layers:** route → controller → service → model. Routes contain no logic.
+- **Responses:** success is `{ success: true, data }`; failure is `{ success: false, message, requestId }` (plus `errors` for field-level validation).
+- **Errors:** throw `AppError(message, status)` for anything the client may see; everything else is logged with a request id and reported as a generic 500 in production. `asyncHandler` removes try/catch boilerplate.
+- **Configuration:** only `config/env.js` interprets the environment. Missing `MONGO_URI`/`JWT_SECRET` (or, in production, a missing `CLIENT_URL` or a short secret) stops the boot with every problem listed.
+- **Security:** Helmet, CORS pinned to `CLIENT_URL` in production (HTTP and sockets), rate limits per zone (auth, submissions, AI, user-generated content, global), `$`-operator/dotted-key stripping on all input, bcrypt with a timing guard on login, JWT with the role embedded, encrypted (AES-256-GCM) user API keys.
+- **Operations:** `GET /health` (also `/api/health`) reports database state and answers 503 when degraded; responses are gzipped; the shared problem catalogue is cached for 60 s; graceful shutdown on SIGTERM/SIGINT; logs go to `server/logs/` and the console.
+- **Admin bootstrap:** the first admin can be created while none exists. `ALLOW_ADMIN_BOOTSTRAP=true` additionally lets any signed-in user self-promote **outside production only** (it powers the Profile "Become admin" button).
 
 ---
 
 ## API Reference
 
-| Method | Endpoint                      | Auth | Description |
-|--------|-------------------------------|------|-------------|
-| POST   | `/api/auth/register`          | No   | Register new user |
-| POST   | `/api/auth/login`             | No   | Login and receive JWT |
-| GET    | `/api/auth/me`                | Yes  | Get current user from token |
-| GET    | `/api/skills`                 | Yes  | List all 12 skills |
-| GET    | `/api/skills/my-states`       | Yes  | Get user's BKT state per skill |
-| GET    | `/api/problems`               | Yes  | List problems (filter by skill, difficulty) |
-| GET    | `/api/problems/:id`           | Yes  | Get problem detail with masked hidden test cases |
-| POST   | `/api/submissions`            | Yes  | Submit code — runs the full 9-step flow |
-| GET    | `/api/submissions/history`    | Yes  | Paginated submission history |
-| GET    | `/api/leaderboard`            | Yes  | Top users ranked by XP (Redis-cached) |
-| GET    | `/api/users/profile`          | Yes  | User profile with skill states and stats |
-| GET    | `/api/users/recommendations`  | Yes  | Next recommended problem |
-| GET    | `/api/admin/analytics`        | Yes  | Platform analytics (admin) |
+`Auth`: **Yes** = Bearer JWT required · **Optional** = works signed out, richer when signed in · **Admin** = admin role.
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/health` · `/api/health` | No | Liveness + database state |
+| POST | `/api/auth/register` | No | Create an account |
+| POST | `/api/auth/login` | No | Sign in, receive JWT |
+| GET | `/api/auth/me` | Yes | Current user (college and target company populated) |
+| GET | `/api/auth/search-name` · `/api/auth/peek` | No | First name behind an email (login greeting; rate limited) |
+| POST | `/api/auth/bootstrap-admin` | Yes | First-time / dev admin promotion (see above) |
+| GET | `/api/skills` · `/api/skills/my-states` | Yes | Skill DAG · your mastery per skill |
+| GET | `/api/problems` | Yes | Catalogue (filters: skillId, difficulty, q, company) |
+| GET | `/api/problems/:id` | Yes | Problem with masked hidden tests |
+| POST | `/api/problems/propose` · `/:id/vote` · `/:id/nudge` | Yes | Propose from interview memory · vote · AI mentor nudge |
+| GET | `/api/problems/review-queue` | Yes | Waitlisted problems |
+| POST | `/api/submissions` · `/api/submissions/run` | Yes | Submit (full mastery pipeline) · run against the samples |
+| GET | `/api/submissions/history` · `/recent/:problemId` · `/runtimes` | Yes | History · recent attempts · available runtimes |
+| GET | `/api/leaderboard` | Yes | XP ranking (global or college) |
+| GET/PATCH | `/api/users/profile` | Yes | Profile · update college / target company / role |
+| GET | `/api/users/recommendations` · `/attempted` | Yes | Explainable recommendations · attempted problems |
+| POST | `/api/users/config-key` · `/dashboard-quote` | Yes | Bring-your-own AI key · AI dashboard line |
+| GET | `/api/analytics/dashboard` · `/profile` · `/peers` · `/model` | Yes | Dashboard payload · learning profile · college peer comparison · BKT model |
+| POST | `/api/analytics/model/refit` | Admin | Re-fit BKT parameters from data |
+| GET | `/api/engagement/daily` · `/achievements` · `/streak` · `/bookmarks` · `/editorial/:problemId` · `/ai-status` | Yes | Daily challenge, badges, streak, bookmarks, editorial, AI availability |
+| POST | `/api/engagement/bookmarks/:problemId` | Yes | Toggle a bookmark |
+| GET | `/api/companies` · `/:slug` · `/:slug/stats` | No | Company atlas, dossier, aggregate stats |
+| GET | `/api/companies/:slug/experiences` · `/related-problems` | Optional | Interview reports · problems matched to the company's topics |
+| POST | `/api/companies/:slug/prep-plan` | Yes | Generate a prep plan |
+| POST | `/api/experiences` | Yes | Submit an experience |
+| POST | `/api/experiences/ai-parse` · `/score` | Optional / No | Structure raw notes with AI · score a draft |
+| POST | `/api/experiences/:id/upvote` · `/:id/vote` | Yes | Vote on an experience |
+| GET | `/api/colleges` · `/:slug` | No | Colleges |
+| GET | `/api/colleges/:slug/dashboard` · `/insights` · `/companies/:companySlug` | Yes | Placement dashboard · forecast, skill gap, peers · a company at this college |
+| GET | `/api/sheets` · `/:slug` | Optional | Curated problem sheets (with your progress) |
+| POST | `/api/sheets/:slug/progress` | Yes | Update sheet progress |
+| GET | `/api/arena/rating` · `/leaderboard` | Yes | Your Elo, tier and matches · the arena ladder |
+| — | Socket.io `/arena` | — | Rooms, matchmaking, Yjs sync, progress, Elo (`arena:*` events) |
+| GET/POST/PATCH/DELETE | `/api/admin/*` | Admin | Stats, cohort heatmap, students, roles, moderation, problem status, colleges, companies, placement records |
 
 ---
 

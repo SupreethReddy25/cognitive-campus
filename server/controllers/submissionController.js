@@ -180,7 +180,7 @@ const createSubmission = async (req, res, next) => {
     logger.info(`Submission: user=${userId} problem=${problemId} correct=${isCorrect} xp=${xpAwarded} mastery=${masteryBefore.toFixed(2)}→${newMasteryP.toFixed(2)}`);
 
     // ─── Sockets ───
-    const { io } = require('../index');
+    const io = req.app.get('io');
     if (xpAwarded > 0) {
       emitXPUpdate(io, { userId: String(userId), userName: user.name, xpEarned: xpAwarded, newXP: fresh.xp, newLevel: fresh.level, newStreak: user.streak });
     }

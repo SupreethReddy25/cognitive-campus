@@ -1,75 +1,54 @@
 const logger = require('../utils/logger');
 
 /**
- * Global error handling middleware.
- * Catches common Mongoose, JWT, and application errors and returns
- * a consistent { success: false, message } response shape.
+ * Translates an error into `{ success: false, message }`.
  *
- * @param {Error} err - The error object
- * @param {import('express').Request} req - Express request
- * @param {import('express').Response} res - Express response
- * @param {import('express').NextFunction} next - Express next function
+ * Known failures (validation, bad ids, bad tokens, duplicates, malformed bodies, `AppError`) get a precise 4xx. Everything
+ * else is a bug: it is logged in full but, in production, the client only sees a generic message.
+ *
+ * @param {Error} err
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const errorHandler = (err, req, res, next) => {
-  logger.error(err.message, { stack: err.stack, path: req.originalUrl, method: req.method });
+  const isProd = process.env.NODE_ENV === 'production';
+  const send = (status, message, extra = {}) => res.status(status).json({ success: false, message, requestId: req.id, ...extra });
+  const logMeta = { requestId: req.id, path: req.originalUrl, method: req.method, userId: req.user?.userId };
 
-  // Mongoose validation error → 400 with field-level messages
-  if (err.name === 'ValidationError') {
-    const fieldErrors = Object.values(err.errors).map((fieldErr) => ({
-      field: fieldErr.path,
-      message: fieldErr.message
-    }));
+  if (res.headersSent) return next(err);
 
-    return res.status(400).json({
-      success: false,
-      message: 'Validation failed',
-      errors: fieldErrors
-    });
+  // errors the API raises on purpose
+  if (err.isOperational) {
+    logger.warn(err.message, logMeta);
+    return send(err.statusCode || 400, err.message, err.details ? { errors: err.details } : {});
   }
 
-  // Mongoose CastError (invalid ObjectId) → 404
-  if (err.name === 'CastError') {
-    return res.status(404).json({
-      success: false,
-      message: 'Resource not found'
-    });
+  // Mongoose schema validation → 400 with field-level messages
+  if (err.name === 'ValidationError' && err.errors) {
+    logger.warn('Validation failed', { ...logMeta, fields: Object.keys(err.errors) });
+    return send(400, 'Validation failed', { errors: Object.values(err.errors).map((e) => ({ field: e.path, message: e.message })) });
   }
 
-  // JWT errors → 401
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token.'
-    });
-  }
+  // invalid ObjectId
+  if (err.name === 'CastError') return send(404, 'Resource not found');
 
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Token has expired.'
-    });
-  }
+  if (err.name === 'JsonWebTokenError') return send(401, 'Invalid token.');
+  if (err.name === 'TokenExpiredError') return send(401, 'Token has expired.');
 
-  // MongoDB duplicate key error → 409
-  if (err.code === 11000) {
-    const duplicateField = Object.keys(err.keyValue).join(', ');
-    return res.status(409).json({
-      success: false,
-      message: `${duplicateField} already exists`
-    });
-  }
+  // unique index violation
+  if (err.code === 11000) return send(409, `${Object.keys(err.keyValue || {}).join(', ') || 'Value'} already exists`);
 
-  // All other errors → 500
-  const response = {
-    success: false,
-    message: err.message || 'Internal server error'
-  };
+  // body-parser: unparseable or oversized JSON
+  if (err.type === 'entity.parse.failed') return send(400, 'Malformed JSON body');
+  if (err.type === 'entity.too.large') return send(413, 'Request body too large');
 
-  if (process.env.NODE_ENV === 'development') {
-    response.stack = err.stack;
-  }
-
-  return res.status(err.statusCode || 500).json(response);
+  // anything else is a bug
+  logger.error(err.message, { ...logMeta, stack: err.stack });
+  const status = err.statusCode || err.status || 500;
+  if (status < 500) return send(status, err.message);
+  const body = { message: isProd ? 'Internal server error' : err.message || 'Internal server error' };
+  return send(500, body.message, isProd ? {} : { stack: err.stack });
 };
 
 module.exports = errorHandler;

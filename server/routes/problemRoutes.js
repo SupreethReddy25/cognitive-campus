@@ -1,4 +1,5 @@
 const express = require('express');
+const { writeLimiter } = require('../middleware/rateLimiter');
 const authenticateToken = require('../middleware/auth');
 const { getProblems, getProblemById, getAiNudge, proposeProblem, getReviewQueue, voteProblem } = require('../controllers/problemController');
 
@@ -11,7 +12,7 @@ router.get('/', authenticateToken, getProblems);
 router.get('/review-queue', authenticateToken, getReviewQueue);
 
 // POST /api/problems/propose — Intel Engine: propose a problem from raw interview memory
-router.post('/propose', authenticateToken, proposeProblem);
+router.post('/propose', authenticateToken, writeLimiter, proposeProblem);
 
 // GET /api/problems/:id — Get a single problem with masked hidden test cases
 router.get('/:id', authenticateToken, getProblemById);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Plus, X } from 'lucide-react';
 import { companiesService, collegesService } from '../services/api';
@@ -106,7 +106,10 @@ export default function IntelHubPage() {
   const [tiers, setTiers] = useState([]);
   const [ctc, setCtc] = useState([0, MAX_CTC]);
   const [minReports, setMinReports] = useState(0);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  // sharing needs an account — visitors are sent to create one
+  const openSubmit = (target) => (isAuthenticated ? setSubmitTarget(target) : navigate('/register'));
   const college = typeof user?.collegeId === 'object' ? user.collegeId : null;
   const [campus, setCampus] = useState({});
   const [onlyCampus, setOnlyCampus] = useState(false);
@@ -176,16 +179,16 @@ export default function IntelHubPage() {
               <span className="text-zinc-100"><CountUp value={totalReports} /></span> reports across <span className="text-zinc-100"><CountUp value={companies.length} /></span> companies{recent > 0 && <>, <span className="text-[var(--ember)]">{recent} added this month</span></>}. Reports marked “sample” are illustrative until real students add theirs. Every percentage carries a confidence interval, so you know how far to trust it.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-6">
-              <button onClick={() => setSubmitTarget({})} className="btn-line group">
+              <button onClick={() => openSubmit({})} className="btn-line group">
                 <span className="text-[15px] font-semibold">Share your interview</span>
                 <span className="flex items-center justify-center"><Plus className="h-4 w-4" strokeWidth={2.4} /></span>
               </button>
               <span className="text-[13px] text-zinc-500">Paste raw notes — AI structures them. Earn up to <span className="text-[var(--star)]">200 XP</span>.</span>
             </div>
           </div>
-          <button onClick={() => setTab(tab === 'atlas' ? 'review' : 'atlas')} className="mt-2 hidden rounded-sm border border-[var(--line-strong)] px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-400 transition-colors hover:text-zinc-100 md:block">
+          {isAuthenticated && <button onClick={() => setTab(tab === 'atlas' ? 'review' : 'atlas')} className="mt-2 hidden rounded-sm border border-[var(--line-strong)] px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-zinc-400 transition-colors hover:text-zinc-100 md:block">
             {tab === 'atlas' ? 'Review queue' : '← Back to atlas'}
-          </button>
+          </button>}
         </header>
 
         {tab === 'review' ? <div className="pt-10"><ReviewQueue /></div> : (
@@ -261,7 +264,7 @@ export default function IntelHubPage() {
                     </ol>
                   )}
               </div>
-              <Preview c={shown} onSubmit={setSubmitTarget} campus={shown ? campus[shown.slug] : null} collegeName={college?.shortName || 'your campus'} />
+              <Preview c={shown} onSubmit={openSubmit} campus={shown ? campus[shown.slug] : null} collegeName={college?.shortName || 'your campus'} />
             </div>
           </>
         )}

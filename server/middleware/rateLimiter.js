@@ -55,4 +55,15 @@ const aiLimiter = rateLimit({
   legacyHeaders: false
 });
 
-module.exports = { authLimiter, submissionLimiter, generalLimiter, aiLimiter };
+/**
+ * Write limiter — user-generated content (experiences, proposed problems): 20 per hour per IP.
+ */
+const writeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 20 : 200,
+  message: { success: false, message: 'You are posting too quickly. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+module.exports = { authLimiter, submissionLimiter, generalLimiter, aiLimiter, writeLimiter };
