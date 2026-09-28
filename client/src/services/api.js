@@ -92,7 +92,8 @@ export const leaderboardService = {
 };
 
 export const arenaService = {
-  getRating: () => api.get('/arena/rating')
+  getRating: () => api.get('/arena/rating'),
+  getLeaderboard: () => api.get('/arena/leaderboard')
 };
 
 export const usersService = {

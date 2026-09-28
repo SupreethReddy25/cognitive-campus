@@ -6,10 +6,10 @@ import { useAuth } from '../../context/AuthContext';
 
 const NAV = [
   { label: 'Home', href: '/dashboard', match: (p) => p === '/dashboard' },
+  { label: 'Interviews', href: '/intel', match: (p) => p === '/intel' || p.startsWith('/companies') },
+  { label: 'Placement', href: '/placement', match: (p) => p.startsWith('/placement') },
   { label: 'Practice', href: '/problems', match: (p) => p.startsWith('/problems') },
   { label: 'Arena', href: '/arena', match: (p) => p.startsWith('/arena') },
-  { label: 'Intel', href: '/intel', match: (p) => p === '/intel' || p.startsWith('/companies') },
-  { label: 'Placement', href: '/placement', match: (p) => p.startsWith('/placement') },
   { label: 'Sheets', href: '/sheets', match: (p) => p.startsWith('/sheets') }
 ];
 

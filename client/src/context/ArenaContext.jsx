@@ -37,6 +37,7 @@ export function ArenaProvider({ children }) {
   const [matchStatus, setMatchStatus] = useState('idle');
   const [players, setPlayers] = useState([]);
   const [winner, setWinner] = useState(null);
+  const [ratings, setRatings] = useState(null); // { [userId]: { before, after, delta } } once a versus match ends
   const [startedAt, setStartedAt] = useState(null);
   const [isHost, setIsHost] = useState(false);
   const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
@@ -146,11 +147,12 @@ export function ArenaProvider({ children }) {
       setStartedAt(new Date());
     });
 
-    socket.on('arena:match_finished', ({ room, winner }) => {
+    socket.on('arena:match_finished', ({ room, winner, ratings }) => {
       setRoom(room);
       setPlayers(room?.players || []);
       setMatchStatus('finished');
       setWinner(winner);
+      setRatings(ratings || null);
     });
 
     // ─── Grace period events ───
@@ -298,6 +300,7 @@ export function ArenaProvider({ children }) {
     setMatchStatus('idle');
     setPlayers([]);
     setWinner(null);
+    setRatings(null);
     setProgressMap({});
     setRemoteCode('');
     setRemoteCursor(null);
@@ -332,7 +335,7 @@ export function ArenaProvider({ children }) {
   }, [roomCode]);
 
   const value = {
-    connected, error, room, roomCode, mode, matchStatus, players, winner, startedAt,
+    connected, error, room, roomCode, mode, matchStatus, players, winner, ratings, startedAt,
     remoteCode, remoteCursor, progressMap, isHost, hasJoinedRoom, joiningInProgress,
     partnerLanguage, partnerOffline,
     isMatchmaking, matchmakingStatus,

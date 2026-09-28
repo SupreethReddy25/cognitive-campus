@@ -390,7 +390,7 @@ const initArenaSocket = (io) => {
       const allFinished = players.every(p => p.finished);
       const anyAced = players.find(p => p.finished && p.progress === p.totalTests);
 
-      if (allFinished || (room.mode === 'versus' && anyAced)) {
+      if (room.status !== 'finished' && (allFinished || (room.mode === 'versus' && anyAced))) {
         room.status = 'finished';
         const winner = players.reduce((best, p) => {
           if (!best) return p;
@@ -399,14 +399,14 @@ const initArenaSocket = (io) => {
 
         logger.info(`[Arena] Room ${roomId} FINISHED. Winner: ${winner?.name}`);
 
-        // Handle Elo updates if it was a versus match
-        if (room.mode === 'versus' && players.length === 2) {
-          handleEloUpdate(players[0], players[1], winner, room.problemId).catch(e => logger.error('[Arena] Elo update failed:', e));
-        }
-
-        arena.to(`arena:${roomId}`).emit('arena:match_finished', {
-          room: roomSnapshot(room),
-          winner: winner ? { userId: winner.userId, name: winner.name, progress: winner.progress, total: winner.totalTests } : null
+        // Elo moves first so the result screen can show the swing; other modes have no rating
+        const versus = room.mode === 'versus' && players.length === 2;
+        Promise.resolve(versus ? handleEloUpdate(players[0], players[1], winner, room.problemId) : null).then((ratings) => {
+          arena.to(`arena:${roomId}`).emit('arena:match_finished', {
+            room: roomSnapshot(room),
+            winner: winner ? { userId: winner.userId, name: winner.name, progress: winner.progress, total: winner.totalTests } : null,
+            ratings
+          });
         });
       }
     });
@@ -547,14 +547,13 @@ function handleVoluntaryLeave(socket, arena, roomId) {
     room.status = 'finished';
     const remaining = Array.from(room.players.values())[0];
     
-    if (room.mode === 'versus') {
-       handleEloUpdate(player, remaining, remaining, room.problemId).catch(e => logger.error('[Arena] Elo forfeit update failed:', e));
-    }
-
-    arena.to(`arena:${roomId}`).emit('arena:match_finished', {
-      room: roomSnapshot(room),
-      winner: remaining ? { userId: remaining.userId, name: remaining.name, progress: remaining.progress, total: remaining.totalTests } : null,
-      reason: 'opponent_left'
+    Promise.resolve(room.mode === 'versus' && remaining ? handleEloUpdate(player, remaining, remaining, room.problemId) : null).then((ratings) => {
+      arena.to(`arena:${roomId}`).emit('arena:match_finished', {
+        room: roomSnapshot(room),
+        winner: remaining ? { userId: remaining.userId, name: remaining.name, progress: remaining.progress, total: remaining.totalTests } : null,
+        reason: 'opponent_left',
+        ratings
+      });
     });
   }
 }
@@ -615,14 +614,13 @@ function handleDisconnect(socket, arena, roomId) {
           room.status = 'finished';
           const remaining = Array.from(room.players.values())[0];
           
-          if (room.mode === 'versus') {
-            handleEloUpdate(player, remaining, remaining, room.problemId).catch(e => logger.error('[Arena] Elo disconnect forfeit update failed:', e));
-          }
-
-          arena.to(`arena:${roomId}`).emit('arena:match_finished', {
-            room: roomSnapshot(room),
-            winner: remaining ? { userId: remaining.userId, name: remaining.name, progress: remaining.progress, total: remaining.totalTests } : null,
-            reason: 'opponent_disconnected'
+          Promise.resolve(room.mode === 'versus' && remaining ? handleEloUpdate(player, remaining, remaining, room.problemId) : null).then((ratings) => {
+            arena.to(`arena:${roomId}`).emit('arena:match_finished', {
+              room: roomSnapshot(room),
+              winner: remaining ? { userId: remaining.userId, name: remaining.name, progress: remaining.progress, total: remaining.totalTests } : null,
+              reason: 'opponent_disconnected',
+              ratings
+            });
           });
         } else {
           // Was in waiting state — just notify
@@ -645,7 +643,7 @@ function handleDisconnect(socket, arena, roomId) {
 }
 
 /**
- * Update Elo ratings after a versus match.
+ * Update Elo ratings after a versus match. Resolves to `{ [userId]: { before, after, delta } }` (or null on failure).
  */
 async function handleEloUpdate(p1, p2, winner, problemId) {
   try {
@@ -694,8 +692,13 @@ async function handleEloUpdate(p1, p2, winner, problemId) {
 
     await Promise.all([r1.save(), r2.save()]);
     logger.info(`[Arena] Elo updated: ${p1.name} (${elo1} -> ${newElo1}), ${p2.name} (${elo2} -> ${newElo2})`);
+    return {
+      [p1.userId]: { before: elo1, after: r1.elo, delta: delta1 },
+      [p2.userId]: { before: elo2, after: r2.elo, delta: delta2 }
+    };
   } catch (error) {
     logger.error(`[Arena] Failed to update Elo ratings:`, error);
+    return null;
   }
 }
 

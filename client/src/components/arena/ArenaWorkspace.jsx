@@ -9,18 +9,19 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { useArena } from '../../context/ArenaContext';
 import { useAuth } from '../../context/AuthContext';
 import { problemsService, submissionsService } from '../../services/api';
 import { RaceTracker } from './RaceTracker';
+import MatchResult from './MatchResult';
 import { defineObservatory } from '../../lib/monacoTheme';
 import { SharedEditor } from './SharedEditor';
 import { SplitEditor } from './SplitEditor';
 import {
   ArrowLeft, Copy, Check, Clock, Users, Swords, SplitSquareHorizontal,
-  Play, Send, Loader2, Crown, Trophy, WifiOff, RefreshCw,
+  Play, Send, Loader2, WifiOff, RefreshCw,
   AlignLeft, Trash2, RotateCcw, Command, ChevronDown
 } from 'lucide-react';
 
@@ -36,7 +37,7 @@ export function ArenaWorkspace() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const {
-    room, mode, matchStatus, players, winner, startedAt,
+    room, mode, matchStatus, players, winner, ratings, startedAt,
     leaveRoom, reportTestPassed, reportSubmission,
     progressMap, partnerOffline, rejoinRoom, connected,
     emitLanguageChange
@@ -262,20 +263,9 @@ export function ArenaWorkspace() {
     return { pass: list.filter(t => t.passed).length, total: list.length };
   }, [result, testCasesArray]);
 
-  // ─── Match finished overlay ───
+  // ─── Match finished ───
   if (matchStatus === 'finished') {
-    const iWon = winner?.userId === user?._id;
-    return <div className="flex h-full flex-col items-center justify-center gap-5 px-10 text-center">
-      <div className="text-[14px] text-zinc-500">{iWon ? 'You passed every test first' : 'The match is over'}</div>
-      <h1 className="display text-[clamp(51px,9.3vw,120px)] text-zinc-50">{iWon ? <>Victor<em className="text-[var(--ember)]">y</em>.</> : <>Match <em className="text-[var(--ember)]">over</em>.</>}</h1>
-      <p className="max-w-md text-[17px] leading-relaxed text-zinc-400">
-        {iWon ? 'Your rating just moved. Enjoy it.' : winner ? `${winner.name} finished first. Read the editorial and come back for a rematch.` : 'The match has ended.'}
-      </p>
-      <div className="mt-6 flex items-center gap-5">
-        <Link to="/arena" className="btn-line group">Back to the arena</Link>
-        <Link to={`/problems/${room?.problemId}`} className="text-[15px] text-zinc-400 transition-colors hover:text-[var(--ember)]">Practise it solo →</Link>
-      </div>
-    </div>;
+    return <MatchResult iWon={winner?.userId === user?._id} winner={winner} players={players} myId={user?._id} ratings={ratings} mode={mode} time={timeStr} problemId={room?.problemId} />;
   }
 
   return <div className="flex h-full flex-col overflow-hidden bg-background">
