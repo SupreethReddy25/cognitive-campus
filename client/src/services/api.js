@@ -122,6 +122,7 @@ export const experiencesService = {
   upvoteExperience: (id) => api.post(`/experiences/${id}/upvote`),
   vote: (id, vote) => api.post(`/experiences/${id}/vote`, { vote }),
   scoreDraft: (draft) => api.post('/experiences/score', draft),
+  getPulse: () => api.get('/experiences/pulse'),
 };
 
 // ─── Sheets ───

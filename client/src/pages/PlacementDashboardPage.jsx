@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { collegesService, usersService } from '../services/api';
 import { CollegeSelector } from '../components/placement/CollegeSelector';
-import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
+import { ShareSheet } from '../components/intel/ShareSheet';
 import { Page, PrimaryButton, CompanyLogo, Skeleton, ErrorNote, CountUp, chartTooltipStyle, cn } from '../components/ui/kit';
 
 const CONF = { none: 'no data yet', low: 'low confidence', medium: 'medium confidence', high: 'high confidence' };
@@ -237,7 +237,7 @@ export default function PlacementDashboardPage() {
         </>
       )}
 
-      {showSubmit && <SubmitExperienceModal companies={[]} onClose={() => setShowSubmit(false)} onSuccess={() => college?.slug && load(college.slug)} />}
+      {showSubmit && <ShareSheet companies={[]} onClose={() => setShowSubmit(false)} onSuccess={() => college?.slug && load(college.slug)} />}
     </Page>
   );
 }

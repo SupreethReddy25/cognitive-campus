@@ -11,6 +11,8 @@ const User = require('../models/User');
 const experienceParser = require('../services/experienceParser');
 const companyIntel = require('../services/companyIntelService');
 const achievementService = require('../services/achievementService');
+const Problem = require('../models/Problem');
+const { mapTopicToSkill } = require('../services/topicSkillMapper');
 const logger = require('../utils/logger');
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard', 'Very Hard', 'Smooth', 'Challenging', 'Grueling', 'Brain-melting'];
@@ -93,7 +95,8 @@ exports.createExperience = async (req, res) => {
         questions: (Array.isArray(r.questions) ? r.questions : []).slice(0, 12).map((q) => ({
           text: String(q.text || '').slice(0, 1200),
           questionType: q.questionType ? String(q.questionType) : undefined,
-          topicTags: (Array.isArray(q.topicTags) ? q.topicTags : []).map(String).slice(0, 6)
+          topicTags: (Array.isArray(q.topicTags) ? q.topicTags : []).map(String).slice(0, 6),
+          problemId: /^[a-f\d]{24}$/i.test(String(q.problemId || '')) ? q.problemId : undefined
         }))
       })),
       overallTips: b.overallTips ? String(b.overallTips).slice(0, 4000) : undefined,
@@ -223,5 +226,90 @@ exports.scoreDraft = async (req, res) => {
     res.status(200).json({ success: true, data: experienceParser.scoreQuality(req.body || {}) });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
+  }
+};
+
+
+// ─── Pulse: what students are being asked right now ─────────────────────────────────────────────────────────────────
+const PULSE_TTL_MS = 60 * 1000;
+let pulseCache = { at: 0, data: null };
+
+/** Best problem in the catalogue whose title appears in the question ("…Two Sum…" → Two Sum), so a question can lead to practice. */
+const matchProblem = (text, problems) => {
+  const t = text.toLowerCase();
+  let best = null;
+  for (const p of problems) {
+    const title = p.title.toLowerCase();
+    if (title.length >= 5 && t.includes(title) && (!best || title.length > best.title.length)) best = { _id: p._id, title };
+  }
+  return best ? { _id: best._id, title: problems.find((p) => String(p._id) === String(best._id)).title } : null;
+};
+
+/**
+ * @desc    Cross-company snapshot for the Interviews atlas: the topics being asked about most and the latest reported questions
+ * @route   GET /api/experiences/pulse
+ * @access  Public
+ */
+exports.getPulse = async (req, res, next) => {
+  try {
+    if (pulseCache.data && Date.now() - pulseCache.at < PULSE_TTL_MS) return res.status(200).json({ success: true, data: pulseCache.data });
+
+    const [exps, problems] = await Promise.all([
+      InterviewExperience.find({ status: 'Published' })
+        .select('companyId year month createdAt rounds offerReceived')
+        .populate('companyId', 'name slug logo domain tier')
+        .sort({ createdAt: -1 }).limit(400).lean(),
+      Problem.find({ isActive: true, status: 'approved' }).select('title').lean()
+    ]);
+
+    const topics = new Map();
+    const questions = [];
+    let questionCount = 0;
+    const companies = new Set();
+    const monthAgo = Date.now() - 30 * 86400000;
+    let recent = 0;
+
+    for (const e of exps) {
+      if (!e.companyId) continue;
+      companies.add(String(e.companyId._id));
+      if (new Date(e.createdAt).getTime() > monthAgo) recent += 1;
+      for (const r of e.rounds || []) {
+        const roundTopics = [...(r.topics || []), ...(r.questions || []).flatMap((q) => q.topicTags || [])];
+        for (const raw of roundTopics) {
+          const label = String(raw).trim();
+          if (!label) continue;
+          const key = label.toLowerCase();
+          const t = topics.get(key) || { topic: label, count: 0, companies: new Set(), skill: mapTopicToSkill(label) || null };
+          t.count += 1; t.companies.add(String(e.companyId._id));
+          topics.set(key, t);
+        }
+        for (const q of r.questions || []) {
+          const text = String(q.text || '').trim();
+          if (text.length < 15) continue;
+          questionCount += 1;
+          if (questions.length < 60) {
+            questions.push({
+              text,
+              roundType: r.type,
+              questionType: q.questionType || null,
+              topicTags: (q.topicTags || []).slice(0, 4),
+              company: { name: e.companyId.name, slug: e.companyId.slug, logo: e.companyId.logo, domain: e.companyId.domain },
+              when: `${e.month || ''} ${e.year || ''}`.trim(),
+              problem: matchProblem(text, problems)
+            });
+          }
+        }
+      }
+    }
+
+    const data = {
+      topics: [...topics.values()].sort((a, b) => b.count - a.count).slice(0, 14).map((t) => ({ topic: t.topic, count: t.count, companies: t.companies.size, skill: t.skill })),
+      questions: questions.slice(0, 12),
+      totals: { reports: exps.length, companies: companies.size, questions: questionCount, thisMonth: recent }
+    };
+    pulseCache = { at: Date.now(), data };
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
   }
 };

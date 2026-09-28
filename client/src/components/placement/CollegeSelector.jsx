@@ -17,7 +17,7 @@ const TIER_COLORS = {
  * CollegeSelector
  *
  * A typeahead search component for selecting a college.
- * Used in profile-view and SubmitExperienceModal.
+ * Used in profile-view.
  *
  * Props:
  *   value       — currently selected college object { _id, name, shortName, slug, tier }

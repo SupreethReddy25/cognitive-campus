@@ -123,6 +123,8 @@ const callGroq = async ({ system, prompt, json, temperature, maxTokens, timeoutM
       messages,
       temperature,
       max_tokens: maxTokens,
+      // reasoning models spend most of their time thinking; extraction and short coaching don't need it
+      ...(/gpt-oss/i.test(GROQ_MODEL) ? { reasoning_effort: 'low' } : {}),
       ...(json ? { response_format: { type: 'json_object' } } : {})
     },
     { headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' }, timeout: timeoutMs }
@@ -146,6 +148,13 @@ const callGroq = async ({ system, prompt, json, temperature, maxTokens, timeoutM
  * @returns {Promise<{text:string, data:any, provider:string, model:string, byok:boolean}>}
  * @throws {AiError}
  */
+// A provider/model that just answered 5xx/429 sits out for a short while, so the next request goes straight to one that works
+// instead of paying for the same failure again. If everything is cooling, all of them are tried anyway.
+const COOLDOWN_MS = 45 * 1000;
+const cooling = new Map();
+const coolKey = (a) => `${a.provider}:${a.model}:${a.byok ? 'byok' : 'shared'}`;
+const isCooling = (a) => (cooling.get(coolKey(a)) || 0) > Date.now();
+
 const complete = async (opts) => {
   const { userId, system, prompt, json = false, temperature = 0.4, maxTokens = 2048, timeoutMs = 25000, maxAttempts = Infinity } = opts;
   const byokKey = await getUserKey(userId);
@@ -163,6 +172,9 @@ const complete = async (opts) => {
     attempts.splice(0, attempts.length, ...[gemini, groq].filter(Boolean).slice(0, maxAttempts));
   }
 
+  const warm = attempts.filter((a) => !isCooling(a));
+  if (warm.length && warm.length < attempts.length) attempts.splice(0, attempts.length, ...warm);
+
   let sawRateLimit = false;
   let lastErr = null;
   const deadKeys = new Set(); // don't retry a key the API says is invalid
@@ -178,6 +190,7 @@ const complete = async (opts) => {
       lastErr = err;
       const status = err.response?.status;
       if (status === 429) sawRateLimit = true;
+      if (status === 429 || status >= 500) cooling.set(coolKey(a), Date.now() + COOLDOWN_MS);
       if (status === 400 || status === 401 || status === 403) {
         // Bad/expired key or invalid request — skip other models on the same key.
         if (a.key) deadKeys.add(a.key);

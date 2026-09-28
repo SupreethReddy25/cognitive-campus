@@ -4,7 +4,7 @@ import { ArrowLeft, ChevronDown, Plus, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { collegesService, usersService } from '../services/api';
 import { PrepPriorities } from '../components/placement/PrepPriorities';
-import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
+import { ShareSheet } from '../components/intel/ShareSheet';
 import { useToast } from '../context/ToastContext';
 import { Page, PrimaryButton, Skeleton, ErrorNote, CountUp, cn } from '../components/ui/kit';
 
@@ -197,7 +197,7 @@ export default function PlacementCompanyPage() {
       )}
 
       {showSubmit && (
-        <SubmitExperienceModal
+        <ShareSheet
           company={company ? { _id: company._id, slug: company.slug, name: company.name } : null}
           companies={[]}
           onClose={() => setShowSubmit(false)}

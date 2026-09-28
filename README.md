@@ -279,6 +279,7 @@ cognitive-campus/
 | GET | `/api/companies/:slug/experiences` · `/related-problems` | Optional | Interview reports · problems matched to the company's topics |
 | POST | `/api/companies/:slug/prep-plan` | Yes | Generate a prep plan |
 | POST | `/api/experiences` | Yes | Submit an experience |
+| GET | `/api/experiences/pulse` | No | Cross-company snapshot: top topics and the latest reported questions (linked to practice) |
 | POST | `/api/experiences/ai-parse` · `/score` | Optional / No | Structure raw notes with AI · score a draft |
 | POST | `/api/experiences/:id/upvote` · `/:id/vote` | Yes | Vote on an experience |
 | GET | `/api/colleges` · `/:slug` | No | Colleges |

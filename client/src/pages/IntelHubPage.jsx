@@ -5,7 +5,10 @@ import { ArrowRight, ArrowUpRight, Plus, X } from 'lucide-react';
 import { companiesService, collegesService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
+import { ShareSheet } from '../components/intel/ShareSheet';
+import { Pulse } from '../components/intel/pulse';
+import { CompanyMap } from '../components/intel/company-map';
+import { ShareNudge } from '../components/intel/share-nudge';
 import { ReviewQueue } from '../components/intel/ReviewQueue';
 import { CompanyLogo, Skeleton, CountUp, cn } from '../components/ui/kit';
 
@@ -114,6 +117,7 @@ export default function IntelHubPage() {
   const [campus, setCampus] = useState({});
   const [onlyCampus, setOnlyCampus] = useState(false);
   const [sort, setSort] = useState('trending');
+  const [view, setView] = useState('list');
   const [refine, setRefine] = useState(false);
   const [hoverId, setHoverId] = useState(null);
   const [submitTarget, setSubmitTarget] = useState(null);
@@ -162,6 +166,11 @@ export default function IntelHubPage() {
     return [...list].sort(sorters[sort]);
   }, [companies, search, tiers, ctc, minReports, sort, onlyCampus, campus]);
 
+  const likelyHere = useMemo(() => Object.entries(campus)
+    .filter(([, v]) => v.probability != null)
+    .sort((a, b) => b[1].probability - a[1].probability).slice(0, 5)
+    .map(([slug, v]) => ({ c: companies.find((x) => x.slug === slug), p: v.probability })).filter((x) => x.c), [campus, companies]);
+
   const shown = filtered.find((c) => c._id === hoverId) || filtered[0];
   const anyFilter = search || tiers.length || onlyCampus || ctc[0] > 0 || ctc[1] < MAX_CTC || minReports > 0;
   const totalReports = companies.reduce((n, c) => n + c.experienceCount, 0);
@@ -194,6 +203,41 @@ export default function IntelHubPage() {
         {tab === 'review' ? <div className="pt-10"><ReviewQueue /></div> : (
           <>
             <div className="mt-14"><Ticker items={hot} /></div>
+
+            {college && likelyHere.length > 0 && (
+              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border border-[var(--signal)]/20 bg-[var(--signal)]/[0.03] px-6 py-5">
+                <div><div className="tag !text-[var(--signal)]">{college.shortName || 'Your campus'} · this season</div><div className="mt-1 text-[14px] text-zinc-400">Most likely to visit</div></div>
+                <div className="flex flex-1 flex-wrap items-center gap-3">
+                  {likelyHere.map(({ c, p }) => (
+                    <Link key={c._id} to={`/companies/${c.slug}`} className="group flex items-center gap-2.5 border border-white/[0.1] py-1.5 pl-1.5 pr-3.5 transition-colors duration-300 hover:border-[var(--signal)]/60 hover:bg-white/[0.03]">
+                      <CompanyLogo company={c} size={26} /><span className="text-[14px] text-zinc-200">{c.name}</span><span className="tag !text-[9.5px] !text-[var(--signal)]">{p}%</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Pulse />
+
+            {isAuthenticated && (
+              <ShareNudge scope="atlas" className="mt-20" title="Interviewed lately?" text="Paste your notes or answer four quick questions. It takes about two minutes, can be anonymous, and becomes prep for the next batch."
+                onShare={() => openSubmit({})} />
+            )}
+
+            <div className="mt-24 flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <div className="tag flex items-center gap-3"><span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />The atlas</div>
+                <h2 className="display mt-4 text-[clamp(32px,4.4vw,60px)] text-zinc-50">Every company, <em>side by side</em></h2>
+              </div>
+              <div className="flex border border-white/[0.09]">
+                {[['list', 'Index'], ['map', 'Map']].map(([k, l]) => (
+                  <button key={k} onClick={() => setView(k)} className={cn('relative px-5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors duration-300', view === k ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
+                    {view === k && <motion.span layoutId="atlas-view" className="absolute inset-0 bg-white/[0.08]" transition={{ type: 'spring', stiffness: 460, damping: 38 }} />}
+                    <span className="relative">{l}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* search — an oversized line, not a form field */}
             <div className="mt-12 flex items-center gap-4 border-b border-[var(--line-strong)] pb-4 focus-within:border-[var(--ember)]">
@@ -238,6 +282,9 @@ export default function IntelHubPage() {
             </AnimatePresence>
 
             {/* the index */}
+            {view === 'map' ? (
+              <div className="mt-10 pb-6"><CompanyMap companies={companies} visible={filtered} campus={college ? campus : null} collegeName={college?.shortName} /></div>
+            ) : (
             <div className="mt-10 grid gap-16 pb-6 lg:grid-cols-[1fr_440px]">
               <div>
                 {loading ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="mb-3 h-16" />)
@@ -266,12 +313,13 @@ export default function IntelHubPage() {
               </div>
               <Preview c={shown} onSubmit={openSubmit} campus={shown ? campus[shown.slug] : null} collegeName={college?.shortName || 'your campus'} />
             </div>
+            )}
           </>
         )}
       </div>
 
       {submitTarget !== null && (
-        <SubmitExperienceModal
+        <ShareSheet
           company={submitTarget._id ? submitTarget : null}
           companies={companies}
           onClose={() => setSubmitTarget(null)}

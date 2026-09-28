@@ -1,5 +1,5 @@
 const express = require('express');
-const { createExperience, parseRawDump, upvoteExperience, voteExperience, scoreDraft } = require('../controllers/experienceController');
+const { createExperience, parseRawDump, upvoteExperience, voteExperience, scoreDraft, getPulse } = require('../controllers/experienceController');
 const authenticateToken = require('../middleware/auth');
 const optionalAuth = require('../middleware/optionalAuth');
 const { aiLimiter, writeLimiter } = require('../middleware/rateLimiter');
@@ -7,6 +7,7 @@ const { aiLimiter, writeLimiter } = require('../middleware/rateLimiter');
 const router = express.Router({ mergeParams: true });
 
 router.route('/').post(authenticateToken, writeLimiter, createExperience);
+router.route('/pulse').get(getPulse);
 router.route('/ai-parse').post(optionalAuth, aiLimiter, parseRawDump);
 router.route('/score').post(scoreDraft);
 router.route('/:id/upvote').post(authenticateToken, upvoteExperience);

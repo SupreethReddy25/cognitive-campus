@@ -7,7 +7,6 @@ import { Skeleton, cn } from '../ui/kit';
 
 const EASE = [0.22, 1, 0.36, 1];
 const PRIORITY = { high: ['#fb7185', 'Focus here'], medium: ['#fbbf24', 'Worth a pass'], low: ['#52525b', 'Light review'] };
-const ctcNum = (r) => parseFloat(String(r?.packageOffered?.ctc || '').replace(/[^0-9.]/g, '')) || 0;
 
 /**
  * "Google at your campus" — the college-scoped layer of a company dossier: which seasons they came, how many they hired,

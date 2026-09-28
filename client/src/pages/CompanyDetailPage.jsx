@@ -7,7 +7,8 @@ import { companiesService, experiencesService, skillsService } from '../services
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { CampusChapter } from '../components/intel/campus-chapter';
-import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
+import { ShareNudge } from '../components/intel/share-nudge';
+import { ShareSheet } from '../components/intel/ShareSheet';
 import { Page, PrimaryButton, CompanyLogo, Skeleton, ErrorNote, CountUp, chartTooltipStyle, cn } from '../components/ui/kit';
 
 const SECTIONS = [['overview', 'Overview'], ['gauntlet', 'The gauntlet'], ['asked', 'What they ask'], ['voices', 'Voices'], ['prep', 'Prep plan']];
@@ -398,6 +399,11 @@ export default function CompanyDetailPage() {
 
       {/* ═══ Voices ═══ */}
       <Section id="voices" title={<>The <em>voices</em></>} kicker="Firsthand accounts. Open one to read every round.">
+        {isAuthenticated && experiences.length < 6 && (
+          <ShareNudge scope={`co-${slug}`} className="mb-10" title={experiences.length ? `Only ${experiences.length} account${experiences.length === 1 ? '' : 's'} of ${company.name} so far` : `No one has shared ${company.name} yet`}
+            text="If you interviewed here, your notes are exactly what the next student is looking for. Paste them or answer a few quick questions — anonymous if you like."
+            onShare={() => setShowSubmit(true)} />
+        )}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-1.5">{['All', 'Yes', 'No', 'Pending'].map((o) => <button key={o} onClick={() => setExpFilter({ ...expFilter, offer: o })} className={chip(expFilter.offer === o)}>{o === 'Yes' ? 'Got the offer' : o === 'No' ? 'No offer' : o}</button>)}</div>
           <div className="flex items-center gap-1 text-[13px] text-zinc-500"><span className="mr-1">Order</span>{[['recent', 'Recent'], ['top', 'Top voted'], ['quality', 'Best written']].map(([k, l]) => <button key={k} onClick={() => setExpFilter({ ...expFilter, sort: k })} className={cn('rounded-sm px-3 py-1.5', expFilter.sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}</div>
@@ -417,7 +423,7 @@ export default function CompanyDetailPage() {
         <PrepPlan slug={slug} companyName={company.name} />
       </Section>
 
-      {showSubmit && <SubmitExperienceModal company={company} companies={[company]} onClose={() => setShowSubmit(false)} onSuccess={() => { loadExperiences(); loadStats(); }} />}
+      {showSubmit && <ShareSheet company={company} companies={[company]} onClose={() => setShowSubmit(false)} onSuccess={() => { loadExperiences(); loadStats(); }} />}
     </Page>
   );
 }
