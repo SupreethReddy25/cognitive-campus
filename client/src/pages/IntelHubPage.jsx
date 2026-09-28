@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Plus, X } from 'lucide-react';
-import { companiesService } from '../services/api';
+import { companiesService, collegesService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
 import { ReviewQueue } from '../components/intel/ReviewQueue';
@@ -35,7 +36,7 @@ function Ticker({ items }) {
 }
 
 /** The right-hand dossier that follows whichever row you hover — no page loads to skim. */
-function Preview({ c, onSubmit }) {
+function Preview({ c, onSubmit, campus, collegeName }) {
   const rounds = c?.interviewProcess?.rounds || [];
   return (
     <div className="sticky top-10 hidden h-fit lg:block">
@@ -56,6 +57,15 @@ function Preview({ c, onSubmit }) {
               <div><div className="display text-[35.2px] leading-none tnum text-zinc-50">{c.experienceCount}</div><div className="mt-2 text-[11.5px] text-zinc-500">reports{c.recentExperiences > 0 && <span className="text-[var(--ember)]"> · +{c.recentExperiences}</span>}</div></div>
               <div><div className="display text-[35.2px] leading-none tnum text-zinc-50">{ctcText(c)}</div><div className="mt-2 text-[11.5px] text-zinc-500">LPA</div></div>
             </div>
+
+            {campus && (
+              <div className="mt-7 border border-[var(--signal)]/25 bg-[var(--signal)]/[0.04] p-4">
+                <div className="tag !text-[var(--signal)]">At {collegeName}</div>
+                <div className="mt-2 text-[13.5px] leading-relaxed text-zinc-300">
+                  Visited <span className="tnum text-zinc-50">{campus.visits}</span> season{campus.visits === 1 ? '' : 's'} · <span className="tnum text-zinc-50">{campus.totalHires}</span> hires{campus.probability != null && <> · <span className="tnum text-zinc-50">{campus.probability}%</span> likely next season</>}
+                </div>
+              </div>
+            )}
 
             <div className="mt-7">
               <div className="mb-3 text-[12px] text-zinc-500">The gauntlet — {DIFF_WORD[c.interviewProcess?.difficulty] || 'Balanced'}, {rounds.length || '—'} rounds</div>
@@ -96,6 +106,10 @@ export default function IntelHubPage() {
   const [tiers, setTiers] = useState([]);
   const [ctc, setCtc] = useState([0, MAX_CTC]);
   const [minReports, setMinReports] = useState(0);
+  const { user } = useAuth();
+  const college = typeof user?.collegeId === 'object' ? user.collegeId : null;
+  const [campus, setCampus] = useState({});
+  const [onlyCampus, setOnlyCampus] = useState(false);
   const [sort, setSort] = useState('trending');
   const [refine, setRefine] = useState(false);
   const [hoverId, setHoverId] = useState(null);
@@ -104,6 +118,20 @@ export default function IntelHubPage() {
 
   const load = () => companiesService.getCompanies().then((r) => setCompanies(r.data.data)).catch(() => toast.error('Could not load companies')).finally(() => setLoading(false));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // which companies actually recruit at your college, from its own placement history
+  useEffect(() => {
+    if (!college?.slug) return undefined;
+    let alive = true;
+    collegesService.getCollegeInsights(college.slug).then((r) => {
+      if (!alive) return;
+      const d = r.data.data; const m = {};
+      (d.topRecruiters || []).forEach((t) => { m[t.company.slug] = { visits: t.visits, totalHires: t.totalHires }; });
+      (d.predictions?.companies || []).forEach((p) => { m[p.company.slug] = { ...(m[p.company.slug] || { visits: p.yearsVisited?.length || 0, totalHires: 0 }), probability: p.probability }; });
+      setCampus(m);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [college?.slug]);
 
   useEffect(() => {
     const h = (e) => { if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) { e.preventDefault(); searchRef.current?.focus(); } };
@@ -118,19 +146,21 @@ export default function IntelHubPage() {
       if (tiers.length && !tiers.includes(c.tier)) return false;
       if ((c.ctcMax ?? 0) < ctc[0] || (c.ctcMin ?? Infinity) > ctc[1]) return false;
       if (c.experienceCount < minReports) return false;
+      if (onlyCampus && !campus[c.slug]) return false;
       return true;
     });
     const sorters = {
       trending: (a, b) => b.recentExperiences - a.recentExperiences || (b.viewCount || 0) - (a.viewCount || 0),
       experiences: (a, b) => b.experienceCount - a.experienceCount,
       ctc: (a, b) => (b.ctcMax ?? 0) - (a.ctcMax ?? 0),
-      name: (a, b) => a.name.localeCompare(b.name)
+      name: (a, b) => a.name.localeCompare(b.name),
+      campus: (a, b) => (campus[b.slug]?.probability ?? -1) - (campus[a.slug]?.probability ?? -1) || (campus[b.slug]?.visits ?? 0) - (campus[a.slug]?.visits ?? 0)
     };
     return [...list].sort(sorters[sort]);
-  }, [companies, search, tiers, ctc, minReports, sort]);
+  }, [companies, search, tiers, ctc, minReports, sort, onlyCampus, campus]);
 
   const shown = filtered.find((c) => c._id === hoverId) || filtered[0];
-  const anyFilter = search || tiers.length || ctc[0] > 0 || ctc[1] < MAX_CTC || minReports > 0;
+  const anyFilter = search || tiers.length || onlyCampus || ctc[0] > 0 || ctc[1] < MAX_CTC || minReports > 0;
   const totalReports = companies.reduce((n, c) => n + c.experienceCount, 0);
   const recent = companies.reduce((n, c) => n + c.recentExperiences, 0);
   const hot = [...companies].filter((c) => c.recentExperiences > 0).sort((a, b) => b.recentExperiences - a.recentExperiences).slice(0, 8);
@@ -174,11 +204,16 @@ export default function IntelHubPage() {
                   <button key={t} onClick={() => setTiers((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]))}
                     className={cn('rounded-sm border px-3.5 py-1.5 transition-colors font-mono text-[10.5px] uppercase tracking-[0.16em]', tiers.includes(t) ? 'border-[var(--ember)] bg-[var(--ember)]/10 text-[var(--ember-soft)]' : 'border-[var(--line)] text-zinc-500 hover:border-[var(--line-strong)] hover:text-zinc-200')}>{t}</button>
                 ))}
+                {college && Object.keys(campus).length > 0 && (
+                  <button onClick={() => setOnlyCampus((v) => !v)} className={cn('flex items-center gap-2 rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors duration-300', onlyCampus ? 'border-[var(--signal)] bg-[var(--signal)]/10 text-[var(--signal)]' : 'border-[var(--line)] text-zinc-400 hover:border-white/30 hover:text-zinc-100')}>
+                    <span className={cn('h-1.5 w-1.5 rounded-full', onlyCampus ? 'bg-[var(--signal)]' : 'bg-zinc-600')} />At {college.shortName || 'my campus'}
+                  </button>
+                )}
                 <button onClick={() => setRefine((r) => !r)} className={cn('rounded-sm px-3.5 py-1.5 transition-colors', refine ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-200')}>Refine {refine ? '−' : '+'}</button>
               </div>
               <div className="flex items-center gap-1 text-zinc-500">
                 <span className="mr-1">Sorted by</span>
-                {SORTS.map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-sm px-3 py-1.5 transition-colors', sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}
+                {[...(college && Object.keys(campus).length ? [['campus', 'My campus']] : []), ...SORTS].map(([k, l]) => <button key={k} onClick={() => setSort(k)} className={cn('rounded-sm px-3 py-1.5 transition-colors', sort === k ? 'bg-white/[0.08] text-zinc-50' : 'hover:text-zinc-200')}>{l}</button>)}
               </div>
             </div>
 
@@ -204,7 +239,7 @@ export default function IntelHubPage() {
               <div>
                 {loading ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="mb-3 h-16" />)
                   : filtered.length === 0 ? (
-                    <div className="py-20 text-center"><div className="display text-[27.2px] italic text-zinc-500">Nothing matches.</div>{anyFilter && <button onClick={() => { setSearch(''); setTiers([]); setCtc([0, MAX_CTC]); setMinReports(0); }} className="mt-4 text-[13px] text-[var(--ember)] hover:underline">Clear every filter</button>}</div>
+                    <div className="py-20 text-center"><div className="display text-[27.2px] italic text-zinc-500">Nothing matches.</div>{anyFilter && <button onClick={() => { setSearch(''); setTiers([]); setCtc([0, MAX_CTC]); setMinReports(0); setOnlyCampus(false); }} className="mt-4 text-[13px] text-[var(--ember)] hover:underline">Clear every filter</button>}</div>
                   ) : (
                     <ol onMouseLeave={() => setHoverId(null)}>
                       {filtered.map((c, i) => {
@@ -214,6 +249,7 @@ export default function IntelHubPage() {
                             <Link to={`/companies/${c.slug}`} className="group flex items-baseline gap-5 border-b border-[var(--line)] py-4">
                               <span className="w-8 shrink-0 text-[13px] tnum text-zinc-700">{String(i + 1).padStart(2, '0')}</span>
                               <span className={cn('display shrink-0 text-[clamp(24px,3.1vw,40px)] leading-none transition-all duration-300', active ? 'translate-x-2 text-[var(--ember)]' : 'text-zinc-200')}>{c.name}</span>
+                              {campus[c.slug] && <span title={`Recruits at ${college?.shortName}`} className="tag !text-[9px] !tracking-[0.14em] shrink-0 -translate-y-2.5 border border-[var(--signal)]/40 px-1.5 py-0.5 !text-[var(--signal)]">{college?.shortName || 'Campus'}</span>}
                               {c.recentExperiences > 0 && <span className="-translate-y-3 text-[11px] font-medium text-[var(--ember)]">+{c.recentExperiences}</span>}
                               <span className="mb-2 hidden flex-1 self-end border-b border-dotted border-zinc-700 sm:block" />
                               <span className="hidden shrink-0 text-right text-[13px] leading-tight text-zinc-500 sm:block"><span className="tnum text-zinc-300">{c.experienceCount}</span> reports<br /><span className="tnum">{ctcText(c)}</span> LPA</span>
@@ -225,7 +261,7 @@ export default function IntelHubPage() {
                     </ol>
                   )}
               </div>
-              <Preview c={shown} onSubmit={setSubmitTarget} />
+              <Preview c={shown} onSubmit={setSubmitTarget} campus={shown ? campus[shown.slug] : null} collegeName={college?.shortName || 'your campus'} />
             </div>
           </>
         )}

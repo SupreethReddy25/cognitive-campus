@@ -5,6 +5,8 @@ import { ResponsiveContainer, ComposedChart, Bar as RBar, Line, XAxis, YAxis, To
 import { ArrowLeft, ArrowUpRight, ChevronDown, Info, KeyRound, Loader2, Plus, Search, ShieldCheck, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { companiesService, experiencesService, skillsService } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import { CampusChapter } from '../components/intel/campus-chapter';
 import { SubmitExperienceModal } from '../components/intel/SubmitExperienceModal';
 import { Page, PrimaryButton, CompanyLogo, Skeleton, ErrorNote, CountUp, chartTooltipStyle, cn } from '../components/ui/kit';
 
@@ -160,6 +162,9 @@ function PrepPlan({ slug, companyName }) {
 export default function CompanyDetailPage() {
   const { slug } = useParams();
   const toast = useToast();
+  const { user } = useAuth();
+  const college = typeof user?.collegeId === 'object' ? user.collegeId : null;
+  const sections = college ? [SECTIONS[0], ['campus', `At ${college.shortName || 'campus'}`], ...SECTIONS.slice(1)] : SECTIONS;
 
   const [company, setCompany] = useState(null);
   const [stats, setStats] = useState(null);
@@ -197,7 +202,7 @@ export default function CompanyDetailPage() {
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) setActive(en.target.id); });
     }, { rootMargin: '-35% 0px -55% 0px' });
-    SECTIONS.forEach(([id]) => { const el = document.getElementById(id); if (el) io.observe(el); });
+    sections.forEach(([id]) => { const el = document.getElementById(id); if (el) io.observe(el); });
     return () => { io.disconnect(); observed.current = false; };
   }, [loading, company]);
 
@@ -256,8 +261,8 @@ export default function CompanyDetailPage() {
 
       {/* sticky section nav */}
       <div className="sticky top-4 z-30 mt-14 flex justify-center">
-        <nav className="flex items-center gap-1 rounded-full border border-[var(--line-strong)] bg-[#0d0d0d]/95 p-1 backdrop-blur-md">
-          {SECTIONS.map(([id, l]) => (
+        <nav className="flex items-center gap-1 rounded-sm border border-[var(--line-strong)] bg-[#0d0d0d]/95 p-1 backdrop-blur-md">
+          {sections.map(([id, l]) => (
             <button key={id} onClick={() => go(id)} className={cn('relative rounded-sm px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors', active === id ? 'text-zinc-50' : 'text-zinc-500 hover:text-zinc-200')}>
               {active === id && <motion.span layoutId="co-nav" className="absolute inset-0 rounded-sm bg-white/[0.08]" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
               <span className="relative">{l}{id === 'voices' && <span className="ml-1.5 text-zinc-600">{experiences.length}</span>}</span>
@@ -297,6 +302,12 @@ export default function CompanyDetailPage() {
       </Section>
 
       {/* ═══ The gauntlet ═══ */}
+      {college && (
+        <Section id="campus" title={<>At <em>{college.shortName || 'your campus'}</em></>} kicker={`${company.name} on your campus: when they came, what they paid, and what to prepare.`}>
+          <CampusChapter college={college} companySlug={slug} companyName={company.name} />
+        </Section>
+      )}
+
       <Section id="gauntlet" title={<>The <em>gauntlet</em></>} kicker={`A typical ${rounds.length}-stage pipeline · ${(company.interviewProcess?.difficulty || 'Medium').toLowerCase()} overall.`}>
         <div className="grid gap-16 lg:grid-cols-[1.4fr_1fr]">
           <ol className="relative">

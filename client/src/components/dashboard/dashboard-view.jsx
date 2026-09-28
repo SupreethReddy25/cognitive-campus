@@ -12,6 +12,7 @@ import { CountUp, Reveal, Skeleton, ErrorNote, cn } from '../ui/kit';
 import { MasteryTrendChart } from './charts';
 import { InsightsPanel, AchievementStrip, timeAgo, tierFor } from './widgets';
 import { Constellation } from './constellation';
+import { CampusRadar } from './campus-radar';
 
 const QUOTE_CACHE = 'cached_ai_quote_v2';
 
@@ -165,6 +166,9 @@ export function DashboardView() {
             {next?.note && <div className="mt-3 pl-1 text-[12.5px] text-zinc-600">{next.note}</div>}
           </Reveal>
         </header>
+
+        {/* ═══ The season — who is coming to your campus, and how ready you are ═══ */}
+        <CampusRadar college={typeof user?.collegeId === 'object' ? user.collegeId : null} />
 
         {/* ═══ Your sky ═══ */}
         <section className="mt-20 md:mt-28 pb-6">
