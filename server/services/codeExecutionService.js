@@ -136,7 +136,7 @@ const parseJSSignature = (starterCode) => {
  * @returns {{ methodName: string, returnType: string, params: Array<{type: string, name: string}> }}
  */
 const parseJavaSignature = (starterCode) => {
-  const match = starterCode.match(/public\s+([\w<>\[\],\s]+?)\s+(\w+)\s*\(([^)]*)\)/);
+  const match = starterCode.match(/public\s+([\w<>[\],\s]+?)\s+(\w+)\s*\(([^)]*)\)/);
   if (!match) return { methodName: 'solution', returnType: 'void', params: [] };
   const returnType = match[1].trim();
   const methodName = match[2];
@@ -402,7 +402,7 @@ ${resultPrinter}
                     String[] parts = inner.split(",");
                     char[] row = new char[parts.length];
                     for (int j = 0; j < parts.length; j++) {
-                        String p = parts[j].trim().replace("\\\"", "");
+                        String p = parts[j].trim().replace("\\"", "");
                         row[j] = p.charAt(0);
                     }
                     rows.add(row);

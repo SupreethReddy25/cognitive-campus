@@ -306,7 +306,7 @@ const parseExperience = async (rawText, { userId, companyHint = '' } = {}) => {
   const raw = String(rawText || '').trim();
   let parsed;
   let source = 'ai';
-  let aiMeta = { used: true };
+  let aiMeta;
 
   try {
     const out = await ai.complete({ userId, system: AI_SYSTEM, prompt: buildAiPrompt(raw), json: true, temperature: 0.1, maxTokens: 3500, timeoutMs: 30000 });

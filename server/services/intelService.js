@@ -38,10 +38,10 @@ const extractJSON = (raw) => {
       try {
         return JSON.parse(braceMatch[0]);
       } catch (e2) {
-        throw new Error(`Gemini returned malformed JSON. Raw excerpt: ${cleaned.substring(0, 300)}`);
+        throw new Error(`Gemini returned malformed JSON. Raw excerpt: ${cleaned.substring(0, 300)}`, { cause: e2 });
       }
     }
-    throw new Error(`No JSON object found in Gemini response. Raw excerpt: ${cleaned.substring(0, 300)}`);
+    throw new Error(`No JSON object found in Gemini response. Raw excerpt: ${cleaned.substring(0, 300)}`, { cause: e });
   }
 };
 

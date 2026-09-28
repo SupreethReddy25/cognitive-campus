@@ -140,8 +140,7 @@ const problemSchema = new mongoose.Schema(
         python: { type: String }
       }
     },
-    tags: [{ type: String, trim: true }],
-    frequency: { type: Number, default: 0 }
+    tags: [{ type: String, trim: true }]
   },
   { timestamps: true }
 );
