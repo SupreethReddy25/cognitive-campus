@@ -296,7 +296,7 @@ export default function IntelHubPage() {
                         const active = shown?._id === c._id;
                         return (
                           <motion.li key={c._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.025, 0.35) }} onMouseEnter={() => setHoverId(c._id)} onFocus={() => setHoverId(c._id)}>
-                            <Link to={`/companies/${c.slug}`} className="group flex items-baseline gap-5 border-b border-[var(--line)] py-4">
+                            <Link to={`/companies/${c.slug}`} className="row group flex items-baseline gap-5 border-b border-[var(--line)] px-3 py-4">
                               <span className="w-8 shrink-0 text-[13px] tnum text-zinc-700">{String(i + 1).padStart(2, '0')}</span>
                               <span className={cn('display shrink-0 text-[clamp(24px,3.1vw,40px)] leading-none transition-all duration-300', active ? 'translate-x-2 text-[var(--ember)]' : 'text-zinc-200')}>{c.name}</span>
                               {campus[c.slug] && <span title={`Recruits at ${college?.shortName}`} className="tag !text-[9px] !tracking-[0.14em] shrink-0 -translate-y-2.5 border border-[var(--signal)]/40 px-1.5 py-0.5 !text-[var(--signal)]">{college?.shortName || 'Campus'}</span>}

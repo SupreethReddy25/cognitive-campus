@@ -313,3 +313,45 @@ exports.getPulse = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// ─── The author's own reports ─────────────────────────────────────────────────────────────────────────────────────
+/**
+ * @desc    Everything the signed-in user has shared, newest first, with how it is doing
+ * @route   GET /api/experiences/mine
+ * @access  Protected
+ */
+exports.getMine = async (req, res, next) => {
+  try {
+    const rows = await InterviewExperience.find({ userId: req.user.userId })
+      .select('companyId role year month offerReceived status qualityScore upvotes downvotes isAnonymous rounds createdAt')
+      .populate('companyId', 'name slug logo domain')
+      .sort({ createdAt: -1 }).lean();
+    const data = rows.filter((r) => r.companyId).map((r) => ({
+      _id: r._id, company: r.companyId, role: r.role, year: r.year, month: r.month, offerReceived: r.offerReceived, status: r.status,
+      qualityScore: r.qualityScore, upvotes: r.upvotes || 0, isAnonymous: r.isAnonymous, createdAt: r.createdAt,
+      rounds: (r.rounds || []).length, questions: (r.rounds || []).reduce((n, x) => n + (x.questions?.length || 0), 0)
+    }));
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Remove one of your own reports. Authors stay in control of what they shared.
+ * @route   DELETE /api/experiences/:id
+ * @access  Protected (author only)
+ */
+exports.deleteMine = async (req, res, next) => {
+  try {
+    const exp = await InterviewExperience.findOne({ _id: req.params.id, userId: req.user.userId });
+    if (!exp) return res.status(404).json({ success: false, error: 'Report not found' });
+    await exp.deleteOne();
+    pulseCache = { at: 0, data: null };
+    logger.info(`Experience ${req.params.id} deleted by its author`);
+    return res.status(200).json({ success: true, data: { deleted: true } });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -122,7 +122,7 @@ export default function SheetDetailPage() {
                   <span className={cn('flex w-[92px] shrink-0 items-center justify-end gap-1.5 text-[12.5px]', p.isAvailable ? 'text-[var(--ember-soft)]' : 'text-zinc-600')}>{p.isAvailable && p.problemId ? 'Solve' : 'LeetCode'}<ArrowUpRight className="h-3.5 w-3.5" /></span>
                 </>
               );
-              const cls = 'group flex items-center gap-4 border-b border-[var(--line)] py-4 transition-colors hover:bg-white/[0.02]';
+              const cls = 'row group flex items-center gap-4 border-b border-[var(--line)] px-3 py-4';
               return (
                 <motion.li key={keyOf(p) + i} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.012, 0.3) }}>
                   {p.isAvailable && p.problemId

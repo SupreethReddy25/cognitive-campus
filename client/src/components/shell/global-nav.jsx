@@ -23,6 +23,7 @@ function AccountMenu({ user, onClose, onLogout }) {
   const into = (user?.xp || 0) % 100;
   const items = [
     ['/profile', 'Profile'],
+    ['/profile#reports', 'My reports'],
     ['/profile#badges', 'Achievements'],
     ['/profile#bookmarks', 'Bookmarks'],
     ['/profile#ai', 'AI key & settings'],

@@ -273,7 +273,7 @@ export function DashboardView() {
                 <div>
                   <div className="mb-3 text-[13px] text-zinc-500">Recent</div>
                   {data.recentSubmissions.slice(0, 6).map((s) => (
-                    <Link key={s._id} to={`/problems/${s.problemId?._id}`} className="group flex items-center justify-between gap-3 border-b border-[var(--line)] py-3 last:border-0">
+                    <Link key={s._id} to={`/problems/${s.problemId?._id}`} className="row group flex items-center justify-between gap-3 border-b border-[var(--line)] py-3">
                       <span className="flex min-w-0 items-center gap-3"><span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', s.isCorrect ? 'bg-emerald-400' : 'bg-zinc-600')} /><span className="truncate text-[14px] text-zinc-300 group-hover:text-zinc-50">{s.problemId?.title || 'Problem'}</span></span>
                       <span className="shrink-0 text-[12px] text-zinc-600">{timeAgo(s.createdAt)}</span>
                     </Link>

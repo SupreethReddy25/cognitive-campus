@@ -19,7 +19,7 @@ const Empty = ({ title, text }) => <div className="py-20 text-center"><div class
 const Field = ({ label, children }) => <div className="space-y-1"><label className="text-[12.5px] text-zinc-500">{label}</label>{children}</div>;
 function Sec({ title, kicker, action, children, className = '' }) {
   return (
-    <section className={cn('pt-16', className)}>
+    <section className={cn('rise pt-16', className)}>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line-strong)] pb-4">
         <div><h2 className="display text-[clamp(24px,3.1vw,37px)] text-zinc-50">{title}</h2>{kicker && <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-zinc-500">{kicker}</p>}</div>
         {action}
@@ -73,9 +73,9 @@ function OverviewTab({ onGoto }) {
       <div className="grid gap-16 lg:grid-cols-[1.6fr_1fr]">
         <Sec title={<>The last <em>fortnight</em></>} kicker="Submissions per day (bars), correct submissions and active students (lines).">
           <div className="h-72"><ResponsiveContainer><ComposedChart data={s.submissionsPerDay.map((d) => ({ ...d, label: d.date.slice(5) }))} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
-            <CartesianGrid stroke="rgba(236,230,216,0.06)" vertical={false} />
-            <XAxis dataKey="label" tick={{ fill: '#7a7466', fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} />
+            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <XAxis dataKey="label" tick={{ fill: '#71717a', fontSize: 11 }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fill: '#52525b', fontSize: 11 }} tickLine={false} axisLine={false} />
             <Tooltip {...chartTooltipStyle} />
             <RBar dataKey="submissions" name="Submissions" fill="#fbbf24" fillOpacity={0.28} radius={[6, 6, 0, 0]} barSize={20} />
             <Line dataKey="correct" name="Correct" stroke="#34d399" strokeWidth={2.2} dot={false} />

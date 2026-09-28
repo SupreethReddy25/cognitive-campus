@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { analyticsService, engagementService, usersService, authService, companiesService, arenaService } from '../../services/api';
 import { CollegeSelector } from '../placement/CollegeSelector';
+import { MyReports } from './my-reports';
 import { MasteryTrendChart } from '../dashboard/charts';
 import { SkillLedger, InsightsPanel, Badge, tierFor, timeAgo } from '../dashboard/widgets';
 import { ActivityHeatmap } from '../ui/activity-heatmap';
@@ -17,7 +18,7 @@ const DOT = { easy: 'bg-emerald-400', medium: 'bg-amber-400', hard: 'bg-rose-400
 
 function Section({ id, title, kicker, children }) {
   return (
-    <section id={id} className="scroll-mt-10 pt-24">
+    <section id={id} className="rise scroll-mt-10 pt-24">
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
         <h2 className="display text-[clamp(29px,3.9vw,48px)] text-zinc-50">{title}</h2>
         {kicker && <div className="hidden max-w-sm pb-1.5 text-right text-[13px] leading-snug text-zinc-500 md:block">{kicker}</div>}
@@ -207,12 +208,16 @@ export function ProfileView() {
       </Section>
 
       {/* ═══ Saved & recent ═══ */}
+      <Section id="reports" title={<>What you&apos;ve <em>shared</em></>} kicker="Your interview reports and how much they have helped. You can take any of them down.">
+        <MyReports />
+      </Section>
+
       <Section id="bookmarks" title={<>Saved &amp; <em>recent</em></>}>
         <div className="grid gap-16 lg:grid-cols-2">
           <div>
             <div className="mb-3 text-[13px] text-zinc-500">Bookmarked problems</div>
             {!bookmarks ? <Skeleton className="h-32" /> : bookmarks.length === 0 ? <p className="py-6 text-[15px] text-zinc-600">Nothing saved. Tap the bookmark on any problem to keep it for later.</p> : bookmarks.map((b) => (
-              <Link key={b._id} to={`/problems/${b._id}`} className="group flex items-center justify-between gap-4 border-b border-[var(--line)] py-3.5">
+              <Link key={b._id} to={`/problems/${b._id}`} className="row group flex items-center justify-between gap-4 border-b border-[var(--line)] px-3 py-3.5">
                 <span className="flex min-w-0 items-center gap-3">{b.solved ? <Check className="h-4 w-4 shrink-0 text-emerald-400" /> : <span className="h-4 w-4 shrink-0 rounded-full border border-zinc-700" />}<span className="truncate text-[17px] text-zinc-200 group-hover:text-[var(--ember)]">{b.title}</span></span>
                 <span className="flex shrink-0 items-center gap-2 text-[13px] capitalize text-zinc-500"><span className={cn('h-1.5 w-1.5 rounded-full', DOT[b.difficulty])} />{b.difficulty}</span>
               </Link>
@@ -221,7 +226,7 @@ export function ProfileView() {
           <div>
             <div className="mb-3 text-[13px] text-zinc-500">Recent submissions</div>
             {(me?.recentSubmissions || []).map((s) => (
-              <Link key={s._id} to={`/problems/${s.problemId?._id}`} className="group flex items-center justify-between gap-4 border-b border-[var(--line)] py-3.5">
+              <Link key={s._id} to={`/problems/${s.problemId?._id}`} className="row group flex items-center justify-between gap-4 border-b border-[var(--line)] px-3 py-3.5">
                 <span className="flex min-w-0 items-center gap-3"><span className={cn('h-2 w-2 shrink-0 rounded-full', s.isCorrect ? 'bg-emerald-400' : 'bg-zinc-600')} /><span className="truncate text-[17px] text-zinc-300 group-hover:text-[var(--ember)]">{s.problemId?.title}</span></span>
                 <span className="shrink-0 text-[13px] text-zinc-600">{s.xpAwarded > 0 && <span className="mr-3 text-[var(--star)]">+{s.xpAwarded}</span>}{timeAgo(s.createdAt)}</span>
               </Link>

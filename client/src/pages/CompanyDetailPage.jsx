@@ -19,7 +19,7 @@ const chip = (on) => cn('shrink-0 rounded-sm border px-3.5 py-1.5 font-mono text
 
 function Section({ id, kicker, title, children }) {
   return (
-    <section id={id} className="scroll-mt-24 pt-24">
+    <section id={id} className="rise scroll-mt-24 pt-24">
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
         <h2 className="display text-[clamp(30px,4.2vw,51px)] text-zinc-50">{title}</h2>
         {kicker && <div className="max-w-xs pb-1.5 text-right text-[13px] leading-snug text-zinc-500">{kicker}</div>}
@@ -295,10 +295,10 @@ export default function CompanyDetailPage() {
             <div className="mb-4 text-[13px] text-zinc-500">Reports (bars) and offer rate (line) by year</div>
             {stats.yearTrend.length ? (
               <div className="h-60"><ResponsiveContainer><ComposedChart data={stats.yearTrend} margin={{ top: 6, right: 6, left: -22, bottom: 0 }}>
-                <CartesianGrid stroke="rgba(236,230,216,0.06)" vertical={false} />
-                <XAxis dataKey="year" tick={{ fill: '#7a7466', fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="l" tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
-                <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="year" tick={{ fill: '#71717a', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="l" tick={{ fill: '#52525b', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fill: '#52525b', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
                 <Tooltip {...chartTooltipStyle} />
                 <RBar yAxisId="l" dataKey="reports" name="Reports" fill="#fbbf24" fillOpacity={0.28} radius={[8, 8, 0, 0]} barSize={34} />
                 <Line yAxisId="r" dataKey="offerRate" name="Offer rate %" stroke="#34d399" strokeWidth={2.4} dot={{ r: 4.5, fill: '#0a0a0a', stroke: '#34d399', strokeWidth: 2 }} connectNulls />
@@ -384,7 +384,7 @@ export default function CompanyDetailPage() {
           <div>
             <h3 className="display mb-6 text-[36px] text-zinc-100">Practise these</h3>
             <div>{related.data.slice(0, 7).map((p) => (
-              <Link key={p._id} to={`/problems/${p._id}`} className="group flex items-center justify-between gap-4 border-b border-[var(--line)] py-3.5">
+              <Link key={p._id} to={`/problems/${p._id}`} className="row group flex items-center justify-between gap-4 border-b border-[var(--line)] px-3 py-3.5">
                 <span className="flex min-w-0 items-center gap-3"><span className={cn('h-2 w-2 shrink-0 rounded-full', p.solved ? 'bg-emerald-400' : 'border border-zinc-600')} /><span className="truncate text-[16px] text-zinc-200 group-hover:text-[var(--ember)]">{p.title}</span>{p.askedHere && <span className="shrink-0 text-[11.5px] text-[var(--ember-soft)]">asked here</span>}</span>
                 <span className="shrink-0 text-[12.5px] capitalize text-zinc-500">{p.difficulty}</span>
               </Link>

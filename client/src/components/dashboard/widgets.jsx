@@ -96,7 +96,7 @@ export function Badge({ a, size = 72 }) {
   const ring = RARITY_RING[a.rarity] || RARITY_RING.common;
   return (
     <div className="group flex w-[112px] flex-col items-center text-center" title={a.desc}>
-      <div className="relative flex items-center justify-center rounded-full transition-transform duration-300 group-hover:-translate-y-1" style={{ width: size, height: size, border: `1px ${a.unlocked ? 'solid' : 'dashed'} ${a.unlocked ? ring : 'rgba(236,230,216,0.16)'}`, boxShadow: a.unlocked ? `0 0 0 5px ${ring}14, inset 0 0 26px ${ring}22` : 'none' }}>
+      <div className="relative flex items-center justify-center rounded-full transition-transform duration-300 group-hover:-translate-y-1" style={{ width: size, height: size, border: `1px ${a.unlocked ? 'solid' : 'dashed'} ${a.unlocked ? ring : 'rgba(255,255,255,0.16)'}`, boxShadow: a.unlocked ? `0 0 0 5px ${ring}14, inset 0 0 26px ${ring}22` : 'none' }}>
         {a.unlocked ? <Icon className="h-7 w-7" style={{ color: ring }} strokeWidth={1.4} /> : <Lock className="h-5 w-5 text-zinc-700" />}
       </div>
       <div className={cn('mt-3 text-[13px] font-medium leading-tight', a.unlocked ? 'text-zinc-200' : 'text-zinc-600')}>{a.title}</div>

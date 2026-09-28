@@ -13,7 +13,7 @@ const chip = (on) => cn('rounded-sm border px-3.5 py-1.5 font-mono text-[10.5px]
 
 function Section({ title, kicker, children }) {
   return (
-    <section className="pt-20">
+    <section className="rise pt-20">
       <div className="mb-8 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
         <h2 className="display text-[clamp(27px,3.7vw,45px)] text-zinc-50">{title}</h2>
         {kicker && <div className="hidden max-w-xs pb-1.5 text-right text-[13px] leading-snug text-zinc-500 md:block">{kicker}</div>}

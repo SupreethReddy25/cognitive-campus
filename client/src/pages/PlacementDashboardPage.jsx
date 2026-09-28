@@ -14,7 +14,7 @@ const CONF = { none: 'no data yet', low: 'low confidence', medium: 'medium confi
 
 function Section({ title, kicker, children, className = '' }) {
   return (
-    <section className={cn('pt-24', className)}>
+    <section className={cn('rise pt-24', className)}>
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[var(--line-strong)] pb-4">
         <h2 className="display text-[clamp(29px,3.9vw,48px)] text-zinc-50">{title}</h2>
         {kicker && <div className="hidden max-w-sm pb-1.5 text-right text-[13px] leading-snug text-zinc-500 md:block">{kicker}</div>}
@@ -132,10 +132,10 @@ export default function PlacementDashboardPage() {
           <Section title={<>The <em>trajectory</em></>} kicker="Modelled from typical recruiter patterns — an illustration until your placement cell uploads real records. Bars: students hired; line: average package (LPA).">
             <div className="grid gap-16 lg:grid-cols-[1.6fr_1fr]">
               <div className="h-72"><ResponsiveContainer><ComposedChart data={insights.hiringTrends} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                <CartesianGrid stroke="rgba(236,230,216,0.06)" vertical={false} />
-                <XAxis dataKey="year" tick={{ fill: '#7a7466', fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="l" tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="r" orientation="right" tick={{ fill: '#5b564b', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="year" tick={{ fill: '#71717a', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="l" tick={{ fill: '#52525b', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="r" orientation="right" tick={{ fill: '#52525b', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip {...chartTooltipStyle} />
                 <RBar yAxisId="l" dataKey="hires" name="Students hired" fill="#fbbf24" fillOpacity={0.28} radius={[8, 8, 0, 0]} barSize={40} />
                 <Line yAxisId="r" dataKey="avgPackage" name="Avg package (LPA)" stroke="#34d399" strokeWidth={2.4} dot={{ r: 4.5, fill: '#0a0a0a', stroke: '#34d399', strokeWidth: 2 }} connectNulls />
@@ -143,7 +143,7 @@ export default function PlacementDashboardPage() {
               <div>
                 <div className="mb-4 text-[13px] text-zinc-500">Most reliable recruiters</div>
                 {insights.topRecruiters.slice(0, 6).map((r, i) => (
-                  <Link key={r.company._id} to={`/placement/companies/${r.company.slug}`} className="group flex items-center gap-4 border-b border-[var(--line)] py-3">
+                  <Link key={r.company._id} to={`/placement/companies/${r.company.slug}`} className="row group flex items-center gap-4 border-b border-[var(--line)] px-3 py-3">
                     <span className="w-5 text-[13px] tnum text-zinc-700">{i + 1}</span>
                     <span className="flex-1 truncate text-[17px] text-zinc-200 transition-colors group-hover:text-[var(--ember)]">{r.company.name}</span>
                     <span className="text-[13px] tnum text-zinc-500">{r.totalHires} hires</span>
@@ -159,7 +159,7 @@ export default function PlacementDashboardPage() {
               <ol className="grid gap-x-16 md:grid-cols-2">
                 {pred.companies.slice(0, 8).map((c, i) => (
                   <motion.li key={c.company._id} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}>
-                    <Link to={`/placement/companies/${c.company.slug}`} className="group flex items-center gap-5 border-b border-[var(--line)] py-5">
+                    <Link to={`/placement/companies/${c.company.slug}`} className="row group flex items-center gap-5 border-b border-[var(--line)] px-3 py-5">
                       <span className="display w-[92px] shrink-0 text-[41.6px] leading-none tnum" style={{ color: c.probability >= 75 ? '#ecfdf5' : c.probability >= 50 ? '#fbbf24' : '#fb7185' }}>{c.probability}<span className="text-[20px] opacity-60">%</span></span>
                       <span className="min-w-0 flex-1">
                         <span className="display block truncate text-[24px] leading-tight text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{c.company.name}</span>
@@ -185,7 +185,7 @@ export default function PlacementDashboardPage() {
                       <td className="border-t border-[var(--line)] py-1.5 pr-6 text-[16px] text-zinc-300 group-hover:text-zinc-50">{r.skill}</td>
                       {r.byYear.map((c) => (
                         <td key={c.year} title={`${c.pct}% · ${c.reports} report(s)`} className="border-t border-[var(--line)] py-1.5 text-center">
-                          <span className="mx-auto block rounded-full" style={{ width: 6 + c.pct * 0.34, height: 6 + c.pct * 0.34, background: c.pct ? `rgba(255,122,77,${0.25 + c.pct / 130})` : 'rgba(236,230,216,0.06)' }} />
+                          <span className="mx-auto block rounded-full" style={{ width: 6 + c.pct * 0.34, height: 6 + c.pct * 0.34, background: c.pct ? `rgba(52,211,153,${0.25 + c.pct / 130})` : 'rgba(255,255,255,0.06)' }} />
                         </td>
                       ))}
                       <td className="border-t border-[var(--line)] py-1.5 text-center text-[15px] tnum text-zinc-200">{r.overallPct ? `${r.overallPct}%` : '—'}</td>
@@ -220,7 +220,7 @@ export default function PlacementDashboardPage() {
               <ol className="grid gap-x-16 md:grid-cols-2">
                 {dash.companies.slice(0, 8).map((c) => (
                   <li key={c.company._id}>
-                    <Link to={`/placement/companies/${c.company.slug}`} className="group flex items-center gap-4 border-b border-[var(--line)] py-5">
+                    <Link to={`/placement/companies/${c.company.slug}`} className="row group flex items-center gap-4 border-b border-[var(--line)] px-3 py-5">
                       <CompanyLogo company={c.company} size={40} />
                       <span className="min-w-0 flex-1">
                         <span className="display block truncate text-[22.4px] leading-tight text-zinc-100 transition-colors group-hover:text-[var(--ember)]">{c.company.name}</span>
