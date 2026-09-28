@@ -56,10 +56,10 @@ const LogoMark = () => (
 
 /* ─── Feature ticker ─────────────────────────────── */
 const FEATURES = [
-  { emoji: '🧠', title: 'Bayesian Learning', desc: 'Adapts in real-time to your knowledge state — smarter than any flashcard.' },
-  { emoji: '🏟️', title: 'Arena Mode', desc: 'Compete live against candidates targeting the same companies as you.' },
-  { emoji: '🔍', title: 'Company Intel', desc: 'Deep dossiers on interview culture, rounds, and insider difficulty ratings.' },
-  { emoji: '🤖', title: 'AI Mentor', desc: 'Socratic guidance that never just gives you the answer.' },
+  { emoji: '🔍', title: 'Interview Atlas', desc: 'Every round and question companies ask, with sources and confidence levels.' },
+  { emoji: '🎓', title: 'Campus Intel', desc: 'Which companies visit your college, what they paid, and what to prepare.' },
+  { emoji: '🧠', title: 'Adaptive Practice', desc: 'Problems ranked by what your target companies ask and where you are weakest.' },
+  { emoji: '🏟️', title: 'Arena Mode', desc: "Race a friend on a company's favourite question, or pair up for a mock round." },
 ];
 
 const FeatureTicker = ({ compact = false }) => {
@@ -1183,7 +1183,7 @@ const AuthPage = () => {
                   {isRegister?'Ready to level up?':'Your prep continues.'}
                 </div>
                 <p style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11.5,color:'rgba(255,255,255,0.2)',margin:'10px 0 20px 0',opacity:greetingReady?1:0,transition:'opacity 0.7s ease 0.12s'}}>
-                  Powered by Bayesian Knowledge Tracing
+                  Interview intelligence, scoped to your campus
                 </p>
                 {/* Feature ticker compact — stays once ready */}
                 <div style={{opacity:greetingReady?1:0,transition:'opacity 0.6s ease 0.2s'}}>
@@ -1199,7 +1199,7 @@ const AuthPage = () => {
 
             {/* Feature chips */}
             <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
-              {['BKT Engine','Company Intel','Arena Mode','AI Mentor'].map((tag,i) => (
+              {['Interview Atlas','Campus Intel','Adaptive Practice','Arena Mode'].map((tag,i) => (
                 <span key={tag} style={{
                   fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'0.15em',textTransform:'uppercase',
                   color:'rgba(255,255,255,0.3)',border:'1px solid rgba(255,255,255,0.055)',borderRadius:6,
@@ -1294,7 +1294,7 @@ const AuthPage = () => {
                 {isRegister ? 'Create your account.' : 'Sign in to continue.'}
               </h1>
               <p style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:13.5,color:'rgba(255,255,255,0.38)',margin:0,lineHeight:1.6}}>
-                {isRegister ? 'Start mastering tech interviews today.' : 'Continue your interview prep journey.'}
+                {isRegister ? 'Find out what your campus\u2019s recruiters ask.' : 'Continue your interview prep journey.'}
               </p>
             </div>
             {/* First time here */}

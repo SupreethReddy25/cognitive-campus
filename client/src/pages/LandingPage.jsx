@@ -237,9 +237,9 @@ const LandingPage = () => {
           <div className="hidden items-center gap-10 md:flex">
             {[
               ['#features', 'How'],
-              ['#stats', 'Engine'],
-              ['/problems', 'Problems'],
-              ['/leaderboard', 'Ranks'],
+              ['#stats', 'Loop'],
+              ['/intel', 'Interviews'],
+              ['/arena', 'Arena'],
             ].map(([href, label], i) => href.startsWith('#') ? (
               <a key={i} href={href}
                 className="ease-sig text-[11px] tracking-[0.22em] text-zinc-500 uppercase hover:text-zinc-100">
@@ -291,33 +291,34 @@ const LandingPage = () => {
             <span className="pdot h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
             <span>01 / 05</span>
             <span className="h-px w-8 bg-white/[0.08]" />
-            <span>Bayesian Knowledge Tracing</span>
+            <span>Interview intelligence</span>
           </div>
 
           {/* Headline — extreme negative space, ultralight */}
           <h1 className="anim d3 text-balance font-display text-[clamp(3.5rem,8.5vw,8rem)] font-extralight leading-[0.92] tracking-[-0.03em] text-zinc-50">
-            A platform<br />
-            that{' '}
+            Know what<br />
+            they&rsquo;ll{' '}
             <em className="font-normal italic text-zinc-500"
               style={{ fontFamily: "'Syne', sans-serif", fontStyle: 'italic', fontWeight: 500 }}>
-              learns how
+              ask at
             </em>
             <br />
-            you learn.
+            your campus.
           </h1>
 
           {/* Subtext */}
           <div ref={subRef} className={`scrollFade mt-10 max-w-[480px] ${subVis ? 'visible' : ''}`}>
             <p className="text-[15px] leading-[1.65] text-zinc-500">
-              Adaptive problem recommendations. Real-time mastery tracking.
-              Every solve updates a Bayesian posterior over twelve DSA skills.
+              Which companies visit your college, what they ask round by round, and how
+              ready you are &mdash; from real interview reports, your campus&rsquo;s placement
+              history, and a practice engine that learns your weak spots.
             </p>
             <p className="mt-4 font-mono text-[12px] tracking-[0.05em] text-[var(--signal)]/90">
               <Typewriter texts={[
-                'BKT-powered mastery.',
-                'AI mentor.',
-                'Multiplayer coding arena.',
-                'Real-time leaderboards.',
+                'Company dossiers, round by round.',
+                'Your campus\u2019s placement history.',
+                'Practice ranked by what they ask.',
+                'Mock rounds in the multiplayer arena.',
               ]} />
             </p>
           </div>
@@ -338,9 +339,9 @@ const LandingPage = () => {
           {/* Numeric feature pills — minimal */}
           <div ref={metricRef} className={`scrollFade mt-20 grid grid-cols-3 gap-[1px] border border-white/[0.04] bg-white/[0.04] ${metricVis ? 'visible' : ''}`}>
             {[
-              { kicker: '36+', label: 'Problems', meta: '12 skills' },
-              { kicker: '94%', label: 'BKT Accuracy', meta: 'Posterior fit' },
-              { kicker: '<1s', label: 'Execution', meta: 'Piston API' },
+              { kicker: '23', label: 'Companies', meta: 'Full dossiers' },
+              { kicker: '19', label: 'Colleges', meta: 'NIRF-linked data' },
+              { kicker: '12', label: 'DSA skills', meta: 'Tracked adaptively' },
             ].map((m, i) => (
               <div key={i} className="flex flex-col gap-2 bg-[#0a0a0a] px-6 py-5">
                 <span className="text-[28px] font-extralight leading-none tabular-nums text-zinc-100">{m.kicker}</span>
@@ -386,7 +387,7 @@ const LandingPage = () => {
         </div>
 
         <div className="flex flex-col items-center text-center">
-          <HandWrittenTitle title="From Problem to Mastery" subtitle="Every step powered by adaptive intelligence." />
+          <HandWrittenTitle title="From Report to Offer" subtitle="Read what they ask. Practise what matters. Prove it under pressure." />
         </div>
       </section>
 
@@ -401,8 +402,8 @@ const LandingPage = () => {
         <DisplayCards cards={[
           {
             icon: <Brain className="w-5 h-5 text-[var(--signal)]" />,
-            title: "BKT Engine",
-            description: "Bayesian tracing adapts in real-time.",
+            title: "Interview Atlas",
+            description: "Every round and question, sourced and confidence-rated.",
             date: "CORE",
             iconClassName: "text-[var(--signal)] font-bold",
             titleClassName: "text-[var(--signal)] font-bold",
@@ -410,17 +411,17 @@ const LandingPage = () => {
           },
           {
             icon: <Zap className="w-5 h-5 text-zinc-300" />,
-            title: "Instant Execution",
-            description: "Piston API executes code in <1 second.",
-            date: "INFRASTRUCTURE",
+            title: "Campus Intel",
+            description: "Who visits your college, what they paid, what to prepare.",
+            date: "YOUR COLLEGE",
             iconClassName: "text-zinc-300 font-bold",
             titleClassName: "text-zinc-100 font-bold",
             className: "[grid-area:stack] translate-x-12 translate-y-10 hover:-translate-y-12 hover:-rotate-3 hover:scale-105 before:absolute before:w-[100%] before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-[#0a0a0a]/70 grayscale-[85%] hover:grayscale-0 before:opacity-100 hover:before:opacity-0 before:transition-opacity before:duration-700 before:left-0 before:top-0 shadow-2xl z-20"
           },
           {
             icon: <Trophy className="w-5 h-5 text-amber-200" />,
-            title: "Live Leaderboard",
-            description: "Real-time global ranking updates.",
+            title: "The Arena",
+            description: "Race a friend on a company's favourite question.",
             date: "COMMUNITY",
             iconClassName: "text-amber-200 font-bold",
             titleClassName: "text-amber-100 font-bold",
@@ -437,7 +438,7 @@ const LandingPage = () => {
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
           <span>03 / 05</span>
           <span className="h-px w-8 bg-white/[0.08]" />
-          <span>Engine</span>
+          <span>The loop</span>
         </div>
 
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1.1fr_1fr]">
@@ -451,17 +452,18 @@ const LandingPage = () => {
               </em>
             </h2>
             <p className="mt-6 max-w-md text-[14px] leading-relaxed text-zinc-500">
-              Every feature is optimised to get you interview-ready faster — without burning out.
-              Nudges, not answers. Evidence-based progression, not busywork.
+              Everything serves one loop: see what they ask, prepare on it, prove it under
+              pressure, then add your own experience back for the next batch. Nudges, not
+              answers. Evidence, not busywork.
             </p>
 
             {/* Counter grid */}
             <div className="mt-12 grid grid-cols-2 gap-[1px] border border-white/[0.04] bg-white/[0.04] max-w-md">
               {[
-                { end: 36, label: 'Problems', suffix: '+' },
+                { end: 23, label: 'Companies' },
+                { end: 19, label: 'Colleges' },
                 { end: 12, label: 'DSA Skills' },
-                { end: 94, label: 'BKT Accuracy', suffix: '%' },
-                { end: 4, label: 'Arena Modes' },
+                { end: 3, label: 'Arena Modes' },
               ].map((m, i) => (
                 <div key={i} className="flex flex-col gap-2 bg-[#0a0a0a] p-6">
                   <span className="text-[36px] font-extralight leading-none text-zinc-100">
@@ -478,7 +480,7 @@ const LandingPage = () => {
             <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
               <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] text-zinc-500 uppercase">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
-                BKT · ENGINE / LIVE
+                COVERAGE / LIVE
               </div>
               <span className="font-mono text-[10px] tabular-nums text-zinc-700">
                 {timeStr}
@@ -488,10 +490,9 @@ const LandingPage = () => {
             {/* Bars */}
             <div className="mt-6 space-y-6">
               {[
-                { l: 'Problems coverage', pct: '100%', delay: '0s' },
-                { l: 'Skill tree breadth', pct: '85%', delay: '0.15s' },
-                { l: 'BKT posterior fit', pct: '94%', delay: '0.3s' },
-                { l: 'Nudge relevance', pct: '78%', delay: '0.45s' },
+                { l: 'Companies profiled', pct: '100%', delay: '0s' },
+                { l: 'Colleges with placement data', pct: '100%', delay: '0.15s' },
+                { l: 'DSA skills modelled', pct: '100%', delay: '0.3s' },
               ].map((b, i) => (
                 <div key={i}>
                   <div className="mb-2 flex items-center justify-between">
@@ -510,8 +511,8 @@ const LandingPage = () => {
             <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-white/[0.04] pt-5">
               {[
                 { l: 'ACTIVE', c: 'var(--signal)', dot: true },
-                { l: 'ADAPTIVE', c: '#a1a1aa' },
-                { l: 'REAL-TIME', c: '#71717a' },
+                { l: 'COLLEGE-SCOPED', c: '#a1a1aa' },
+                { l: 'SOURCED', c: '#71717a' },
               ].map((p, i) => (
                 <div key={i} className="flex items-center gap-2 border border-white/[0.06] px-2.5 py-1">
                   {p.dot && <span className="pdot h-1.5 w-1.5 rounded-full" style={{ background: p.c }} />}
@@ -530,8 +531,8 @@ const LandingPage = () => {
           }}>
           <div className="marquee gap-12 font-mono text-[11px] tracking-[0.28em] text-zinc-700 uppercase">
             {[...Array(2)].flatMap((_, r) =>
-              ['Arrays', 'Linked Lists', 'Binary Trees', 'Graph BFS', 'Dynamic Programming', 'Stacks',
-                'Queues', 'Heaps', 'Sorting', 'Recursion', 'Tries', 'Two Pointers', 'Greedy', 'Bit Manipulation'
+              ['Google', 'Amazon', 'Microsoft', 'Adobe', 'Flipkart', 'Goldman Sachs', 'Uber', 'Atlassian',
+                'JP Morgan', 'Intuit', 'Walmart Labs', 'Apple', 'TCS', 'Razorpay'
               ].map((t, i) => (
                 <span key={`${r}-${i}`} className="flex items-center gap-3 whitespace-nowrap">
                   <span className="h-1 w-1 rounded-full bg-zinc-800" />
@@ -555,18 +556,18 @@ const LandingPage = () => {
         </div>
 
         <h2 className="text-balance font-sans text-[clamp(3rem,8vw,7rem)] font-extralight leading-[0.94] tracking-[-0.035em] text-zinc-50">
-          Ready to master{' '}
+          Ready for the{' '}
           <em className="not-italic"
             style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 400, color: 'var(--signal)' }}>
-            DSA?
+            interview?
           </em>
         </h2>
 
         <p className="mt-8 max-w-xl font-mono text-[12px] tracking-[0.05em] text-zinc-500">
           <Typewriter texts={[
-            'Join students already solving smarter.',
-            'Land your dream placement.',
-            'Start your BKT journey.',
+            'Know your campus\u2019s season before it starts.',
+            'Practise what they actually ask.',
+            'Land the offer.',
           ]} />
         </p>
         <p className="mt-3 font-mono text-[10px] tracking-[0.24em] text-zinc-700 uppercase">
@@ -588,10 +589,10 @@ const LandingPage = () => {
         <div className="flex items-center gap-6">
           <a href="https://github.com/SupreethReddy25/cognitive-campus" target="_blank" rel="noreferrer"
             className="ease-sig text-zinc-700 hover:text-zinc-300">GitHub</a>
-          <button onClick={() => navigate('/problems')}
-            className="ease-sig bg-transparent text-zinc-700 hover:text-zinc-300">Problems</button>
-          <button onClick={() => navigate('/leaderboard')}
-            className="ease-sig bg-transparent text-zinc-700 hover:text-zinc-300">Leaderboard</button>
+          <button onClick={() => navigate('/intel')}
+            className="ease-sig bg-transparent text-zinc-700 hover:text-zinc-300">Interviews</button>
+          <button onClick={() => navigate('/arena')}
+            className="ease-sig bg-transparent text-zinc-700 hover:text-zinc-300">Arena</button>
           <span className="text-[var(--signal)]/70">OK</span>
         </div>
       </footer>
