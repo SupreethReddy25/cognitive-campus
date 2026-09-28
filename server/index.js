@@ -4,6 +4,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
@@ -39,6 +40,7 @@ app.set('io', io);
 
 // --------------- Middleware Stack ---------------
 app.use(helmet());
+app.use(compression());
 app.use(cors({ origin: process.env.NODE_ENV === 'production' && process.env.CLIENT_URL ? process.env.CLIENT_URL : true }));
 app.use(express.json({ limit: '512kb' }));
 app.use(morgan('dev', { stream: { write: (msg) => logger.info(msg.trim()) } }));

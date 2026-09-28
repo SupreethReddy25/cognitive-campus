@@ -1,7 +1,7 @@
 {
   "name": "cognitive-campus-server",
   "version": "1.0.0",
-  "description": "Cogni backend \u2014 BKT-powered DSA learning platform",
+  "description": "Cogni backend — BKT-powered DSA learning platform",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -16,6 +16,7 @@
     "acorn": "^8.14.1",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

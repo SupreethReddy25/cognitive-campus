@@ -25,8 +25,15 @@ const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  * @route   GET /api/problems
  * @access  Protected
  */
+// The catalogue is shared by every user and changes rarely, so identical list queries are served from memory for a minute.
+const LIST_TTL_MS = 60 * 1000;
+const listCache = new Map();
+
 const getProblems = async (req, res, next) => {
   try {
+    const cacheKey = JSON.stringify(req.query);
+    const hit = listCache.get(cacheKey);
+    if (hit && Date.now() - hit.at < LIST_TTL_MS) return sendSuccess(res, hit.data);
     const { skillId, difficulty, q, company } = req.query;
     const page = parseInt(req.query.page, 10) || 1;
     const limit = Math.min(parseInt(req.query.limit, 10) || 20, 200);
@@ -51,12 +58,10 @@ const getProblems = async (req, res, next) => {
     ]);
 
 
-    return sendSuccess(res, {
-      problems,
-      totalCount,
-      currentPage: page,
-      totalPages: Math.ceil(totalCount / limit)
-    });
+    const data = { problems, totalCount, currentPage: page, totalPages: Math.ceil(totalCount / limit) };
+    if (listCache.size > 100) listCache.clear();
+    listCache.set(cacheKey, { at: Date.now(), data });
+    return sendSuccess(res, data);
   } catch (error) {
     next(error);
   }
