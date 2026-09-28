@@ -21,11 +21,19 @@ export function Label({ children, className = '' }) {
   return <span className={cn('tag', className)}>{children}</span>;
 }
 
+/** Follows the pointer with a soft light — drives every `.spot` surface. */
+export const spotlight = (e) => {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+};
+
 export function Card({ children, className = '', glow = false, padded = true, as: Tag = 'div', ...rest }) {
   return (
     <Tag
+      onPointerMove={spotlight}
       className={cn(
-        'relative border border-[var(--line)] bg-[var(--ink-2)]',
+        'spot relative border border-[var(--line)] bg-[var(--ink-2)] transition-colors duration-500 hover:border-[var(--line-strong)]',
         padded && 'p-6',
         glow && 'card-glow',
         className
